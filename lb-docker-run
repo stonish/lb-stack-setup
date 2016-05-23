@@ -1,0 +1,174 @@
+#!/usr/bin/env python
+import os
+import sys
+import pwd
+import grp
+import optparse
+import socket
+import time
+from threading import Thread, Event
+from subprocess import Popen
+
+version = 1
+dockerTag = 'latest'
+
+class autofs(Thread):
+    def __init__(self):
+        Thread.__init__(self)
+        self.is_stop = Event()
+    def run(self):
+        while not self.is_stop.is_set():
+            self.is_stop.wait(120)
+            os.stat('/cvmfs/lhcb.cern.ch')
+            os.stat('/cvmfs/lhcbdev.cern.ch')             
+    def stop(self):
+        self.is_stop.set()
+        self.join()
+
+if (not os.path.exists('/cvmfs/lhcb.cern.ch')) or (not os.path.exists('/cvmfs/lhcb.cern.ch')):
+    sys.exit('Please, be sure you have correctly installed cvmfs (lhcb and lhcbdev)')
+
+exit_status = os.system('docker --version 2> /dev/null')
+if exit_status is not 0:
+    sys.exit('Please, be sure you have correctly installed Docker')
+
+cwd = os.getcwd()
+cwd_stat = os.stat(cwd)
+userName = pwd.getpwuid(cwd_stat.st_uid).pw_name
+grpId = cwd_stat.st_gid
+grpName = grp.getgrgid(cwd_stat.st_gid).gr_name
+dockerHome = '/home/' + userName
+
+if dockerHome in cwd:
+    dockerHome = '/' + userName
+
+if grpId is not 0:
+    try:
+        docker_group = grp.getgrnam('docker').gr_gid
+    except:
+        sys.exit('No "Docker" group found')
+else:
+    if userName not in grp.getgrnam('docker').gr_mem:
+        sys.exit('Directory owned by root, you need to be part of the "Docker" group to run a container')
+
+parser = optparse.OptionParser()
+parser.add_option('--version', action='store_true', dest='version', help="Print version information and quit")
+parser.add_option('--slc6', action='store_const', const='slc6', dest='os', help="Run an slc6 container, default one")
+parser.add_option('--slc5', action='store_const', const='slc5', dest='os', help="Run an slc5 container")
+parser.add_option('--centos7', action='store_const', const='centos7', dest='os', help="Run an centos7 container")
+parser.add_option('--os', action='store', help="OS you want to run",
+                    choices=['slc5', 'slc6', 'centos7'])
+parser.add_option('--no-LbLogin', action='store_const', const='no', dest='LbLogin', help="Do not call LbLogin on start")
+parser.add_option('--no-lb-su', action='store_const', const='no', dest='lb_su', help="Do not switch user")
+parser.add_option('--home', action='store_true', dest='home', help="Set a persistent home for this image")
+parser.add_option('-c', action='store', dest='cmd', help="Run CMD when container is started")
+parser.add_option('-e', '--env', action='append', dest='envVar', help="Set environment variables")
+parser.add_option('-v', '--volume', action='append', dest='volume', help="Bind mount a volume")
+parser.add_option('-p', '--publish', action='append', dest='port', help="Publish a container's port(s) to the host")
+parser.add_option('-u', '--user', action='store', dest='user', help="Username or UID (format: <name|uid>[:<group|gid>])")
+parser.add_option('-w', '--workdir', action='store', dest='workdir', help="Working directory inside the container")
+parser.add_option('--dns', action='store', dest='dns', help="Set custom DNS servers")
+parser.add_option('--privileged', action='store_true', dest='privileged', help="Give extended privileges to this container")
+parser.add_option('--no-interactive', action='store_false', dest='interactive', help="Do not give an interactive shell to this container")
+parser.add_option('--ssh-agent', action='store_true', dest='sshAgent', help="Forward host ssh-agent to the container")
+parser.add_option('--docker-hostname', action='store_true', dest='hostname', help="Pass to the container the host's hostname")
+parser.add_option('--kerberos', action='store_true', dest='kerberos', help="Forward the kerberos ticket to the container")
+parser.add_option('--use-absolute-path', action='store_true', dest='absolutePath', help="Mount the host current directory with the same absolute path")
+
+parser.set_defaults(version=False,
+                    os='slc6',
+                    LbLogin='yes',
+                    lb_su='yes',
+                    home=False,
+                    privileged=False,
+                    interactive=True,
+                    sshAgent=False,
+                    hostname=False,
+                    kerberos=False,
+                    absolutePath=False,
+                    envVar=[],
+                    port=[],
+                    volume=['/cvmfs/lhcb.cern.ch', '/cvmfs/lhcbdev.cern.ch'])
+
+options, args = parser.parse_args()
+
+if options.version == True:
+    sys.exit("lb-docker-run version : " + str(version) + '\nTag for docker images : ' + str(dockerTag))
+
+if options.cmd and args:
+    parser.error('you cannot -c in conjunction with arguments')
+
+if not args:
+    args.append('/bin/bash')
+
+cmd = ['docker', 'run', '--rm',
+        '-e', 'dockerLb=' + options.LbLogin + ':' + options.lb_su]
+
+if options.absolutePath == False:
+    options.volume.extend([cwd + ':/workspace'])
+else:
+    options.volume.extend([cwd])
+    options.workdir = cwd
+
+if options.home == True:
+    homedir = os.getenv('HOME') + '/.local/docker/' + options.os + '-build-home/'
+    if not os.path.exists(homedir):
+        os.makedirs(homedir)
+    options.volume.extend([homedir + ':' + dockerHome])
+    options.envVar.extend(['dockerHome=' + dockerHome])
+
+if options.interactive == True:
+    cmd.extend(['-it'])
+
+if options.privileged == True:
+    cmd.extend(['--privileged'])
+
+if options.sshAgent == True:
+    options.volume.extend([os.getenv('SSH_AUTH_SOCK') + ':/ssh-agent'])
+    options.envVar.extend(['SSH_AUTH_SOCK=/ssh-agent'])
+
+if options.hostname == True:
+    options.envVar.extend(['docker_hostname=' + socket.gethostname()])
+
+if options.kerberos == True:
+    options.envVar.extend(['KRB5CCNAME'])
+    options.volume.extend([os.getenv('KRB5CCNAME').split(':')[1]])	
+
+if options.user:
+    cmd.extend(['-u', options.user])
+else:
+    options.envVar.extend(['WORK_USER=' + userName + ':' + grpName])
+
+for env in options.envVar:
+    cmd.extend(['-e', env])
+
+for vol in options.volume:
+    if vol.find(':') >= 0:
+        cmd.extend(['-v', vol])
+    else:
+        cmd.extend(['-v', vol + ':' + vol])
+
+for port in options.port:
+    cmd.extend(['-p', port])
+
+if options.workdir:
+    cmd.extend(['-w', options.workdir])
+
+if options.dns:
+    cmd.extend(['--dns', options.dns])
+
+
+cmd.extend(['lhcbdev/{0}-build:'.format(options.os) + str(dockerTag)])
+cmd.extend(args)
+
+if options.cmd:
+    cmd.extend(['-c', options.cmd])
+
+t1=autofs()
+t1.start()
+
+try:
+    sys.exit(Popen(cmd).wait())
+finally:
+    t1.stop()
+
