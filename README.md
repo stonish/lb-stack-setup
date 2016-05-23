@@ -24,7 +24,7 @@ mapped to the directory `hackaton`.
 Building the whole stack the first time may take a lot of time, so you can
 optionally get a prebuilt image with
 ```
-curl http://lhcbproject.web.cern.ch/lhcbproject/dist/hackaton-201605.tar.xz | xz -c | tar xf -
+make pull-build
 ```
 
 At this point you can build the software stack with (tune the number of parallel
