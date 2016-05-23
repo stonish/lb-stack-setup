@@ -2,6 +2,7 @@
 /.checkout.stamp
 /.definitions.mk
 /.dependencies.mk
+/.setup.mk
 /.ccache
 /ANALYSIS/
 /BRUNEL/
