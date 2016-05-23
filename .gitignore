@@ -1,1 +1,3 @@
 *.pyc
+/.checkout.stamp
+/.definitions.mk
