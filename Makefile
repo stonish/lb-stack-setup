@@ -3,6 +3,7 @@ CONFIGFILE = Future.py
 export CCACHE_DIR=$(PWD)/.ccache
 export CMAKEFLAGS=-DCMAKE_USE_CCACHE=ON
 export CMAKE_PREFIX_PATH:=$(PWD):$(CMAKE_PREFIX_PATH)
+export VERBOSE=
 
 # generated chunks
 # - variables and build rules
