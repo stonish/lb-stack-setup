@@ -11,7 +11,7 @@ at the 7th LHCb Computing Workshop.
 ## Quick start
 To get started, get the tools with
 ```
-git clone https://gitlab.cern.ch/clemenci/upgrade-hackaton-setup.git hackaton
+git clone https://gitlab.cern.ch/lhcb/upgrade-hackaton-setup.git hackaton
 ```
 Then from the `hackaton` directory just created invoke
 ```
