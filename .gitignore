@@ -1,3 +1,16 @@
 *.pyc
 /.checkout.stamp
 /.definitions.mk
+/.dependencies.mk
+/.ccache
+/ANALYSIS/
+/BRUNEL/
+/DAVINCI/
+/GAUDI/
+/HLT/
+/LBCOM/
+/LHCB/
+/MOORE/
+/PHYS/
+/REC/
+/STRIPPING/
