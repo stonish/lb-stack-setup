@@ -27,10 +27,10 @@ optionally get a prebuilt image with
 make pull-build
 ```
 
-At this point you can build the software stack with (tune the number of parallel
-jobs according to your machine)
+At this point you can build the software stack with (will build automatically
+in parallel)
 ```
-make -j 4
+make
 ```
 Note that if you didn't pull the prebuilt image, this command will checkout the
 code and build from scratch.
