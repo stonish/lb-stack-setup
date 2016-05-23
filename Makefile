@@ -40,3 +40,8 @@ pull-build:
 .checkout.stamp: checkout.py $(CONFIGFILE)
 	python checkout.py
 	touch .checkout.stamp
+
+$(CCACHE_DIR):
+	ccache -F 20000 -M 0
+
+$(PROJECTS): $(CCACHE_DIR)
