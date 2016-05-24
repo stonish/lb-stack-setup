@@ -8,6 +8,9 @@ at the 7th LHCb Computing Workshop.
 * Docker: you should be able to run Docker containers
 * CVMFS: you should have access to /cvmfs/lhcb.cern.ch
 
+If you cannot get Docker or CVMFS running (or you are on a Mac), you can use
+the CernVM-based approach described at the end of the page.
+
 ## Quick start
 To get started, get the tools with
 ```
@@ -50,18 +53,18 @@ sudo yum-config-manager --add-repo=http://linuxsoft.cern.ch/internal/yumsnapshot
 sudo yum install --nogpgcheck ccache
 ```
 
-And don't forget to load the LHCb environment if not down already:
+And don't forget to load the LHCb environment if not done already:
 ```
 source /cvmfs/lhcb.cern.ch/lib/LbLogin.sh
 ```
- 
+
 You should now be ready to get the hackathon code in a directory called /workspace:
 ```
 sudo mkdir /workspace
-sudo chown <youruser> /workspace
+sudo chown $USER /workspace
 cd /workspace
 git clone https://gitlab.cern.ch/lhcb/upgrade-hackaton-setup.git .
-``` 
+```
 
 As explained in the previous section, you can then download a snapshot of the binaries:
 ```
