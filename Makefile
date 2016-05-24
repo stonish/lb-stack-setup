@@ -14,16 +14,21 @@ all:
 	python gen_make_definitions.py $@
 -include .definitions.mk
 # - dependencies between projects (unless we are pulling the build)
-ifeq (,$(filter pull-build purge,$(MAKECMDGOALS)))
+ifeq (,$(filter pull-build purge update checkout,$(MAKECMDGOALS)))
 .dependencies.mk: $(CONFIGFILE) gen_make_deps.py .checkout.stamp
 	python gen_make_deps.py $@
 -include .dependencies.mk
 endif
 
 # main targets
-.PHONY: all checkout build clean purge $(PROJECTS) $(patsubst %,%-clean,$(PROJECTS))
+.PHONY: all checkout update build clean purge $(PROJECTS) $(patsubst %,%-clean,$(PROJECTS))
 all: build
 checkout: .checkout.stamp
+	@echo "checkout completed"
+update:
+	$(RM) .checkout.stamp
+	$(MAKE) .checkout.stamp
+	@echo "update completed"
 build: $(PROJECTS) checkout
 clean: $(patsubst %,%-clean,$(PROJECTS))
 purge:
