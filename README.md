@@ -80,7 +80,7 @@ make
 The `Makefile` provided features a few useful targets:
 
 * basic commands
-  * _all_ (or _build_): the default target, builds all the projects
+  * _all_ (or _build_): builds all the projects (this is the default)
   * _checkout_: get the sources
   * _update_: update the projects sources
   * _clean_: run a clean of all packages (keeping the sources)
@@ -88,6 +88,6 @@ The `Makefile` provided features a few useful targets:
 * helpers
   * _pull-build_: get a prebuilt image of all the projects
 * access to projects
-  * _<Project>/<target>_: call the specified make target in the given project,
+  * _\<Project\>/\<target\>_: call the specified make target in the given project,
     for example, to get the list of targets available in Gaudi you can call
     `make Gaudi/help`
