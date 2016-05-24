@@ -38,10 +38,11 @@ purge:
 # distribution
 PRE_BUILT_IMAGE = hackaton-201605.tar.xz
 $(PRE_BUILT_IMAGE): build
-	tar -c --xz -f $@ .ccache $(PROJECTS_UPCASE) .checkout.stamp
+	tar -c --xz -f $@ .ccache $(PROJECTS_UPCASE)
 dist: $(PRE_BUILT_IMAGE)
 pull-build:
 	curl http://lhcbproject.web.cern.ch/lhcbproject/dist/$(PRE_BUILT_IMAGE) | tar -x --xz -f -
+	touch .checkout.stamp
 
 
 # implementation details
