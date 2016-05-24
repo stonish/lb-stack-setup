@@ -1,6 +1,9 @@
 # settings
 CONFIGFILE = Future.py
 
+# default target
+all:
+
 # generated chunks
 # - environment
 .setup.mk: setup.sh
@@ -10,17 +13,18 @@ CONFIGFILE = Future.py
 .definitions.mk: $(CONFIGFILE) gen_make_definitions.py
 	python gen_make_definitions.py $@
 -include .definitions.mk
-# - dependencies between projects
+# - dependencies between projects (unless we are pulling the build)
+ifeq (,$(filter pull-build clean purge,$(MAKECMDGOALS)))
 .dependencies.mk: $(CONFIGFILE) gen_make_deps.py .checkout.stamp
 	python gen_make_deps.py $@
 -include .dependencies.mk
-
+endif
 
 # main targets
 .PHONY: all checkout build clean purge $(PROJECTS)
 all: build
 checkout: .checkout.stamp
-build: $(PROJECTS)
+build: $(PROJECTS) checkout
 clean:
 	for d in $(PROJECTS_DIRS) ; do (test -d  $$d/build.$(CMTCONFIG) && $(MAKE) -C $$d clean ; $(RM) -r $$d/InstallArea) ; done
 purge:
