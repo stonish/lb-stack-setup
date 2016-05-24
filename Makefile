@@ -14,19 +14,18 @@ all:
 	python gen_make_definitions.py $@
 -include .definitions.mk
 # - dependencies between projects (unless we are pulling the build)
-ifeq (,$(filter pull-build clean purge,$(MAKECMDGOALS)))
+ifeq (,$(filter pull-build purge,$(MAKECMDGOALS)))
 .dependencies.mk: $(CONFIGFILE) gen_make_deps.py .checkout.stamp
 	python gen_make_deps.py $@
 -include .dependencies.mk
 endif
 
 # main targets
-.PHONY: all checkout build clean purge $(PROJECTS)
+.PHONY: all checkout build clean purge $(PROJECTS) $(patsubst %,%-clean,$(PROJECTS))
 all: build
 checkout: .checkout.stamp
 build: $(PROJECTS) checkout
-clean:
-	for d in $(PROJECTS_DIRS) ; do (test -d  $$d/build.$(CMTCONFIG) && $(MAKE) -C $$d clean ; $(RM) -r $$d/InstallArea) ; done
+clean: $(patsubst %,%-clean,$(PROJECTS))
 purge:
 	$(RM) -r $(PROJECTS_UPCASE) .setup.mk .definitions.mk .dependencies.mk .checkout.stamp
 
