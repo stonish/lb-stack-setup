@@ -9,7 +9,7 @@ at the 7th LHCb Computing Workshop.
 * CVMFS: you should have access to /cvmfs/lhcb.cern.ch
 
 If you cannot get Docker or CVMFS running (or you are on a Mac), you can use
-the CernVM-based approach described at the end of the page.
+the CernVM-based approach described later in the page.
 
 ## Quick start
 To get started, get the tools with
@@ -75,3 +75,19 @@ Or rebuild:
 ```
 make
 ```
+
+## Makefile instructions
+The `Makefile` provided features a few useful targets:
+
+* basic commands
+  * _all_ (or _build_): the default target, builds all the projects
+  * _checkout_: get the sources
+  * _update_: update the projects sources
+  * _clean_: run a clean of all packages (keeping the sources)
+  * _purge_: similar to _clean_, but remove the sources too
+* helpers
+  * _pull-build_: get a prebuilt image of all the projects
+* access to projects
+  * _<Project>/<target>_: call the specified make target in the given project,
+    for example, to get the list of targets available in Gaudi you can call
+    `make Gaudi/help`
