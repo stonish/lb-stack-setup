@@ -1,5 +1,9 @@
 # settings
 CONFIGFILE = Future.py
+CCACHE := $(shell which ccache 2> /dev/null)
+ifeq ($(CCACHE),)
+  CCACHE := $(shell which ccache-swig 2> /dev/null)
+endif
 
 # default target
 all:
@@ -50,7 +54,9 @@ pull-build:
 	python checkout.py
 	touch .checkout.stamp
 
+ifneq ($(CCACHE),)
 $(CCACHE_DIR):
-	ccache -F 20000 -M 0
+	$(CCACHE) -F 20000 -M 0
 
 $(PROJECTS): $(CCACHE_DIR)
+endif
