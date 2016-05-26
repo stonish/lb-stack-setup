@@ -24,6 +24,7 @@ lhcb_upgrade = Slot('lhcb-future',
                                'x86_64-slc6-gcc49-dbg']
                     )
 
+lhcb_upgrade.Moore.overrides['Hlt/HltCache'] = None
 
 lhcb_upgrade.warning_exceptions = [r'/Boost/',
                                    r'pyconfig\.h']
