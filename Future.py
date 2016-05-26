@@ -24,8 +24,6 @@ lhcb_upgrade = Slot('lhcb-future',
                                'x86_64-slc6-gcc49-dbg']
                     )
 
-# Moore does not compile at the moment
-lhcb_upgrade.Moore.disabled = True
 
 lhcb_upgrade.warning_exceptions = [r'/Boost/',
                                    r'pyconfig\.h']
