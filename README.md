@@ -1,7 +1,7 @@
-# Tools to set up and build the code for Upgrade Hackaton at 7th LHCb Computing Workshop
+# Tools to set up and build the code for Upgrade Hackathon at 7th LHCb Computing Workshop
 
 This project contains a handful of tools and scripts that allow easy checkout
-and build of the baseline code for the upgrade targeted hackaton taking place
+and build of the baseline code for the upgrade targeted hackathon taking place
 at the 7th LHCb Computing Workshop.
 
 ## Prerequisites
@@ -14,15 +14,15 @@ the CernVM-based approach described later in the page.
 ## Quick start
 To get started, get the tools with
 ```
-git clone https://gitlab.cern.ch/lhcb/upgrade-hackaton-setup.git hackaton
+git clone https://gitlab.cern.ch/lhcb/upgrade-hackathon-setup.git hackathon
 ```
-Then from the `hackaton` directory just created invoke
+Then from the `hackathon` directory just created invoke
 ```
 ./lb-docker-run
 ```
 which will pull the latest image of the SLC6 Docker image we use to build our
 software and start an interactive shell in the special directory `/workspace`,
-mapped to the directory `hackaton`.
+mapped to the directory `hackathon`.
 
 Building the whole stack the first time may take a lot of time, so you can
 optionally get a prebuilt image with
@@ -63,7 +63,7 @@ You should now be ready to get the hackathon code in a directory called /workspa
 sudo mkdir /workspace
 sudo chown $USER /workspace
 cd /workspace
-git clone https://gitlab.cern.ch/lhcb/upgrade-hackaton-setup.git .
+git clone https://gitlab.cern.ch/lhcb/upgrade-hackathon-setup.git .
 ```
 
 As explained in the previous section, you can then download a snapshot of the binaries:
