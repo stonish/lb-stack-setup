@@ -7,9 +7,9 @@ LBPROJECTS = ['Gaudi', 'LHCb', 'Lbcom', 'Rec', 'Phys', 'Stripping',
 
 def url(name):
     '''Return correct Git URL for a project.'''
-    # base = 'ssh://git@gitlab.cern.ch:7999/'
-    base = 'https://gitlab.cern.ch/'
-    if name in ('Gaudi', 'Hlt', 'Moore'):
+    base = 'ssh://git@gitlab.cern.ch:7999/'
+    # base = 'https://gitlab.cern.ch/'
+    if name in ('Gaudi', 'LHCb', 'Lbcom', 'Rec', 'Brunel', 'Hlt', 'Moore'):
         return '%slhcb/%s.git' % (base, name)
     return '%sLHCb-SVN-mirrors/%s.git' % (base, name)
 
