@@ -1,4 +1,4 @@
-# Tools to set up and build the code for Upgrade Hackathon at 7th LHCb Computing Workshop
+# Tools to set up and build the code for Upgrade Hackathon
 
 This project contains a handful of tools and scripts that allow easy checkout
 and build of the baseline code for the upgrade targeted hackathon taking place

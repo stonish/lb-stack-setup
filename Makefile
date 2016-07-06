@@ -40,7 +40,7 @@ purge:
 
 
 # distribution
-PRE_BUILT_IMAGE = hackaton-201605.tar.xz
+PRE_BUILT_IMAGE = hackaton-201607.tar.xz
 $(PRE_BUILT_IMAGE): build
 	tar -c --xz -f $@ .ccache $(PROJECTS_UPCASE)
 dist: $(PRE_BUILT_IMAGE)
