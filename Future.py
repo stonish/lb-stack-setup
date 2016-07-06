@@ -9,9 +9,7 @@ def url(name):
     '''Return correct Git URL for a project.'''
     # base = 'ssh://git@gitlab.cern.ch:7999/'
     base = 'https://gitlab.cern.ch/'
-    if name in ('Gaudi', 'LHCb', 'Lbcom', 'Rec', 'Brunel', 'Hlt', 'Moore'):
-        return '%slhcb/%s.git' % (base, name)
-    return '%sLHCb-SVN-mirrors/%s.git' % (base, name)
+    return '%slhcb/%s.git' % (base, name)
 
 
 lhcb_upgrade = Slot('lhcb-future',
@@ -23,8 +21,6 @@ lhcb_upgrade = Slot('lhcb-future',
                     platforms=['x86_64-slc6-gcc49-opt',
                                'x86_64-slc6-gcc49-dbg']
                     )
-
-lhcb_upgrade.Moore.overrides['Hlt/HltCache'] = None
 
 lhcb_upgrade.warning_exceptions = [r'/Boost/',
                                    r'pyconfig\.h']
