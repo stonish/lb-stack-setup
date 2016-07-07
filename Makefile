@@ -25,7 +25,7 @@ ifeq (,$(filter pull-build purge update checkout,$(MAKECMDGOALS)))
 endif
 
 # main targets
-.PHONY: all checkout update build clean purge $(PROJECTS) $(patsubst %,%-clean,$(PROJECTS))
+.PHONY: all checkout update build clean purge $(PROJECTS) $(patsubst %,%-clean,$(PROJECTS)) $(patsubst %,%-purge,$(PROJECTS))
 all: build
 checkout: .checkout.stamp
 	@echo "checkout completed"
@@ -35,7 +35,8 @@ update:
 	@echo "update completed"
 build: $(PROJECTS) checkout
 clean: $(patsubst %,%-clean,$(PROJECTS))
-purge:
+purge: $(patsubst %,%-purge,$(PROJECTS))
+deep-purge:
 	$(RM) -r $(PROJECTS_UPCASE) .setup.mk .definitions.mk .dependencies.mk .checkout.stamp
 
 

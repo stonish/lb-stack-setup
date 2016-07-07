@@ -20,6 +20,8 @@ with open(sys.argv[1], 'w') as makefile:
                        '\ttest -d {1}/build.$(CMTCONFIG) && \\\n'
                        '\t  $(MAKE) -C {1} clean ; \\\n'
                        '\t  $(RM) -r {1}/InstallArea/$(CMTCONFIG)\n'
+                       '{0}-purge:\n'
+                       '\t  $(MAKE) -C {1} purge\n'
                        '{0}/%:\n'
                        '\t  $(MAKE) -C {1} $*\n'
                        .format(p.name, p.baseDir))
