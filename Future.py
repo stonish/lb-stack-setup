@@ -3,6 +3,7 @@ from LbNightlyTools.Configuration import *
 
 LBPROJECTS = ['Gaudi', 'LHCb', 'Lbcom', 'Rec', 'Phys', 'Stripping',
               'Analysis', 'DaVinci', 'Brunel', 'Hlt', 'Moore']
+LBPROJECTS.remove('Moore')
 
 
 def url(name):
