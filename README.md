@@ -22,7 +22,8 @@ Then from the `hackathon` directory just created invoke
 ```
 which will pull the latest image of the SLC6 Docker image we use to build our
 software and start an interactive shell in the special directory `/workspace`,
-mapped to the directory `hackathon`.
+mapped to the directory `hackathon`. *Note*: you may find the options `--home`
+and `--ssh-agent` very useful.
 
 Building the whole stack the first time may take a lot of time, so you can
 optionally get a prebuilt image with
