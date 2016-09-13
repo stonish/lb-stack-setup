@@ -19,10 +19,16 @@ class autofs(threading.Thread):
         while not self.is_stop.is_set():
             self.is_stop.wait(120)
             os.stat('/cvmfs/lhcb.cern.ch')
-            os.stat('/cvmfs/lhcbdev.cern.ch')             
+            os.stat('/cvmfs/lhcbdev.cern.ch')
     def stop(self):
         self.is_stop.set()
         self.join()
+
+def stop_threads():
+    for i in threading.enumerate():
+        if i.name == "t1docker":
+            if i.is_alive():
+                i.stop()
 
 cwd = os.getcwd()
 cwd_stat = os.stat(cwd)
@@ -70,6 +76,7 @@ parser.add_option('--no-LbLogin', action='store_const', const='no', dest='LbLogi
 parser.add_option('--no-network-settings', action='store_true', dest='networkSettings', help="Use the default container network settings instead of the host network stack")
 parser.add_option('--privileged', action='store_true', dest='privileged', help="Give extended privileges to this container")
 parser.add_option('--ssh-agent', action='store_true', dest='sshAgent', help="Forward host ssh-agent to the container")
+parser.add_option('--update', action='store_true', dest='update', help="Update the docker image if a newer is available")
 parser.add_option('--use-absolute-path', action='store_true', dest='absolutePath', help="Mount the host current directory with the same absolute path")
 
 parser.set_defaults(version=False,
@@ -87,6 +94,7 @@ parser.set_defaults(version=False,
                     graphicTools=False,
                     noCvmfs=False,
                     forceCvmfs=False,
+                    update=False,
                     envVar=[],
                     port=[],
                     volume=[])
@@ -94,18 +102,16 @@ parser.set_defaults(version=False,
 options, args = parser.parse_args()
 
 if options.version == True:
-    try:
-        print("lb-docker-run version : " + str(version) + '\nTag for docker images : ' + str(dockerTag))
-    finally:
-        for i in threading.enumerate():
-            if i.name == "t1docker":
-                if i.is_alive():
-                    i.stop()
-        exit()
+    print("lb-docker-run version : " + str(version) + '\nTag for docker images : ' + str(dockerTag))
+    sys.exit()
 
 if call(['docker', '--version']) is not 0:
     sys.exit('Please, be sure you have correctly installed Docker')
 
+if options.update == True:
+    call(['docker', 'pull', 'lhcbdev/{0}-build:{1}'.format(options.os, dockerTag)])
+
+need_autofs_thread = False
 if options.noCvmfs == False:
     if (not os.path.exists('/cvmfs/lhcbdev.cern.ch')) or (not os.path.exists('/cvmfs/lhcb.cern.ch')) or (not os.listdir('/cvmfs/lhcbdev.cern.ch')) or (not os.listdir('/cvmfs/lhcbdev.cern.ch')):
         if options.forceCvmfs == True :
@@ -115,8 +121,7 @@ if options.noCvmfs == False:
             sys.exit("Please, be sure you have cvmfs mounted on the host machine, or look at the options")
     else:
         options.volume.extend(['/cvmfs/lhcb.cern.ch', '/cvmfs/lhcbdev.cern.ch'])
-        t1docker = autofs()
-        t1docker.start()
+        need_autofs_thread = True
 else:
     options.LbLogin='no'
 
@@ -149,7 +154,7 @@ if options.privileged == True:
     cmd.extend(['--privileged'])
 
 if options.sshAgent == True:
-    options.volume.extend([os.getenv('SSH_AUTH_SOCK') + ':/ssh-agent'])
+    options.volume.extend(['{0}:/ssh-agent'.format(os.getenv('SSH_AUTH_SOCK'))])
     options.envVar.extend(['SSH_AUTH_SOCK=/ssh-agent'])
 
 if options.hostname == True:
@@ -157,7 +162,7 @@ if options.hostname == True:
 
 if options.kerberos == True:
     options.envVar.extend(['KRB5CCNAME'])
-    options.volume.extend([os.getenv('KRB5CCNAME').split(':')[1]])	
+    options.volume.extend([os.getenv('KRB5CCNAME').split(':')[1]])
 
 if options.user:
     cmd.extend(['-u', options.user])
@@ -180,29 +185,23 @@ if options.workdir:
     cmd.extend(['-w', options.workdir])
 
 if options.networkSettings == False and options.dns:
-    try:
-        sys.exit("you can not set a dns with --net option enabled, look at the options")
-    finally:
-        for i in threading.enumerate():
-            if i.name == "t1docker":
-                if i.is_alive():
-                    i.stop()
-
+    sys.exit("you can not set a dns with --net option enabled, look at the options")
 elif options.networkSettings == False:
     cmd.append('--net=host')
 elif options.dns:
-    cmd.extend(['--dns', options.dns]) 
+    cmd.extend(['--dns', options.dns])
 
 cmd.extend(['lhcbdev/{0}-build:{1}'.format(options.os, dockerTag)])
-cmd.extend(args)
 
 if options.cmd:
-    cmd.extend(['-c', options.cmd])
+    cmd.extend(['/bin/lb-su', options.cmd])
+else:
+    cmd.extend(args)
 
 try:
+    if need_autofs_thread:
+        t1docker = autofs()
+        t1docker.start()
     sys.exit(Popen(cmd).wait())
 finally:
-    for i in threading.enumerate():
-        if i.name == "t1docker":
-            if i.is_alive():
-                i.stop()
+    stop_threads()
