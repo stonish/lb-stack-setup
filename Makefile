@@ -18,7 +18,7 @@ all:
 	python gen_make_definitions.py $@
 -include .definitions.mk
 # - dependencies between projects (unless we are pulling the build)
-ifeq (,$(filter pull-build purge update checkout,$(MAKECMDGOALS)))
+ifeq (,$(filter pull-build deep-purge update checkout,$(MAKECMDGOALS)))
 .dependencies.mk: $(CONFIGFILE) gen_make_deps.py .checkout.stamp
 	python gen_make_deps.py $@
 -include .dependencies.mk
