@@ -9,7 +9,7 @@ import threading
 from subprocess import Popen, call
 
 version = 1
-dockerTag = '20160627'
+DEFAULT_TAG = '20160627'  # must be kept in sync with lb-docker-run
 
 class autofs(threading.Thread):
     def __init__(self):
@@ -102,23 +102,23 @@ parser.set_defaults(version=False,
 options, args = parser.parse_args()
 
 if options.version == True:
-    print("lb-docker-run version : " + str(version) + '\nTag for docker images : ' + str(dockerTag))
+    print("lb-docker-run version : " + str(version) + '\nTag for docker images : ' + str(DEFAULT_TAG))
     sys.exit()
 
 if call(['docker', '--version']) is not 0:
     sys.exit('Please, be sure you have correctly installed Docker')
 
-if options.update == True:
-    call(['docker', 'pull', 'lhcbdev/{0}-build:{1}'.format(options.os, dockerTag)])
+image_name = 'lhcbdev/{0}-build:{1}'.format(options.os, DEFAULT_TAG)
 
 need_autofs_thread = False
 if options.noCvmfs == False:
-    if (not os.path.exists('/cvmfs/lhcbdev.cern.ch')) or (not os.path.exists('/cvmfs/lhcb.cern.ch')) or (not os.listdir('/cvmfs/lhcbdev.cern.ch')) or (not os.listdir('/cvmfs/lhcbdev.cern.ch')):
-        if options.forceCvmfs == True :
-            dockerTag = 'cvmfs'
-            options.envVar.extend(['dockerMountCVMFS=yes'])
-        else:
-            sys.exit("Please, be sure you have cvmfs mounted on the host machine, or look at the options")
+    if options.forceCvmfs:
+        if options.os == 'slc5':
+            parser.error('cvmfs mounting is not supported on SLC5')
+        image_name = 'lhcbdev/{0}-build-cvmfs:{1}'.format(options.os, DEFAULT_TAG)
+        options.envVar.extend(['dockerMountCVMFS=yes'])
+    elif (not os.path.exists('/cvmfs/lhcbdev.cern.ch')) or (not os.path.exists('/cvmfs/lhcb.cern.ch')) or (not os.listdir('/cvmfs/lhcbdev.cern.ch')) or (not os.listdir('/cvmfs/lhcbdev.cern.ch')):
+        sys.exit("Please, be sure you have cvmfs mounted on the host machine, or look at the options")
     else:
         options.volume.extend(['/cvmfs/lhcb.cern.ch', '/cvmfs/lhcbdev.cern.ch'])
         need_autofs_thread = True
@@ -134,33 +134,35 @@ if not args:
 cmd = ['docker', 'run', '--rm',
         '-e', 'dockerLb=' + options.LbLogin + ':' + options.lb_su]
 
-if options.absolutePath == False:
-    options.volume.extend([cwd + ':/workspace'])
-else:
+if options.absolutePath:
     options.volume.extend([cwd])
     options.workdir = cwd
+else:
+    options.volume.extend([cwd + ':/workspace'])
 
-if options.home == True:
+if options.home:
     homedir = os.getenv('HOME') + '/.local/docker/' + options.os + '-build-home/'
     if not os.path.exists(homedir):
         os.makedirs(homedir)
     options.volume.extend([homedir + ':' + dockerHome])
     options.envVar.extend(['dockerHome=' + dockerHome])
 
-if options.interactive == True:
+if options.interactive:
     cmd.extend(['-it'])
 
-if options.privileged == True:
+if options.privileged or options.forceCvmfs:
+    if not options.privileged:
+        print('WARNING: --force-cvmfs implies --privileged')
     cmd.extend(['--privileged'])
 
-if options.sshAgent == True:
+if options.sshAgent:
     options.volume.extend(['{0}:/ssh-agent'.format(os.getenv('SSH_AUTH_SOCK'))])
     options.envVar.extend(['SSH_AUTH_SOCK=/ssh-agent'])
 
-if options.hostname == True:
+if options.hostname:
     options.envVar.extend(['docker_hostname=' + socket.gethostname()])
 
-if options.kerberos == True:
+if options.kerberos:
     options.envVar.extend(['KRB5CCNAME'])
     options.volume.extend([os.getenv('KRB5CCNAME').split(':')[1]])
 
@@ -191,12 +193,15 @@ elif options.networkSettings == False:
 elif options.dns:
     cmd.extend(['--dns', options.dns])
 
-cmd.extend(['lhcbdev/{0}-build:{1}'.format(options.os, dockerTag)])
+cmd.extend([image_name])
 
 if options.cmd:
     cmd.extend(['/bin/lb-su', options.cmd])
 else:
     cmd.extend(args)
+
+if options.update == True:
+    call(['docker', 'pull', image_name])
 
 try:
     if need_autofs_thread:
