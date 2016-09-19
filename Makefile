@@ -27,6 +27,16 @@ endif
 # main targets
 .PHONY: all checkout update build clean purge $(PROJECTS) $(patsubst %,%-clean,$(PROJECTS)) $(patsubst %,%-purge,$(PROJECTS))
 all: build
+.git-setup.stamp:
+	@if [ -z $(git config --global user.email) ] ; then \
+		echo "warning: setting dummy user.email for Git to noreply-lhcb-upgrade-hackathon@cern.ch" ; \
+		git config --global user.email "noreply-lhcb-upgrade-hackathon@cern.ch" ; \
+	fi
+	@if [ -z $(git config --global user.name) ] ; then \
+		echo "warning: setting dummy user.name for Git to $USER" ; \
+		git config --global user.name "$USER" ; \
+	fi
+	@touch $@
 checkout: .checkout.stamp
 	@echo "checkout completed"
 update:
@@ -45,15 +55,15 @@ PRE_BUILT_IMAGE := $(shell git describe --match "hackathon-*" --abbrev=0 --tags)
 $(PRE_BUILT_IMAGE): build
 	tar -c --xz -f $@ .ccache $(PROJECTS_UPCASE)
 dist: $(PRE_BUILT_IMAGE)
-pull-build:
+pull-build: .git-setup.stamp
 	curl http://lhcbproject.web.cern.ch/lhcbproject/dist/$(PRE_BUILT_IMAGE) | tar -x --xz -f -
 	touch .checkout.stamp
 
 
 # implementation details
-.checkout.stamp: checkout.py $(CONFIGFILE)
+.checkout.stamp: checkout.py $(CONFIGFILE) .git-setup.stamp
 	python checkout.py
-	touch .checkout.stamp
+	touch $@
 
 ifneq ($(CCACHE),)
 $(CCACHE_DIR):
