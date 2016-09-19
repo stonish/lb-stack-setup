@@ -1,5 +1,6 @@
 *.pyc
 /.checkout.stamp
+/.git-setup.stamp
 /.definitions.mk
 /.dependencies.mk
 /.setup.mk
