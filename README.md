@@ -76,6 +76,17 @@ Or rebuild:
 ```
 make
 ```
+## Running on lxplus
+Make sure you have enough space on the working area and you are logged in a slc6-gcc49 machine.
+```
+cd /afs/cern.ch/work/X/USERNAME/
+mkdir workspace
+git clone https://gitlab.cern.ch/lhcb/upgrade-hackathon-setup.git .
+```
+Differently from before you cannot get a pre-build image, so do not run 
+```make pull-build``` (NO!)
+but simply 
+```make```
 
 ## Makefile instructions
 The `Makefile` provided features a few useful targets:
@@ -120,3 +131,6 @@ cd BRUNEL/BRUNEL_future
 make test ARGS="-N -V -R Brunel.2015magdown"
 ./build.$CMTCONFIG/run gaudirun.py /workspace/BRUNEL/BRUNEL_future/Rec/Brunel/tests/qmtest/brunel.qms/2015magdown.qmt
 ```
+
+
+
