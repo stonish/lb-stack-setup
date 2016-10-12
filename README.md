@@ -104,6 +104,7 @@ The `Makefile` provided features a few useful targets:
   * _clean_: run a clean of all packages (keeping the sources)
   * _purge_: similar to _clean_, but remove the cmake temporary files
   * _deep-purge_: similar to _clean_, but remove the sources too
+  * _help_: print a list of available targets
 * helpers
   * _pull-build_: get a prebuilt image of all the projects
 * special project targets

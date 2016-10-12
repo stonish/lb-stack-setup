@@ -32,6 +32,11 @@ purge: $(patsubst %,%-purge,$(PROJECTS))
 deep-purge:
 	$(RM) -r $(PROJECTS) .setup.mk
 
+help:
+	@for t in $(ALL_TARGETS) ; do echo .. $$t ; done
+
+# public targets: main targets
+ALL_TARGETS = all build checkout update clean purge deep-purge
 
 # distribution
 PRE_BUILT_IMAGE := $(shell git describe --match "hackathon-*" --abbrev=0 --tags).tar.xz
@@ -46,7 +51,9 @@ pull-build: .git-setup.stamp
 # implementation details
 # ----------------------
 # compute inverse deps for "clean" targets
-$(foreach p,${PROJECTS},$(foreach d,${${p}_DEPS},$(eval ${d}_INV_DEPS += ${p})))
+$(foreach p,$(PROJECTS),$(foreach d,$($(p)_DEPS),$(eval $(d)_INV_DEPS += $(p))))
+# public targets: project targets
+ALL_TARGETS += $(foreach p,$(PROJECTS),$(p) $(p)-checkout $(p)-update $(p)-clean $(p)-purge fast/$(p) fast/$(p)-clean)
 
 define PROJECT_settings
 # project settings
@@ -89,5 +96,4 @@ $(CCACHE_DIR):
 $(PROJECTS): $(CCACHE_DIR)
 endif
 
-.PHONY: all checkout update build clean purge $(PROJECTS) \
-        $(patsubst %,%-checkout %-clean %-purge,$(PROJECTS))
+.PHONY: $(ALL_TARGETS) dist pull-build
