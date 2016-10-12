@@ -140,5 +140,5 @@ file used for the test and run it through `gaudirun.py`, for example:
 ```
 cd Brunel
 make test ARGS="-N -V -R Brunel.2015magdown"
-./build.$CMTCONFIG/run gaudirun.py /workspace/Brunel/Rec/Brunel/tests/qmtest/brunel.qms/2015magdown.qmt
+./run gaudirun.py /workspace/Brunel/Rec/Brunel/tests/qmtest/brunel.qms/2015magdown.qmt
 ```
