@@ -56,12 +56,11 @@ $(1)_URL := $$(if $$($(1)_URL),$$($(1)_URL),https://gitlab.cern.ch/lhcb/$(1).git
 $(1)_BRANCH := $$(if $$($(1)_BRANCH),$$($(1)_BRANCH),$(DEFAULT_BRANCH))
 # checkout/update
 $(1)-checkout:
-	test -e $(1) || git clone -b $$($(1)_BRANCH) $$($(1)_URL) $(1)
-	cd $(1) && lb-project-init
-	test -h $(1)/run -o -e $(1)/run || ln -s build.$$(CMTCONFIG)/run $(1)/run
-$(1)-update:
-	test -e $(1) || $$(MAKE) $(1)-checkout
-	cd $(1) && git pull origin $$($(1)_BRANCH)
+	@test -e $(1) || git clone -b $$($(1)_BRANCH) $$($(1)_URL) $(1)
+	@cd $(1) && lb-project-init
+	@test -h $(1)/run -o -e $(1)/run || ln -s build.$$(CMTCONFIG)/run $(1)/run
+$(1)-update: $(1)-checkout
+	@cd $(1) && git pull origin $$($(1)_BRANCH)
 # generic build target
 $(1)/%: $(1)-checkout $$($(1)_DEPS)
 	$$(MAKE) -C $(1) $$*
