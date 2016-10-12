@@ -28,13 +28,13 @@ endif
 .PHONY: all checkout update build clean purge $(PROJECTS) $(patsubst %,%-clean,$(PROJECTS)) $(patsubst %,%-purge,$(PROJECTS))
 all: build
 .git-setup.stamp:
-	@if [ -z $(git config --global user.email) ] ; then \
+	@if [ -z $$(git config --global user.email) ] ; then \
 		echo "warning: setting dummy user.email for Git to noreply-lhcb-upgrade-hackathon@cern.ch" ; \
 		git config --global user.email "noreply-lhcb-upgrade-hackathon@cern.ch" ; \
 	fi
-	@if [ -z $(git config --global user.name) ] ; then \
-		echo "warning: setting dummy user.name for Git to $USER" ; \
-		git config --global user.name "$USER" ; \
+	@if [ -z $$(git config --global user.name) ] ; then \
+		echo "warning: setting dummy user.name for Git to $$USER" ; \
+		git config --global user.name "$$USER" ; \
 	fi
 	@touch $@
 checkout: .checkout.stamp
