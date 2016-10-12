@@ -143,6 +143,29 @@ make test ARGS="-N -V -R Brunel.2015magdown"
 ./run gaudirun.py /workspace/Brunel/Rec/Brunel/tests/qmtest/brunel.qms/2015magdown.qmt
 ```
 
+## Debugging
+The projects built here are available only as optimized builds, so some special
+actions are needed to be able to debug pieces of code:
+
+* if you are using Docker, make sure you started `lb-docker-run` with the option
+  `--privileged`
+* add the good version of gdb to the path
+  ```
+  export PATH=/cvmfs/lhcb.cern.ch/lib/contrib/gdb/7.11/x86_64-slc6-gcc49-opt/bin:$PATH
+  ```
+* change the configuration of the project containing the code to debug
+  ```
+  sed -i 's/CMAKE_BUILD_TYPE:STRING=.*/CMAKE_BUILD_TYPE:STRING=Debug/' Project/build.${CMTCONFIG}/CMakeCache.txt
+  ```
+* rebuild the project
+  ```
+  make Project
+  ```
+* run the job through the debugger
+  ```
+  Project/run gdb --args python $(Project/run which gaudirun.py) my_options.py
+  ```
+
 ## Examples
 ### Build a project and run it
 To run, for example, Brunel with some option file
