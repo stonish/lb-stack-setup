@@ -83,10 +83,15 @@ cd /afs/cern.ch/work/X/USERNAME/
 mkdir workspace
 git clone https://gitlab.cern.ch/lhcb/upgrade-hackathon-setup.git .
 ```
+
 Differently from before you cannot get a pre-build image, so do not run 
-```make pull-build``` (NO!)
+```
+make pull-build
+```
 but simply 
-```make```
+```
+make
+```
 
 ## Makefile instructions
 The `Makefile` provided features a few useful targets:
