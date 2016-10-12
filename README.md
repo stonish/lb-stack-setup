@@ -76,6 +76,7 @@ Or rebuild:
 ```
 make
 ```
+
 ## Running on lxplus
 Make sure you have enough space on the working area and you are logged in a slc6-gcc49 machine.
 ```
@@ -84,11 +85,11 @@ mkdir workspace
 git clone https://gitlab.cern.ch/lhcb/upgrade-hackathon-setup.git .
 ```
 
-Differently from before you cannot get a pre-build image, so do not run 
+Differently from before you cannot get a pre-build image, so do not run
 ```
 make pull-build
 ```
-but simply 
+but simply
 ```
 make
 ```
@@ -109,11 +110,16 @@ The `Makefile` provided features a few useful targets:
   * _\<Project\>/\<target\>_: call the specified make target in the given project,
     for example, to get the list of targets available in Gaudi you can call
     `make Gaudi/help`
+* special project targets
+  * _\<Project\>_: build the required project (with dependencies),
+  * _\<Project\>-\<action\>_: where _\<action\>_ can be _checkout_, _update_,
+    _clean_ or _purge_, triggers the action on the specific project (with
+    dependencies where it applies)
 
 ## Testing and running
 LHCb projects come with several tests that can be run via the standard `ctest`
 command from the project build directories
-(e.g. `GAUDI/GAUDI_future/build.$CMTCONFIG`), or via the some helper targets in
+(e.g. `Gaudi/build.$CMTCONFIG`), or via the some helper targets in
 the top level Makefile, for example:
 ```
 make Gaudi/test ARGS="-N"
@@ -132,10 +138,7 @@ Some examples:
 Tests hide the output of the job while it's run, but you can find the `.qmt`
 file used for the test and run it through `gaudirun.py`, for example:
 ```
-cd BRUNEL/BRUNEL_future
+cd Brunel
 make test ARGS="-N -V -R Brunel.2015magdown"
-./build.$CMTCONFIG/run gaudirun.py /workspace/BRUNEL/BRUNEL_future/Rec/Brunel/tests/qmtest/brunel.qms/2015magdown.qmt
+./build.$CMTCONFIG/run gaudirun.py /workspace/Brunel/Rec/Brunel/tests/qmtest/brunel.qms/2015magdown.qmt
 ```
-
-
-
