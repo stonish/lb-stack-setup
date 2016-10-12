@@ -142,3 +142,13 @@ cd Brunel
 make test ARGS="-N -V -R Brunel.2015magdown"
 ./run gaudirun.py /workspace/Brunel/Rec/Brunel/tests/qmtest/brunel.qms/2015magdown.qmt
 ```
+
+## Examples
+### Build a project and run it
+To run, for example, Brunel with some option file
+```
+make Brunel
+Brunel/run gaudirun.py my_options.py
+```
+Note that this sequence works with or without previously checked out sources,
+in which case it would clone only the required repositories.
