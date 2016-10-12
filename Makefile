@@ -1,9 +1,10 @@
 # settings
-CONFIGFILE = Future.py
 CCACHE := $(shell which ccache 2> /dev/null)
 ifeq ($(CCACHE),)
   CCACHE := $(shell which ccache-swig 2> /dev/null)
 endif
+
+include configuration.mk
 
 # default target
 all:
@@ -13,19 +14,8 @@ all:
 .setup.mk: setup.sh
 	sed 's/=/:=/' $^ > $@
 -include .setup.mk
-# - variables and build rules
-.definitions.mk: $(CONFIGFILE) gen_make_definitions.py
-	python gen_make_definitions.py $@
--include .definitions.mk
-# - dependencies between projects (unless we are pulling the build)
-ifeq (,$(filter pull-build deep-purge update checkout,$(MAKECMDGOALS)))
-.dependencies.mk: $(CONFIGFILE) gen_make_deps.py .checkout.stamp
-	python gen_make_deps.py $@
--include .dependencies.mk
-endif
 
 # main targets
-.PHONY: all checkout update build clean purge $(PROJECTS) $(patsubst %,%-clean,$(PROJECTS)) $(patsubst %,%-purge,$(PROJECTS))
 all: build
 .git-setup.stamp:
 	@if [ -z $$(git config --global user.email) ] ; then \
@@ -37,37 +27,61 @@ all: build
 		git config --global user.name "$$USER" ; \
 	fi
 	@touch $@
-checkout: .checkout.stamp
+
+checkout: $(patsubst %,%-checkout,$(PROJECTS))
 	@echo "checkout completed"
-update:
-	$(RM) .checkout.stamp
-	$(MAKE) .checkout.stamp
+update: checkout $(patsubst %,%-update,$(PROJECTS))
 	@echo "update completed"
-build: $(PROJECTS) checkout
+build: $(PROJECTS)
 clean: $(patsubst %,%-clean,$(PROJECTS))
 purge: $(patsubst %,%-purge,$(PROJECTS))
 deep-purge:
-	$(RM) -r $(PROJECTS_UPCASE) .setup.mk .definitions.mk .dependencies.mk .checkout.stamp
+	$(RM) -r $(PROJECTS) .setup.mk
 
 
 # distribution
 PRE_BUILT_IMAGE := $(shell git describe --match "hackathon-*" --abbrev=0 --tags).tar.xz
 $(PRE_BUILT_IMAGE): build
-	tar -c --xz -f $@ .ccache $(PROJECTS_UPCASE)
+	tar -c --xz -f $@ .ccache $(PROJECTS)
 dist: $(PRE_BUILT_IMAGE)
 pull-build: .git-setup.stamp
 	curl http://lhcbproject.web.cern.ch/lhcbproject/dist/$(PRE_BUILT_IMAGE) | tar -x --xz -f -
-	touch .checkout.stamp
+	# tar -x --xz -f $(PRE_BUILT_IMAGE)
 
 
 # implementation details
-.checkout.stamp: checkout.py $(CONFIGFILE) .git-setup.stamp
-	python checkout.py
-	touch $@
+define PROJECT_settings
+# project settings
+$(1)_URL := $$(if $$($(1)_URL),$$($(1)_URL),https://gitlab.cern.ch/lhcb/$(1).git)
+$(1)_BRANCH := $$(if $$($(1)_BRANCH),$$($(1)_BRANCH),$(DEFAULT_BRANCH))
+# checkout/update
+$(1)-checkout:
+	test -e $(1) || git clone -b $$($(1)_BRANCH) $$($(1)_URL) $(1)
+	cd $(1) && lb-project-init
+$(1)-update:
+	test -e $(1) || $$(MAKE) $(1)-checkout
+	cd $(1) && git pull origin $$($(1)_BRANCH)
+# generic build target
+$(1)/%: $(1)-checkout
+	$$(MAKE) -C $(1) $$*
+# build... delegate to generic target
+$(1): $$($(1)_DEPS)
+	$$(MAKE) $(1)/install
+# clean
+$(1)-clean: $(patsubst %,%-clean,$($(1)_INV_DEPS))
+	-test -d $(1)/build.$$(CMTCONFIG) && $$(MAKE) $(1)/clean
+	$(RM) -r $(1)/InstallArea/$$(CMTCONFIG)
+# purge
+$(1)-purge:
+	-test -e $(1) && $$(MAKE) $(1)/purge
+endef
+$(foreach proj,$(PROJECTS),$(eval $(call PROJECT_settings,$(proj))))
 
 ifneq ($(CCACHE),)
 $(CCACHE_DIR):
 	$(CCACHE) -F 20000 -M 0
-
 $(PROJECTS): $(CCACHE_DIR)
 endif
+
+.PHONY: all checkout update build clean purge $(PROJECTS) \
+        $(patsubst %,%-checkout %-clean %-purge,$(PROJECTS))
