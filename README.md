@@ -106,15 +106,17 @@ The `Makefile` provided features a few useful targets:
   * _deep-purge_: similar to _clean_, but remove the sources too
 * helpers
   * _pull-build_: get a prebuilt image of all the projects
-* access to projects
-  * _\<Project\>/\<target\>_: call the specified make target in the given project,
-    for example, to get the list of targets available in Gaudi you can call
-    `make Gaudi/help`
 * special project targets
   * _\<Project\>_: build the required project (with dependencies),
+  * _\<Project\>/\<target\>_: build the specified target in the given project,
+    for example, to get the list of targets available in Gaudi you can call
+    `make Gaudi/help`
   * _\<Project\>-\<action\>_: where _\<action\>_ can be _checkout_, _update_,
     _clean_ or _purge_, triggers the action on the specific project (with
     dependencies where it applies)
+* _fast_ targets are available for targets with dependencies, for example
+  * _fast/\<Project\>_: same as the target _\<Project\>_, but do not try to
+    build the dependencies
 
 ## Testing and running
 LHCb projects come with several tests that can be run via the standard `ctest`

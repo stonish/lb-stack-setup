@@ -63,13 +63,17 @@ $(1)-update:
 	test -e $(1) || $$(MAKE) $(1)-checkout
 	cd $(1) && git pull origin $$($(1)_BRANCH)
 # generic build target
-$(1)/%: $(1)-checkout
+$(1)/%: $(1)-checkout $$($(1)_DEPS)
+	$$(MAKE) -C $(1) $$*
+fast/$(1)/%: $(1)-checkout
 	$$(MAKE) -C $(1) $$*
 # build... delegate to generic target
-$(1): $$($(1)_DEPS)
-	$$(MAKE) $(1)/install
+$(1): $(1)/install
+fast/$(1): fast/$(1)/install
 # clean
 $(1)-clean: $(patsubst %,%-clean,$($(1)_INV_DEPS))
+	$$(MAKE) -C fast/$(1)-clean
+fast/$(1)-clean:
 	-test -d $(1)/build.$$(CMTCONFIG) && $$(MAKE) $(1)/clean
 	$(RM) -r $(1)/InstallArea/$$(CMTCONFIG)
 # purge
