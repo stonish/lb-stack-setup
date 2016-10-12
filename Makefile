@@ -9,8 +9,7 @@ include configuration.mk
 # default target
 all:
 
-# generated chunks
-# - environment
+# environment
 .setup.mk: setup.sh
 	sed 's/=/:=/' $^ > $@
 -include .setup.mk
