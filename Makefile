@@ -1,9 +1,4 @@
 # settings
-CCACHE := $(shell which ccache 2> /dev/null)
-ifeq ($(CCACHE),)
-  CCACHE := $(shell which ccache-swig 2> /dev/null)
-endif
-
 include configuration.mk
 
 # default target
@@ -47,8 +42,12 @@ pull-build: .git-setup.stamp
 	curl http://lhcbproject.web.cern.ch/lhcbproject/dist/$(PRE_BUILT_IMAGE) | tar -x --xz -f -
 	# tar -x --xz -f $(PRE_BUILT_IMAGE)
 
-
+# ----------------------
 # implementation details
+# ----------------------
+# compute inverse deps for "clean" targets
+$(foreach p,${PROJECTS},$(foreach d,${${p}_DEPS},$(eval ${d}_INV_DEPS += ${p})))
+
 define PROJECT_settings
 # project settings
 $(1)_URL := $$(if $$($(1)_URL),$$($(1)_URL),https://gitlab.cern.ch/lhcb/$(1).git)
@@ -80,6 +79,10 @@ $(1)-purge:
 endef
 $(foreach proj,$(PROJECTS),$(eval $(call PROJECT_settings,$(proj))))
 
+CCACHE := $(shell which ccache 2> /dev/null)
+ifeq ($(CCACHE),)
+  CCACHE := $(shell which ccache-swig 2> /dev/null)
+endif
 ifneq ($(CCACHE),)
 $(CCACHE_DIR):
 	$(CCACHE) -F 20000 -M 0

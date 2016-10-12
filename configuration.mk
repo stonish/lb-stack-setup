@@ -13,6 +13,3 @@ Hlt_DEPS = Phys
 Brunel_DEPS = Rec
 DaVinci_DEPS = Analysis Stripping
 Moore_DEPS = Hlt
-
-# compute inverse deps for "clean" targets
-$(foreach p,${PROJECTS},$(foreach d,${${p}_DEPS},$(eval ${d}_INV_DEPS += ${p})))
