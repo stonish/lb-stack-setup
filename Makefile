@@ -82,7 +82,7 @@ fast/$(1)-clean:
 	$(RM) -r $(1)/InstallArea/$$(CMTCONFIG)
 # purge
 $(1)-purge:
-	-test -e $(1) && $$(MAKE) $(1)/purge
+	-test -e $(1) && $$(MAKE) fast/$(1)/purge
 endef
 $(foreach proj,$(PROJECTS),$(eval $(call PROJECT_settings,$(proj))))
 
