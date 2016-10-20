@@ -76,6 +76,7 @@ Or rebuild:
 ```
 make
 ```
+
 ## Running on lxplus
 Make sure you have enough space on the working area and you are logged in a slc6-gcc49 machine.
 ```
@@ -84,11 +85,11 @@ mkdir workspace
 git clone https://gitlab.cern.ch/lhcb/upgrade-hackathon-setup.git .
 ```
 
-Differently from before you cannot get a pre-build image, so do not run 
+Differently from before you cannot get a pre-build image, so do not run
 ```
 make pull-build
 ```
-but simply 
+but simply
 ```
 make
 ```
@@ -103,17 +104,25 @@ The `Makefile` provided features a few useful targets:
   * _clean_: run a clean of all packages (keeping the sources)
   * _purge_: similar to _clean_, but remove the cmake temporary files
   * _deep-purge_: similar to _clean_, but remove the sources too
+  * _help_: print a list of available targets
 * helpers
   * _pull-build_: get a prebuilt image of all the projects
-* access to projects
-  * _\<Project\>/\<target\>_: call the specified make target in the given project,
+* special project targets
+  * _\<Project\>_: build the required project (with dependencies),
+  * _\<Project\>/\<target\>_: build the specified target in the given project,
     for example, to get the list of targets available in Gaudi you can call
     `make Gaudi/help`
+  * _\<Project\>-\<action\>_: where _\<action\>_ can be _checkout_, _update_,
+    _clean_ or _purge_, triggers the action on the specific project (with
+    dependencies where it applies)
+* _fast_ targets are available for targets with dependencies, for example
+  * _fast/\<Project\>_: same as the target _\<Project\>_, but do not try to
+    build the dependencies
 
 ## Testing and running
 LHCb projects come with several tests that can be run via the standard `ctest`
 command from the project build directories
-(e.g. `GAUDI/GAUDI_future/build.$CMTCONFIG`), or via the some helper targets in
+(e.g. `Gaudi/build.$CMTCONFIG`), or via the some helper targets in
 the top level Makefile, for example:
 ```
 make Gaudi/test ARGS="-N"
@@ -132,10 +141,40 @@ Some examples:
 Tests hide the output of the job while it's run, but you can find the `.qmt`
 file used for the test and run it through `gaudirun.py`, for example:
 ```
-cd BRUNEL/BRUNEL_future
+cd Brunel
 make test ARGS="-N -V -R Brunel.2015magdown"
-./build.$CMTCONFIG/run gaudirun.py /workspace/BRUNEL/BRUNEL_future/Rec/Brunel/tests/qmtest/brunel.qms/2015magdown.qmt
+./run gaudirun.py /workspace/Brunel/Rec/Brunel/tests/qmtest/brunel.qms/2015magdown.qmt
 ```
 
+## Debugging
+The projects built here are available only as optimized builds, so some special
+actions are needed to be able to debug pieces of code:
 
+* if you are using Docker, make sure you started `lb-docker-run` with the option
+  `--privileged`
+* add the good version of gdb to the path
+  ```
+  export PATH=/cvmfs/lhcb.cern.ch/lib/contrib/gdb/7.11/x86_64-slc6-gcc49-opt/bin:$PATH
+  ```
+* change the configuration of the project containing the code to debug
+  ```
+  sed -i 's/CMAKE_BUILD_TYPE:STRING=.*/CMAKE_BUILD_TYPE:STRING=Debug/' Project/build.${CMTCONFIG}/CMakeCache.txt
+  ```
+* rebuild the project
+  ```
+  make Project
+  ```
+* run the job through the debugger
+  ```
+  Project/run gdb --args python $(Project/run which gaudirun.py) my_options.py
+  ```
 
+## Examples
+### Build a project and run it
+To run, for example, Brunel with some option file
+```
+make Brunel
+Brunel/run gaudirun.py my_options.py
+```
+Note that this sequence works with or without previously checked out sources,
+in which case it would clone only the required repositories.
