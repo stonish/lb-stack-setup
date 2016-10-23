@@ -48,10 +48,13 @@ https://cernvm.cern.ch/portal/vbinstallation
 Running the VM specifying the context in CernVM online is probably the simplest option.
 (You can also run CernVM in an Openstack as per https://cernvm.cern.ch/portal/openstack)
 
-Once the machine is up and running, you need to add ccache to the config:
+Once the machine is up and running, you need either ccache or ccache-swig (the
+first is slightly better). If you do not have any of them, you can install ccache
+with:
 ```
-sudo yum-config-manager --add-repo=http://linuxsoft.cern.ch/internal/yumsnapshot/20160518/epel/6/x86_64
-sudo yum install --nogpgcheck ccache
+sudo yum-config-manager --add-repo=http://linuxsoft.cern.ch/epel/6/x86_64/
+sudo rpm --import http://linuxsoft.cern.ch/epel/RPM-GPG-KEY-EPEL-6
+sudo yum install ccache
 ```
 
 And don't forget to load the LHCb environment if not done already:
@@ -81,8 +84,8 @@ make
 Make sure you have enough space on the working area and you are logged in a slc6-gcc49 machine.
 ```
 cd /afs/cern.ch/work/X/USERNAME/
-mkdir workspace
-git clone https://gitlab.cern.ch/lhcb/upgrade-hackathon-setup.git .
+git clone https://gitlab.cern.ch/lhcb/upgrade-hackathon-setup.git workspace
+cd workspace
 ```
 
 Differently from before you cannot get a pre-build image, so do not run
