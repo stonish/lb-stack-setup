@@ -88,13 +88,17 @@ git clone https://gitlab.cern.ch/lhcb/upgrade-hackathon-setup.git workspace
 cd workspace
 ```
 
-Differently from before you cannot get a pre-build image, so do not run
-```
-make pull-build
-```
-but simply
+Differently from before you cannot get a pre-build image, just call
 ```
 make
+```
+
+Note that sometimes on lxplus builds with ninja are killed because they use too
+much the machine (you would get an _internal compiler error_ from gcc).
+In that case it could be useful to reduce the number of parallel compilations
+with something like
+```
+make NINJAFLAGS=-j8
 ```
 
 ## Makefile instructions
