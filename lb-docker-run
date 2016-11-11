@@ -111,6 +111,8 @@ if call(['docker', '--version']) is not 0:
 
 image_name = 'lhcbdev/{0}-build:{1}'.format(options.os, DEFAULT_TAG)
 
+default_cvmfs_volumes = ['/cvmfs/lhcb.cern.ch', '/cvmfs/lhcbdev.cern.ch']
+
 need_autofs_thread = False
 if options.noCvmfs == False:
     if options.forceCvmfs:
@@ -118,10 +120,10 @@ if options.noCvmfs == False:
             parser.error('cvmfs mounting is not supported on SLC5')
         image_name = 'lhcbdev/{0}-build-cvmfs:{1}'.format(options.os, DEFAULT_TAG)
         options.envVar.extend(['dockerMountCVMFS=yes'])
-    elif (not os.path.exists('/cvmfs/lhcbdev.cern.ch')) or (not os.path.exists('/cvmfs/lhcb.cern.ch')) or (not os.listdir('/cvmfs/lhcbdev.cern.ch')) or (not os.listdir('/cvmfs/lhcbdev.cern.ch')):
+    elif not all(os.path.exists(p) and os.listdir(p) for p in default_cvmfs_volumes):
         sys.exit("Please, be sure you have cvmfs mounted on the host machine, or look at the options")
     else:
-        options.volume.extend(['/cvmfs/lhcb.cern.ch', '/cvmfs/lhcbdev.cern.ch'])
+        options.volume.extend(default_cvmfs_volumes)
         need_autofs_thread = True
 else:
     options.LbLogin='no'
