@@ -40,7 +40,9 @@ ALL_TARGETS = all build checkout update clean purge deep-purge
 
 # distribution
 PRE_BUILT_IMAGE := $(shell git describe --match "hackathon-*" --abbrev=0 --tags).tar.xz
-$(PRE_BUILT_IMAGE): build
+$(PRE_BUILT_IMAGE):
+	$(MAKE) build
+	$(MAKE) build
 	tar -c --xz -f $@ .ccache $(PROJECTS)
 dist: $(PRE_BUILT_IMAGE)
 pull-build: .git-setup.stamp
