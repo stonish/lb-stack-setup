@@ -11,5 +11,5 @@ Stripping_DEPS = Phys
 Hlt_DEPS = Phys
 
 Brunel_DEPS = Rec
-DaVinci_DEPS = Analysis Stripping
-Moore_DEPS = Hlt
+#DaVinci_DEPS = Analysis Stripping
+#Moore_DEPS = Hlt
