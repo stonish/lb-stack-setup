@@ -1,5 +1,5 @@
 DEFAULT_BRANCH = future
-PROJECTS = Gaudi LHCb Lbcom Rec Phys Stripping Analysis DaVinci Brunel Hlt # Moore
+PROJECTS = Gaudi LHCb Lbcom Rec Phys Stripping Analysis Brunel Hlt # DaVinci Moore
 
 # FIXME: it would be nice to generate the dependencies
 LHCb_DEPS = Gaudi
