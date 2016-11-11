@@ -111,7 +111,7 @@ if call(['docker', '--version']) is not 0:
 
 image_name = 'lhcbdev/{0}-build:{1}'.format(options.os, DEFAULT_TAG)
 
-default_cvmfs_volumes = ['/cvmfs/lhcb.cern.ch', '/cvmfs/lhcbdev.cern.ch', '/cvmfs/sft.cern.ch']
+default_cvmfs_volumes = ['/cvmfs/lhcb.cern.ch', '/cvmfs/lhcbdev.cern.ch']
 
 need_autofs_thread = False
 if options.noCvmfs == False:
