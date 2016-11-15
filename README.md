@@ -185,3 +185,6 @@ Brunel/run gaudirun.py my_options.py
 ```
 Note that this sequence works with or without previously checked out sources,
 in which case it would clone only the required repositories.
+
+For Mini Brunel, the option file and the input file are available on EOS at `/eos/lhcb/software/mini-brunel`
+
