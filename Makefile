@@ -26,6 +26,13 @@ checkout: $(patsubst %,%-checkout,$(PROJECTS))
 	@echo "checkout completed"
 update: checkout $(patsubst %,%-update,$(PROJECTS))
 	@echo "update completed"
+use-git-https:
+	@$(MAKE) set-git-remote-url GIT_BASE=https://gitlab.cern.ch/lhcb
+use-git-ssh:
+	@$(MAKE) set-git-remote-url GIT_BASE=ssh://git@gitlab.cern.ch:7999/lhcb
+use-git-krb5:
+	@$(MAKE) set-git-remote-url GIT_BASE=https://:@gitlab.cern.ch:8443/lhcb
+
 build: $(PROJECTS)
 clean: $(patsubst %,%-clean,$(PROJECTS))
 purge: $(patsubst %,%-purge,$(PROJECTS))
@@ -36,7 +43,7 @@ help:
 	@for t in $(ALL_TARGETS) ; do echo .. $$t ; done
 
 # public targets: main targets
-ALL_TARGETS = all build checkout update clean purge deep-purge
+ALL_TARGETS = all build checkout update clean purge deep-purge use-git-https use-git-ssh use-git-krb5
 
 # distribution
 PRE_BUILT_IMAGE := $(shell git describe --match "hackathon-*" --abbrev=0 --tags).$(CMTCONFIG).tar.xz
@@ -97,5 +104,8 @@ $(CCACHE_DIR):
 	$(CCACHE) -F 20000 -M 0
 $(PROJECTS): $(CCACHE_DIR)
 endif
+
+set-git-remote-url:
+	@for p in $(PROJECTS) ; do if [ -d $$p ] ; then ( cd $$p && pwd && git remote set-url origin $(GIT_BASE)/$$p.git && git remote -v ) ; fi ; done
 
 .PHONY: $(ALL_TARGETS) dist pull-build

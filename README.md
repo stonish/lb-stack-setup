@@ -112,6 +112,8 @@ The `Makefile` provided features a few useful targets:
   * _purge_: similar to _clean_, but remove the cmake temporary files
   * _deep-purge_: similar to _clean_, but remove the sources too
   * _help_: print a list of available targets
+  * _use-git-xyz_: change the Git remote url of the checkout out projects,
+    with _xyz_ replaces with any of _https_, _ssh_ or _krb5_
 * helpers
   * _pull-build_: get a prebuilt image of all the projects
 * special project targets
