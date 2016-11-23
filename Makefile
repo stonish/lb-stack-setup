@@ -33,6 +33,10 @@ use-git-ssh:
 use-git-krb5:
 	@$(MAKE) set-git-remote-url GIT_BASE=https://:@gitlab.cern.ch:8443/lhcb
 
+CMD = true
+for-each:
+	@for p in $(PROJECTS) ; do if [ -d $$p ] ; then ( cd $$p && pwd && $(CMD) ) ; fi ; done
+
 build: $(PROJECTS)
 clean: $(patsubst %,%-clean,$(PROJECTS))
 purge: $(patsubst %,%-purge,$(PROJECTS))
