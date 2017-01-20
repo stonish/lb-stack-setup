@@ -139,7 +139,8 @@ cmd = ['docker', 'run', '--rm',
 
 if options.absolutePath:
     options.volume.extend([cwd])
-    options.workdir = cwd
+    if not options.workdir:
+        options.workdir = cwd
 else:
     options.volume.extend([cwd + ':/workspace'])
 
