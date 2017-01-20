@@ -1,6 +1,9 @@
 DEFAULT_BRANCH = future
 PROJECTS = Gaudi LHCb Lbcom Rec Phys Stripping Analysis Brunel Hlt # DaVinci Moore
 
+Gaudi_URL = https://gitlab.cern.ch/gaudi/Gaudi.git
+Gaudi_BRANCH = master
+
 # FIXME: it would be nice to generate the dependencies
 LHCb_DEPS = Gaudi
 Lbcom_DEPS = LHCb
