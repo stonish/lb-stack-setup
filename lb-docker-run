@@ -9,7 +9,7 @@ import threading
 from subprocess import Popen, call
 
 version = 1
-DEFAULT_TAG = '20160627'  # must be kept in sync with lb-docker-run
+DEFAULT_TAG = '20170119'  # must be kept in sync with lb-docker-build
 
 class autofs(threading.Thread):
     def __init__(self, dirs):
@@ -33,6 +33,7 @@ def stop_threads():
 
 cwd = os.getcwd()
 cwd_stat = os.stat(cwd)
+userId = cwd_stat.st_uid
 userName = pwd.getpwuid(cwd_stat.st_uid).pw_name
 grpId = cwd_stat.st_gid
 grpName = grp.getgrgid(cwd_stat.st_gid).gr_name
@@ -174,6 +175,7 @@ if options.user:
     cmd.extend(['-u', options.user])
 else:
     options.envVar.extend(['WORK_USER=' + userName + ':' + grpName])
+    options.envVar.extend(['WORK_USER_ID={0}:{1}'.format(userId, grpId)])
 
 for env in options.envVar:
     cmd.extend(['-e', env])
