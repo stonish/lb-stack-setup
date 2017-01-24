@@ -3,6 +3,7 @@ import os
 import sys
 import pwd
 import grp
+import platform
 import optparse
 import socket
 import threading
@@ -42,14 +43,15 @@ dockerHome = '/home/' + userName
 if dockerHome in cwd:
     dockerHome = '/' + userName
 
-if grpId is not 0:
-    try:
-        docker_group = grp.getgrnam('docker').gr_gid
-    except:
-        sys.exit('No "Docker" group found')
-else:
-    if userName not in grp.getgrnam('docker').gr_mem:
-        sys.exit('Directory owned by root, you need to be part of the "Docker" group to run a container')
+if platform.system() == "Linux":
+    if grpId is not 0:
+        try:
+            docker_group = grp.getgrnam('docker').gr_gid
+        except:
+            sys.exit('No "Docker" group found')
+    else:
+        if userName not in grp.getgrnam('docker').gr_mem:
+            sys.exit('Directory owned by root, you need to be part of the "Docker" group to run a container')
 
 parser = optparse.OptionParser()
 parser.add_option('--version', action='store_true', dest='version', help="Print version information and quit")
