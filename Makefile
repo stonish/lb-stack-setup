@@ -27,11 +27,11 @@ checkout: $(patsubst %,%-checkout,$(PROJECTS))
 update: checkout $(patsubst %,%-update,$(PROJECTS))
 	@echo "update completed"
 use-git-https:
-	@$(MAKE) set-git-remote-url GIT_BASE=https://gitlab.cern.ch/lhcb
+	@$(MAKE) set-git-remote-url GIT_BASE=https://gitlab.cern.ch
 use-git-ssh:
-	@$(MAKE) set-git-remote-url GIT_BASE=ssh://git@gitlab.cern.ch:7999/lhcb
+	@$(MAKE) set-git-remote-url GIT_BASE=ssh://git@gitlab.cern.ch:7999
 use-git-krb5:
-	@$(MAKE) set-git-remote-url GIT_BASE=https://:@gitlab.cern.ch:8443/lhcb
+	@$(MAKE) set-git-remote-url GIT_BASE=https://:@gitlab.cern.ch:8443
 
 CMD = true
 for-each:
@@ -70,7 +70,8 @@ ALL_TARGETS += $(foreach p,$(PROJECTS),$(p) $(p)-checkout $(p)-update $(p)-clean
 
 define PROJECT_settings
 # project settings
-$(1)_URL := $$(if $$($(1)_URL),$$($(1)_URL),https://gitlab.cern.ch/lhcb/$(1).git)
+$(1)_GITREPO := $$(if $$($(1)_GITREPO),$$($(1)_GITREPO),lhcb)
+$(1)_URL := https://gitlab.cern.ch/$$($(1)_GITREPO)/$(1).git
 $(1)_BRANCH := $$(if $$($(1)_BRANCH),$$($(1)_BRANCH),$(DEFAULT_BRANCH))
 # checkout/update
 $(1)-checkout:
@@ -110,6 +111,6 @@ $(PROJECTS): $(CCACHE_DIR)
 endif
 
 set-git-remote-url:
-	@for p in $(PROJECTS) ; do if [ -d $$p ] ; then ( cd $$p && pwd && git remote set-url origin $(GIT_BASE)/$$p.git && git remote -v ) ; fi ; done
+	@$(foreach p,$(PROJECTS),if [ -d $p ] ; then ( cd $p && pwd && git remote set-url origin $(GIT_BASE)/$($p_GITREPO)/$p.git && git remote -v ) ; fi ;)
 
 .PHONY: $(ALL_TARGETS) dist pull-build
