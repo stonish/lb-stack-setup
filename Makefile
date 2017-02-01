@@ -70,8 +70,8 @@ ALL_TARGETS += $(foreach p,$(PROJECTS),$(p) $(p)-checkout $(p)-update $(p)-clean
 
 define PROJECT_settings
 # project settings
-$(1)_GITREPO := $$(if $$($(1)_GITREPO),$$($(1)_GITREPO),lhcb)
-$(1)_URL := https://gitlab.cern.ch/$$($(1)_GITREPO)/$(1).git
+$(1)_GITGROUP := $$(if $$($(1)_GITGROUP),$$($(1)_GITGROUP),lhcb)
+$(1)_URL := https://gitlab.cern.ch/$$($(1)_GITGROUP)/$(1).git
 $(1)_BRANCH := $$(if $$($(1)_BRANCH),$$($(1)_BRANCH),$(DEFAULT_BRANCH))
 # checkout/update
 $(1)-checkout:
@@ -111,6 +111,6 @@ $(PROJECTS): $(CCACHE_DIR)
 endif
 
 set-git-remote-url:
-	@$(foreach p,$(PROJECTS),if [ -d $p ] ; then ( cd $p && pwd && git remote set-url origin $(GIT_BASE)/$($p_GITREPO)/$p.git && git remote -v ) ; fi ;)
+	@$(foreach p,$(PROJECTS),if [ -d $p ] ; then ( cd $p && pwd && git remote set-url origin $(GIT_BASE)/$($p_GITGROUP)/$p.git && git remote -v ) ; fi ;)
 
 .PHONY: $(ALL_TARGETS) dist pull-build
