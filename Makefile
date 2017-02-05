@@ -102,6 +102,9 @@ CCACHE := $(shell which ccache 2> /dev/null)
 ifeq ($(CCACHE),)
   CCACHE := $(shell which ccache-swig 2> /dev/null)
 endif
+ifeq ($(CCACHE),)
+  CCACHE := $(shell lb-run --ext ccache LCG/latest which ccache)
+endif
 ifneq ($(CCACHE),)
 $(CCACHE_DIR):
 	$(CCACHE) -F 20000 -M 0
