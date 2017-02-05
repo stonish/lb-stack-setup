@@ -13,6 +13,7 @@
 #     branch/tag to checkout for Project, overrides DEFAULT_BRANCH
 # - GIT_BASE:
 #     git repository base URL, default is https://gitlab.cern.ch
+#     If you change this, call "make set-git-remote-url" to apply the change
 # - Project_GITGROUP:
 #     GitLab group to use for finding the repository.
 #     The URL is $(GIT_BASE)/$(Project_GITGROUP)/Project.git
