@@ -1,5 +1,6 @@
-DEFAULT_BRANCH = future
-PROJECTS = Gaudi LHCb Lbcom Rec Phys Stripping Analysis Brunel Hlt # DaVinci Moore
+DEFAULT_BRANCH = master
+# PROJECTS = Gaudi LHCb Lbcom Rec Brunel Phys Hlt Moore Stripping Analysis DaVinci
+PROJECTS = LHCb Lbcom Rec Brunel Phys Hlt Moore Stripping Analysis DaVinci
 
 # Take Gaudi.git from https://gitlab.cern.ch/gaudi (default: https://gitlab.cern.ch/lhcb)
 Gaudi_GITGROUP = gaudi
@@ -9,11 +10,10 @@ Gaudi_BRANCH = master
 LHCb_DEPS = Gaudi
 Lbcom_DEPS = LHCb
 Rec_DEPS = Lbcom
-Phys_DEPS = Rec
-Analysis_DEPS = Phys
-Stripping_DEPS = Phys
-Hlt_DEPS = Phys
-
 Brunel_DEPS = Rec
-#DaVinci_DEPS = Analysis Stripping
-#Moore_DEPS = Hlt
+Phys_DEPS = Rec
+Hlt_DEPS = Phys
+Moore_DEPS = Hlt
+Stripping_DEPS = Phys
+Analysis_DEPS = Phys
+DaVinci_DEPS = Stripping Analysis
