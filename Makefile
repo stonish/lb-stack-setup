@@ -62,6 +62,11 @@ pull-build: .git-setup.stamp
 # ----------------------
 # implementation details
 # ----------------------
+project = $(firstword $(subst /, ,$1))
+branch = $(or $(word 2,$(subst /, ,$1)),$(value 2))
+# separate branch (or tag) from project/branch
+$(foreach p,$(PROJECTS),$(eval $(call project,$(p))_BRANCH := $(call branch,$(p))))
+PROJECTS := $(foreach p,$(PROJECTS),$(call project,$(p)))
 # remove unsatisfiable dependencies
 $(foreach p,$(PROJECTS),$(eval $(p)_DEPS := $(filter $($(p)_DEPS), $(PROJECTS))))
 # compute inverse deps for "clean" targets
