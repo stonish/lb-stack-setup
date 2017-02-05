@@ -1,6 +1,7 @@
 DEFAULT_BRANCH = master
 # PROJECTS = Gaudi LHCb Lbcom Rec Brunel Phys Hlt Moore Stripping Analysis DaVinci
 PROJECTS = LHCb Lbcom Rec Brunel Phys Hlt Moore Stripping Analysis DaVinci
+GIT_BASE = ssh://git@gitlab.cern.ch:7999
 
 # Take Gaudi.git from https://gitlab.cern.ch/gaudi (default: https://gitlab.cern.ch/lhcb)
 Gaudi_GITGROUP = gaudi

@@ -6,6 +6,8 @@ all:
 
 CCACHE_DIR := $(shell . `pwd`/setup.sh ; echo $${CCACHE_DIR})
 
+GIT_BASE := $(or $(GIT_BASE),https://gitlab.cern.ch)
+
 # main targets
 all: build
 .git-setup.stamp:
@@ -69,9 +71,9 @@ ALL_TARGETS += $(foreach p,$(PROJECTS),$(p) $(p)-checkout $(p)-update $(p)-clean
 
 define PROJECT_settings
 # project settings
-$(1)_GITGROUP := $$(if $$($(1)_GITGROUP),$$($(1)_GITGROUP),lhcb)
-$(1)_URL := https://gitlab.cern.ch/$$($(1)_GITGROUP)/$(1).git
-$(1)_BRANCH := $$(if $$($(1)_BRANCH),$$($(1)_BRANCH),$(DEFAULT_BRANCH))
+$(1)_GITGROUP := $$(or $$($(1)_GITGROUP),lhcb)
+$(1)_URL := $$(or $$($(1)_URL),$(GIT_BASE)/$$($(1)_GITGROUP)/$(1).git)
+$(1)_BRANCH := $$(or $$($(1)_BRANCH),$(DEFAULT_BRANCH))
 # checkout/update
 $(1)-checkout:
 	@test -e $(1) || git clone -b $$($(1)_BRANCH) $$($(1)_URL) $(1)
