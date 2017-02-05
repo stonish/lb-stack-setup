@@ -1,3 +1,27 @@
+# Configuration for LHCb stack build
+# ===================================================================
+#
+# The known variables are:
+# - PROJECTS:
+#     A list of projects to build.
+#     If a branch (or tag) is optionally specified with Project/branch, it
+#     will override the DEFAULT_BRANCH and Project_BRANCH. For example:
+#         PROJECTS = Gaudi/v28r1 LHCb Lbcom Rec ...
+# - DEFAULT_BRANCH:
+#     Default branch to checkout for all projects.
+# - Project_BRANCH:
+#     branch/tag to checkout for Project, overrides DEFAULT_BRANCH
+# - GIT_BASE:
+#     git repository base URL, default is https://gitlab.cern.ch
+# - Project_GITGROUP:
+#     GitLab group to use for finding the repository.
+#     The URL is $(GIT_BASE)/$(Project_GITGROUP)/Project.git
+# - Project_URL:
+#     Override the default URL based on GIT_BASE and Project_GITGROUP.
+# - Project_DEPS:
+#     Project dependencies. Modification is normally not needed. If a project
+#     is not in PROJECTS, the variable is ignored.
+
 DEFAULT_BRANCH = master
 # PROJECTS = Gaudi LHCb Lbcom Rec Brunel Phys Hlt Moore Stripping Analysis DaVinci
 PROJECTS = LHCb Lbcom Rec Brunel Phys Hlt Moore Stripping Analysis DaVinci
