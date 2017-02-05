@@ -4,10 +4,7 @@ include configuration.mk
 # default target
 all:
 
-# environment
-.setup.mk: setup.sh
-	sed 's/=/:=/' $^ > $@
--include .setup.mk
+CCACHE_DIR := $(shell . `pwd`/setup.sh ; echo $${CCACHE_DIR})
 
 # main targets
 all: build
@@ -81,10 +78,9 @@ $(1)-checkout:
 $(1)-update: $(1)-checkout
 	@cd $(1) && git pull origin $$($(1)_BRANCH)
 # generic build target
-$(1)/%: $(1)-checkout $$($(1)_DEPS)
-	$$(MAKE) -C $(1) $$*
-fast/$(1)/%: $(1)-checkout
-	$$(MAKE) -C $(1) $$*
+$(1)/%: $$($(1)_DEPS) fast/$(1)/% ;
+fast/$(1)/%: $(1)-checkout setup.sh
+	@(. `pwd`/setup.sh ; (set -v ; $$(MAKE) -C $(1) $$*))
 # build... delegate to generic target
 $(1): $(1)/install
 fast/$(1): fast/$(1)/install
