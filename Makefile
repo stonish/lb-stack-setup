@@ -60,6 +60,8 @@ pull-build: .git-setup.stamp
 # ----------------------
 # implementation details
 # ----------------------
+# remove unsatisfiable dependencies
+$(foreach p,$(PROJECTS),$(eval $(p)_DEPS := $(filter $($(p)_DEPS), $(PROJECTS))))
 # compute inverse deps for "clean" targets
 $(foreach p,$(PROJECTS),$(foreach d,$($(p)_DEPS),$(eval $(d)_INV_DEPS += $(p))))
 # public targets: project targets
