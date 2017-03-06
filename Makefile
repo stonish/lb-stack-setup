@@ -55,7 +55,9 @@ help:
 ALL_TARGETS = all build checkout update clean purge deep-purge use-git-https use-git-ssh use-git-krb5
 
 # distribution
-PRE_BUILT_IMAGE := $(shell git describe --match "hackathon-*" --abbrev=0 --tags).$(CMTCONFIG).tar.xz
+DIST_TAG := $(or $(DIST_TAG),$(shell git describe --match "*" --abbrev=0 --tags 2> /dev/null))
+ifneq ($(DIST_TAG),)
+PRE_BUILT_IMAGE := $(DIST_TAG).$(CMTCONFIG).tar.xz
 $(PRE_BUILT_IMAGE):
 	$(MAKE) build
 	$(MAKE) build
@@ -63,7 +65,7 @@ $(PRE_BUILT_IMAGE):
 dist: $(PRE_BUILT_IMAGE)
 pull-build: .git-setup.stamp
 	curl http://lhcbproject.web.cern.ch/lhcbproject/dist/$(PRE_BUILT_IMAGE) | tar -x --xz -f -
-	# tar -x --xz -f $(PRE_BUILT_IMAGE)
+endif
 
 # ----------------------
 # implementation details
