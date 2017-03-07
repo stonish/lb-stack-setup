@@ -11,7 +11,7 @@ GIT_BASE := $(or $(GIT_BASE),https://gitlab.cern.ch)
 # separate branch (or tag) from project/branch
 project = $(firstword $(subst /, ,$1))
 branch = $(or $(word 2,$(subst /, ,$1)),$(value 2))
-$(foreach p,$(PROJECTS),$(eval $(call project,$(p))_BRANCH := $(call branch,$(p))))
+$(foreach p,$(PROJECTS),$(eval $(call project,$(p))_BRANCH := $(call branch,$(p),$($(p)_BRANCH))))
 PROJECTS := $(foreach p,$(PROJECTS),$(call project,$(p)))
 
 # main targets
