@@ -86,7 +86,9 @@ $(1)_BRANCH := $$(or $$($(1)_BRANCH),$(DEFAULT_BRANCH))
 $(1)-checkout:
 	@test -e $(1) || git clone -b $$($(1)_BRANCH) $$($(1)_URL) $(1)
 	@cd $(1) && lb-project-init
-	@test -h $(1)/run -o -e $(1)/run || ln -s build.$$(CMTCONFIG)/run $(1)/run
+	@test -h $(1)/run -o -e $(1)/run || (\
+		echo -e '#!/bin/bash\n$$$$(dirname "$$$${BASH_SOURCE[0]}")/build.$$$${CMTCONFIG}/run' > $(1)/run && \
+		chmod +x $(1)/run)
 $(1)-update: $(1)-checkout
 	@cd $(1) && git pull origin $$($(1)_BRANCH)
 # generic build target
