@@ -88,7 +88,7 @@ $(1)-checkout:
 	@cd $(1) && lb-project-init
 	@grep -Fxq "toolchain.cmake" $(1)/.git/info/exclude || echo "toolchain.cmake" >> $(1)/.git/info/exclude
 	@test -h $(1)/run -o -e $(1)/run || (\
-		echo -e '#!/bin/bash\n$$$$(dirname "$$$${BASH_SOURCE[0]}")/build.$$$${CMTCONFIG}/run' > $(1)/run && \
+		echo -e '#!/bin/bash\n$$$$(dirname "$$$${BASH_SOURCE[0]}")/build.$$$${CMTCONFIG}/run "$$$$@"' > $(1)/run && \
 		chmod +x $(1)/run)
 	@grep -Fxq "run" $(1)/.git/info/exclude || echo "run" >> $(1)/.git/info/exclude
 $(1)-update: $(1)-checkout
