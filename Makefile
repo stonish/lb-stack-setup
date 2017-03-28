@@ -46,7 +46,7 @@ build: $(PROJECTS)
 clean: $(patsubst %,%-clean,$(PROJECTS))
 purge: $(patsubst %,%-purge,$(PROJECTS))
 deep-purge:
-	$(RM) -r $(PROJECTS) .setup.mk
+	$(RM) -r $(PROJECTS)
 
 help:
 	@for t in $(ALL_TARGETS) ; do echo .. $$t ; done
