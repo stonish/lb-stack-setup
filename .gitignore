@@ -1,15 +1,3 @@
 *.pyc
 /.git-setup.stamp
-/.setup.mk
 /.ccache
-/Analysis/
-/Brunel/
-/DaVinci/
-/Gaudi/
-/Hlt/
-/Lbcom/
-/LHCb/
-/Moore/
-/Phys/
-/Rec/
-/Stripping/
