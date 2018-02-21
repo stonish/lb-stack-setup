@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 export CCACHE_DIR=${PWD}/.ccache
 #export CCACHE_LOGFILE=$(dirname $(mktemp -u))/ccache.debug
 export CMAKEFLAGS="-DCMAKE_USE_CCACHE=ON -DLOKI_BUILD_FUNCTOR_CACHE=FALSE --no-warn-unused-cli"
