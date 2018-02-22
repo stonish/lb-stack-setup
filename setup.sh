@@ -9,6 +9,7 @@ export CCACHE_NOCPP2=1  # compile the preprocessed source on cache miss; faster 
 export CMAKEFLAGS="$CMAKEFLAGS -DCMAKE_USE_CCACHE=ON"
 export CMAKEFLAGS="$CMAKEFLAGS -DLOKI_BUILD_FUNCTOR_CACHE=FALSE --no-warn-unused-cli"
 export CMAKE_PREFIX_PATH=${PWD}:${CMAKE_PREFIX_PATH}
+export CMAKE_PREFIX_PATH=${PWD}/Gaudi/cmake:${CMAKE_PREFIX_PATH}  # Use toolchain from local Gaudi
 export VERBOSE=
 export PATH=${PATH}:/cvmfs/lhcb.cern.ch/lib/contrib/ninja/1.4.0/x86_64-slc6
 
