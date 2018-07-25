@@ -1,3 +1,4 @@
 *.pyc
 /.git-setup.stamp
 /.ccache
+/.distcc
