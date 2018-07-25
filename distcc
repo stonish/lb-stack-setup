@@ -1,0 +1,5 @@
+#!/bin/bash
+distcc=`type -a distcc |  head -2 | tail -1 | cut -d " " -f 3-`
+#distcc=/home/rmatev/opt/distcc-ad3ea71/bin/distcc
+export DISTCC_PRINCIPAL=distcc  # TODO is this needed?
+$distcc "$@"

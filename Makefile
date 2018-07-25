@@ -4,7 +4,7 @@ include configuration.mk
 # default target
 all:
 
-CCACHE_DIR := $(shell . `pwd`/setup.sh ; echo $${CCACHE_DIR})
+CCACHE_DIR := $(shell . `pwd`/setup.sh; echo $${CCACHE_DIR})
 
 GIT_BASE := $(or $(GIT_BASE),https://gitlab.cern.ch)
 
@@ -96,7 +96,7 @@ $(1)-update: $(1)-checkout
 # generic build target
 $(1)/%: $$($(1)_DEPS) fast/$(1)/% ;
 fast/$(1)/%: $(1)-checkout setup.sh
-	@(. `pwd`/setup.sh ; (set -v ; $$(MAKE) -C $(1) $$*))
+	@(. `pwd`/setup.sh -m $(1); (set -v ; $$(MAKE) -C $(1) $$*); `pwd`/setup.sh -s)
 # exception for Project/purge: always do fast/Project/purge
 $(1)/purge: fast/$(1)/purge setup.sh ;
 # build... delegate to generic target
