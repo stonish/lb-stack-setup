@@ -97,8 +97,9 @@ $(1)-update: $(1)-checkout
 $(1)/%: $$($(1)_DEPS) fast/$(1)/% ;
 fast/$(1)/%: $(1)-checkout setup.sh
 	@(. `pwd`/setup.sh -m $(1); (set -v ; $$(MAKE) -C $(1) $$*); `pwd`/setup.sh -s)
-# exception for Project/purge: always do fast/Project/purge
+# exception for purge and clean: always do fast/Project/purge or clean
 $(1)/purge: fast/$(1)/purge setup.sh ;
+$(1)/clean: fast/$(1)/clean setup.sh ;
 # build... delegate to generic target
 $(1): $(1)/install
 fast/$(1): fast/$(1)/install
