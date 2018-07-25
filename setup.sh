@@ -9,6 +9,10 @@ USE_CCACHE=true
 DEBUG_DISTCC=false
 TMPDIR_DISTCC=`pwd`/.distcc
 
+# take localslots{_cpp} from the number of logical cores
+nproc=$(nproc)
+nproc2x=$(expr $nproc \* 2)
+
 setup_distcc_hosts() {
   set +e
   nc -w 2 localhost 11111 </dev/null 2> /dev/null || \
@@ -17,9 +21,9 @@ setup_distcc_hosts() {
   set -e
   if [ $ok -eq 0 ]; then
     # "localhost" has a special meaning for distcc -> use "127.0.0.1"
-    export DISTCC_HOSTS="--localslots=4 --localslots_cpp=8 127.0.0.1:11111/40,lzo,cpp 127.0.0.1:11112/40,lzo,cpp --randomize"
+    # TODO add cpp conditionally on USE_DISTCC_PUMP
+    export DISTCC_HOSTS="--localslots=$nproc --localslots_cpp=$nproc2x 127.0.0.1:11111/40,lzo,cpp 127.0.0.1:11112/40,lzo,cpp --randomize"
     #export DISTCC_HOSTS="--localslots=2 --localslots_cpp=2 rmatev04.cern.ch/4,lzo,cpp,auth --randomize"
-    # TODO take localslots{_cpp} from the number of logical cores
     export NINJAFLAGS=${NINJAFLAGS:-"-j100"}
     # TODO The number of jobs needs automation
   fi
@@ -38,6 +42,7 @@ pump_startup() {
   #     return 0
   #   fi
   # fi
+  # TODO do not use local include server
   python3 $HOME/tools/distcc/include_server/include_server.py \
     --port $INCLUDE_SERVER_PORT --pid_file $INCLUDE_SERVER_DIR/pid \
     -t -s \
@@ -101,9 +106,9 @@ if [ "$MAKE" = true ]; then
     export PATH=`pwd`:${PATH}  # override distcc with the local wrapper
     export CCACHE_NOCPP2=1  # give distcc the preprocessed source and skip the double preprocessing on cache miss
     export CMAKEFLAGS="${CMAKEFLAGS} -DCMAKE_USE_DISTCC=ON"
+    export CMAKEFLAGS="${CMAKEFLAGS} -DCMAKE_JOB_POOLS='link_pool=$nproc2x' -DCMAKE_JOB_POOL_LINK=link_pool"
     export DISTCC_HOSTS="localhost"
     setup_distcc_hosts
-    distcc --show-hosts
     if [ $? -eq 0 ]; then
       # limit local preprocessing by ccache as doing 100s at a time is bad
       export CCACHE_PREFIX_CPP="`pwd`/cpp_prefix.sh"
@@ -115,6 +120,7 @@ if [ "$MAKE" = true ]; then
 
       # DEBUGGING
       if [ "$DEBUG_DISTCC" = true ]; then
+        distcc --show-hosts
         mkdir -p $TMPDIR_DISTCC
         export DISTCC_FALLBACK=0
         export DISTCC_LOG=$TMPDIR_DISTCC/distcc.log
