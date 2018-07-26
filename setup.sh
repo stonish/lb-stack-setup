@@ -54,7 +54,7 @@ pump_shutdown() {
   if [ -f "$TMPDIR_DISTCC/pump/pid" ]; then
     INCLUDE_SERVER_DIR=$TMPDIR_DISTCC/pump \
     INCLUDE_SERVER_PID=`cat $TMPDIR_DISTCC/pump/pid` \
-      pump --shutdown
+      pump --shutdown >> $TMPDIR_DISTCC/pump/shutdown.stdout 2>> $TMPDIR_DISTCC/pump/shutdown.stderr
   fi
   true
 }
