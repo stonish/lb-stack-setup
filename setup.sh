@@ -8,6 +8,7 @@ USE_CCACHE=true
 
 DEBUG_DISTCC=false
 TMPDIR_DISTCC=`pwd`/.distcc
+LOCAL_TOOLS=`pwd`/tools
 
 # take localslots{_cpp} from the number of logical cores
 nproc=$(nproc)
@@ -33,28 +34,32 @@ setup_distcc_hosts() {
 pump_startup() {
   pkill -f include_server || true  # kill stray include servers TODO do we really need to?
   # start the include server manually (instead of pump --startup) for more control
-  INCLUDE_SERVER_DIR=$TMPDIR_DISTCC/pump
+  INCLUDE_SERVER_DIR=$TMPDIR_DISTCC/socket
   mkdir -p $INCLUDE_SERVER_DIR
   export INCLUDE_SERVER_PORT=$INCLUDE_SERVER_DIR/socket  # used by the distcc client
-  # if [ -f "$TMPDIR_DISTCC/pump/pid" ]; then
-  #   if ps -p `cat $TMPDIR_DISTCC/pump/pid` > /dev/null; then
+  # if [ -f "$TMPDIR_DISTCC/pump.pid" ]; then
+  #   if ps -p `cat $TMPDIR_DISTCC/pump.pid` > /dev/null; then
   #     echo "Reusing existing include_server"
   #     return 0
   #   fi
   # fi
-  # TODO do not use local include server
-  python3 $HOME/tools/distcc/include_server/include_server.py \
-    --port $INCLUDE_SERVER_PORT --pid_file $INCLUDE_SERVER_DIR/pid \
-    -t -s \
-    > $INCLUDE_SERVER_DIR/stdout 2> $INCLUDE_SERVER_DIR/stderr
+  # TODO add a separator line to the stdout/stderr
+  INCLUDE_SERVER_INSTALL="$LOCAL_TOOLS/lib64/python3.6/site-packages/include_server"
+  PYTHONPATH="$PYTHONPATH:$INCLUDE_SERVER_INSTALL" \
+    python3 $INCLUDE_SERVER_INSTALL/include_server.py \
+      --port $INCLUDE_SERVER_PORT --pid_file $TMPDIR_DISTCC/pump.pid \
+      -t -s \
+      >> $TMPDIR_DISTCC/pump-startup.stdout 2>> $TMPDIR_DISTCC/pump-startup.stderr
   # debugging flags -d19 (-d1) --path_observation_re cvmfs
 }
 
 pump_shutdown() {
-  if [ -f "$TMPDIR_DISTCC/pump/pid" ]; then
-    INCLUDE_SERVER_DIR=$TMPDIR_DISTCC/pump \
-    INCLUDE_SERVER_PID=`cat $TMPDIR_DISTCC/pump/pid` \
-      pump --shutdown >> $TMPDIR_DISTCC/pump/shutdown.stdout 2>> $TMPDIR_DISTCC/pump/shutdown.stderr
+  if [ -f "$TMPDIR_DISTCC/pump.pid" ]; then
+    # TODO add a separator line to the stdout/stderr
+    PATH="$LOCAL_TOOLS/bin:$PATH"
+    INCLUDE_SERVER_DIR=$TMPDIR_DISTCC/socket \
+    INCLUDE_SERVER_PID=`cat $TMPDIR_DISTCC/pump.pid` \
+      pump --shutdown >> $TMPDIR_DISTCC/pump-shutdown.stdout 2>> $TMPDIR_DISTCC/pump-shutdown.stderr
   fi
   true
 }

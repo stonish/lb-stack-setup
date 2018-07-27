@@ -2,3 +2,5 @@
 /.git-setup.stamp
 /.ccache
 /.distcc
+/tools/*
+/tools/!src
