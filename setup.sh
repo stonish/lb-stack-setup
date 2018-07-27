@@ -43,10 +43,13 @@ pump_startup() {
   #     return 0
   #   fi
   # fi
+
+  # TODO find a better way to start the include_server
+  python_version=`python3 --version | grep -o '3\.[0-9]*'`
+  include_server_install="$LOCAL_TOOLS/lib64/python$python_version/site-packages/include_server"
   # TODO add a separator line to the stdout/stderr
-  INCLUDE_SERVER_INSTALL="$LOCAL_TOOLS/lib64/python3.6/site-packages/include_server"
-  PYTHONPATH="$PYTHONPATH:$INCLUDE_SERVER_INSTALL" \
-    python3 $INCLUDE_SERVER_INSTALL/include_server.py \
+  PYTHONPATH="$PYTHONPATH:$include_server_install" \
+    python3 $include_server_install/include_server.py \
       --port $INCLUDE_SERVER_PORT --pid_file $TMPDIR_DISTCC/pump.pid \
       -t -s \
       >> $TMPDIR_DISTCC/pump-startup.stdout 2>> $TMPDIR_DISTCC/pump-startup.stderr
