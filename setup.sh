@@ -47,22 +47,23 @@ pump_startup() {
   # TODO find a better way to start the include_server
   python_version=`python3 --version | grep -o '3\.[0-9]*'`
   include_server_install="$LOCAL_TOOLS/lib64/python$python_version/site-packages/include_server"
-  # TODO add a separator line to the stdout/stderr
+  # TODO add a separator line to the stdout/stderr or rotate logs
   PYTHONPATH="$PYTHONPATH:$include_server_install" \
     python3 $include_server_install/include_server.py \
       --port $INCLUDE_SERVER_PORT --pid_file $TMPDIR_DISTCC/pump.pid \
       -t -s \
-      >> $TMPDIR_DISTCC/pump-startup.stdout 2>> $TMPDIR_DISTCC/pump-startup.stderr
+      > $TMPDIR_DISTCC/pump-startup.stdout 2> $TMPDIR_DISTCC/pump-startup.stderr
   # debugging flags -d19 (-d1) --path_observation_re cvmfs
 }
 
 pump_shutdown() {
   if [ -f "$TMPDIR_DISTCC/pump.pid" ]; then
-    # TODO add a separator line to the stdout/stderr
+    # TODO add a separator line to the stdout/stderr or rotate logs
     PATH="$LOCAL_TOOLS/bin:$PATH"
     INCLUDE_SERVER_DIR=$TMPDIR_DISTCC/socket \
     INCLUDE_SERVER_PID=`cat $TMPDIR_DISTCC/pump.pid` \
-      pump --shutdown >> $TMPDIR_DISTCC/pump-shutdown.stdout 2>> $TMPDIR_DISTCC/pump-shutdown.stderr
+      pump --shutdown > $TMPDIR_DISTCC/pump-shutdown.stdout 2> $TMPDIR_DISTCC/pump-shutdown.stderr
+    rm -f $TMPDIR_DISTCC/pump.pid  # TODO test if process exists?
   fi
   true
 }
