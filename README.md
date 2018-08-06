@@ -191,3 +191,20 @@ in which case it would clone only the required repositories.
 
 For Mini Brunel, the option file and the input file are available on EOS at `/eos/lhcb/software/MiniBrunel`
 
+
+## Distributed compilation setup
+### Prerequisites
+- python3, including the headers. On CentOS:
+```
+yum install python34 python34-devel
+```
+### AAA
+```
+git checkout distcc
+git submodule update --init tools/src/distcc
+cd tools/src/distcc
+git checkout tmp
+./autogen.sh
+./configure --prefix `pwd`/../..
+make install
+```
