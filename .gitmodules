@@ -1,3 +1,4 @@
 [submodule "tools/distcc"]
-	path = tools/src/distcc
-	url = https://github.com/rmatev/distcc.git
+    path = tools/src/distcc
+    url = https://github.com/rmatev/distcc.git
+    branch = tmp
