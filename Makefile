@@ -124,7 +124,7 @@ ifeq ($(CCACHE),)
 endif
 ifneq ($(CCACHE),)
 $(CCACHE_DIR):
-	$(CCACHE) -F 20000 -M 0
+	( . `pwd`/setup.sh; $(CCACHE) -F 20000 -M 0 )
 $(PROJECTS): $(CCACHE_DIR)
 endif
 
