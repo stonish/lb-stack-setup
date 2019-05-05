@@ -201,10 +201,5 @@ yum install python34 python34-devel
 ### AAA
 ```
 git checkout distcc
-git submodule update --init tools/src/distcc
-cd tools/src/distcc
-git checkout tmp
-./autogen.sh
-./configure --prefix `pwd`/../..
-make install
+bash install.sh
 ```
