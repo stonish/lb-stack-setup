@@ -132,3 +132,10 @@ set-git-remote-url:
 	@$(foreach p,$(PROJECTS),if [ -d $p ] ; then ( cd $p && pwd && git remote set-url origin $(GIT_BASE)/$($p_GITGROUP)/$p.git && git remote -v ) ; fi ;)
 
 .PHONY: $(ALL_TARGETS) dist pull-build
+
+# debugging
+print-%  : ; @echo $* = $($*)
+
+.PHONY: list
+list:
+	@$(MAKE) -pRrq -f $(lastword $(MAKEFILE_LIST)) : 2>/dev/null | awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($$1 !~ "^[#.]") {print $$1}}' | sort | egrep -v -e '^[^[:alnum:]]' -e '^$@$$'

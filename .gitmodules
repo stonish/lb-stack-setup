@@ -8,3 +8,7 @@
 [submodule "tools/src/ninja"]
 	path = tools/src/ninja
 	url = https://github.com/ninja-build/ninja.git
+[submodule "tools/src/cmake"]
+	path = tools/src/cmake
+	url = https://gitlab.kitware.com/rmatev/cmake.git
+	branch = ninja-pool-custom-command

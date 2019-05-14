@@ -23,7 +23,7 @@
 #     Project dependencies. Modification is normally not needed. If a project
 #     is not in PROJECTS, the variable is ignored.
 
-PROJECTS = Gaudi/v28r2 LHCb Lbcom Rec Brunel Phys Hlt Moore Stripping Analysis DaVinci LHCbIntegrationTests
+PROJECTS = Gaudi LHCb Lbcom Rec #Brunel Phys Hlt Moore Stripping Analysis DaVinci LHCbIntegrationTests
 DEFAULT_BRANCH = master
 GIT_BASE = ssh://git@gitlab.cern.ch:7999
 
