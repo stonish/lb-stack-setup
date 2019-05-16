@@ -84,7 +84,7 @@ $(1)_URL := $$(or $$($(1)_URL),$(GIT_BASE)/$$($(1)_GITGROUP)/$(1).git)
 $(1)_BRANCH := $$(or $$($(1)_BRANCH),$(DEFAULT_BRANCH))
 # checkout/update
 $(1)-checkout:
-	@test -e $(1) || git clone -b $$($(1)_BRANCH) $$($(1)_URL) $(1)
+	@test -e $(1) || git clone --recurse-submodules -b $$($(1)_BRANCH) $$($(1)_URL) $(1)
 	@cd $(1) && ../utils/build-env lb-project-init
 	@grep -Fxq "toolchain.cmake" $(1)/.git/info/exclude || echo "toolchain.cmake" >> $(1)/.git/info/exclude
 	@test -h $(1)/run -o -e $(1)/run || (\
