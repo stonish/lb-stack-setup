@@ -38,7 +38,7 @@ def cvmfs_on_autofs():
         # no autofs on MacOS
         return False
     for l in check_output(['mount']).splitlines():
-        if '/cvmfs type autofs' in l:
+        if b'/cvmfs type autofs' in l:
             return True
     return False
 
