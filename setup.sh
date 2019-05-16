@@ -123,7 +123,7 @@ if [ "$USE_CCACHE" = true ]; then
   
   export CCACHE_DIR=${PWD}/.ccache
   export CCACHE_TEMPDIR=${XDG_RUNTIME_DIR:-$(dirname $(mktemp -u))/$(id -u)}/ccache-tmp  # use a faster TMPDIR
-  export CCACHE_DEBUG=1
+  # export CCACHE_DEBUG=1
   export CCACHE_LOGFILE=${PWD}/.ccache.log
   mkdir -p ${CCACHE_TEMPDIR}
 fi
