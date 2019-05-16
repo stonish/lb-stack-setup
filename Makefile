@@ -85,7 +85,8 @@ $(1)_BRANCH := $$(or $$($(1)_BRANCH),$(DEFAULT_BRANCH))
 # checkout/update
 $(1)-checkout:
 	@test -e $(1) || git clone --recurse-submodules -b $$($(1)_BRANCH) $$($(1)_URL) $(1)
-	@cd $(1) && ../utils/build-env lb-project-init
+$(1)/Makefile: $(1)-checkout
+	@test -e $(1)/Makefile || utils/build-env lb-project-init $(1)
 	@grep -Fxq "toolchain.cmake" $(1)/.git/info/exclude || echo "toolchain.cmake" >> $(1)/.git/info/exclude
 	@test -h $(1)/run -o -e $(1)/run || (\
 		echo -e '#!/bin/bash\n$$$$(dirname "$$$${BASH_SOURCE[0]}")/build.$$$${CMTCONFIG}/run "$$$$@"' > $(1)/run && \
@@ -95,7 +96,7 @@ $(1)-update: $(1)-checkout
 	@cd $(1) && git pull origin $$($(1)_BRANCH)
 # generic build target
 $(1)/%: $$($(1)_DEPS) fast/$(1)/% ;
-fast/$(1)/%: $(1)-checkout utils/setup.sh
+fast/$(1)/%: $(1)/Makefile utils/setup.sh
 	@utils/build-env bash -c '(. `pwd`/utils/setup.sh -m $(1); (set -v ; $$(MAKE) -C $(1) $$*); `pwd`/utils/setup.sh -s)'
 # exception for purge and clean: always do fast/Project/purge or clean
 $(1)/purge: fast/$(1)/purge utils/setup.sh ;
