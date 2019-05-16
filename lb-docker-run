@@ -157,8 +157,14 @@ parser.add_option(
     dest='interactive',
     help="Do not give an interactive shell to this container")
 parser.add_option(
-    '--no-tty',
+    '--tty',
     action='store_true',
+    dest='tty',
+    help="Allocate a pseudo-TTY with --interactive")
+parser.add_option(
+    '--no-tty',
+    action='store_false',
+    dest='tty',
     help="Do not allocate a pseudo-TTY with --interactive")
 parser.add_option(
     '--no-remove',
@@ -207,6 +213,7 @@ parser.add_option(
 parser.set_defaults(
     lhcb_env=None,
     interactive=True,
+    # tty's default is set based on opts.interactive
     remove=True,
     env=[],
     port=[],
@@ -226,9 +233,14 @@ else:  # are target of a symlink
 opts, args = parser.parse_args(args=argv)
 logging.basicConfig(level=opts.level)
 
+# tty's default is set based on opts.interactive
+if opts.tty is None:
+    opts.tty = opts.interactive
+
 if opts.wrap:
     logging.debug('enabling wrapper mode')
     opts.interactive = False
+    opts.tty = False
     opts.remove = True
     opts.network = 'host'
     opts.absolutePath = True
@@ -260,6 +272,9 @@ if opts.force_cvmfs and opts.no_cvmfs:
 
 if opts.user and opts.no_map_user:
     parser.error('conflicting options --user and --no-map-user')
+
+if not opts.interactive and opts.tty:
+    parser.error('conflicting options --no-interactive and --tty')
 
 if not opts.platform and not opts.os:
     opts.os = platform_os = DEFAULT_PLATFORM.split('-')[1]
@@ -346,7 +361,7 @@ docker_opts = [
     (True, ['docker', 'run']),
     (opts.remove, ['--rm']),
     (opts.interactive, ['-i']),
-    (opts.interactive and not opts.no_tty, ['-t']),
+    (opts.interactive and opts.tty, ['-t']),
     (opts.privileged, ['--privileged']),
     (opts.name, ['--name', opts.name]),
     (opts.volume, concat(['-v', v if ':' in v else '{0}:{0}'.format(v)]
