@@ -1,0 +1,13 @@
+#!/bin/bash
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+cd ${DIR}
+BINARY_TAG="$( grep -m 1 "^[^#]" binary_tag )"
+
+for iproject in $(seq 1 $#); do
+    if [[ "${!iproject}" != -* ]]; then
+        break
+    fi
+done
+
+PROJECT="${!iproject}"
+./build-env --ptrace "${@:1:$iproject-1}" ${PROJECT}/build.${BINARY_TAG}/run "${@:$iproject+1}"

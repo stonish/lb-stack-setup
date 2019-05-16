@@ -1,0 +1,22 @@
+#!/bin/bash
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+cd ${DIR}
+BINARY_TAG="$( grep -m 1 "^[^#]" binary_tag )"
+
+# TODO make kerberos optional
+# TODO is there a way to forward cache from types other than FILE, e.g KCM?
+export KRB5CCNAME=$(klist 2>/dev/null | head -1 | grep -o 'FILE:.*')
+if [ -z "$KRB5CCNAME" ]; then
+    echo -e \
+"No kerberos ticket cache of the form 'FILE:path/to/file' was found.
+Please do this to forward a kerberos ticket to the conainer:
+
+    export KRB5CCNAME='FILE:/tmp/krb5cc_$(id -u)'; kinit <username>@CERN.CH
+"
+    exit 1
+fi
+
+./lb-docker-run \
+    --quiet-env --lbenv -c ${BINARY_TAG} \
+    -C .. --use-absolute-path --kerberos \
+    "$@"
