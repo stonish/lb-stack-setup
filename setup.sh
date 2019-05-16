@@ -2,15 +2,13 @@
 set -e
 #set -x  # trace the script for debugging
 
-SCCACHE_REDIS="redis://:8jeAty7WA1HJdY1743TN2OwOhF4hKX1cynYSQf5d2ZIcYwuY@lbquantaperf02.cern.ch"
-
 USE_DISTCC="${USE_DISTCC:-true}"
 USE_DISTCC_PUMP="${USE_DISTCC_PUMP:-true}"
 USE_CCACHE="${USE_CCACHE:-true}"
 
 DEBUG_DISTCC=false
 TMPDIR_DISTCC=`pwd`/.distcc
-LOCAL_TOOLS=`pwd`/tools
+LOCAL_TOOLS=`pwd`/contrib
 
 # take localslots{_cpp} from the number of logical cores
 nproc=$(nproc)
@@ -19,8 +17,6 @@ nproc2x=$(expr $nproc \* 2)
 export PATH=$LOCAL_TOOLS/bin:$PATH
 export PATH=~/cmake/bin:$PATH
 #export PATH=/cvmfs/lhcb.cern.ch/lib/contrib/CMake/3.14.3/Linux-x86_64/bin:$PATH
-which cmake
-cmake --version
 # Make absolutely sure cmake will use the local install of ninja, ccache and distcc
 export CMAKEFLAGS="$CMAKEFLAGS -DCMAKE_MAKE_PROGRAM:FILEPATH=$LOCAL_TOOLS/bin/ninja"
 export CMAKEFLAGS="$CMAKEFLAGS -Dccache_cmd:FILEPATH=$LOCAL_TOOLS/bin/ccache"
@@ -67,14 +63,13 @@ pump_startup() {
   # fi
 
   # TODO find a better way to start the include_server
-  python_version=`python3 --version | grep -o '3\.[0-9]*'`
-  # TODO use /cvmfs/sft.cern.ch/lcg/releases/LCG_95apython3/Python/3.6.5/x86_64-centos7-gcc8-opt/bin/python
-  include_server_install="$LOCAL_TOOLS/lib64/python$python_version/site-packages/include_server"
+  PYTHON=/cvmfs/sft.cern.ch/lcg/releases/LCG_95apython3/Python/3.6.5/x86_64-centos7-gcc8-opt/bin/python
+  include_server_install="$LOCAL_TOOLS/lib/python3.6/site-packages/include_server"
   # TODO add a separator line to the stdout/stderr or rotate logs
   # Start the include server directly, avoiding the `pump` wrapper.
   # This allows more control, e.g. to chose the version of python
   PYTHONPATH="$PYTHONPATH:$include_server_install" \
-    python3 $include_server_install/include_server.py \
+    $PYTHON $include_server_install/include_server.py \
       --port $INCLUDE_SERVER_PORT --pid_file $TMPDIR_DISTCC/pump.pid \
       -t -s \
       > $TMPDIR_DISTCC/pump-startup.stdout 2> $TMPDIR_DISTCC/pump-startup.stderr
@@ -144,7 +139,8 @@ if [ "$MAKE" = true ]; then
   export CMAKEFLAGS="$CMAKEFLAGS -DGAUDI_DIAGNOSTICS_COLOR=ON"
   export CMAKE_PREFIX_PATH=${PWD}:${CMAKE_PREFIX_PATH}
   # TODO what if we don't build Gaudi???
-  export default_toolchain:FILEPATH=${PWD}/Gaudi/cmake/GaudiDefaultToolchain.cmake  # Use toolchain from local Gaudi
+  export CMAKEFLAGS="$CMAKEFLAGS -Ddefault_toolchain:FILEPATH=${PWD}/Gaudi/cmake/GaudiDefaultToolchain.cmake"
+  # Use toolchain from local Gaudi
   unset VERBOSE  # Reduce verbosity
   # Disable functor cache
   if [[ " Brunel Moore DaVinci " =~ " $PROJECT " ]]; then
