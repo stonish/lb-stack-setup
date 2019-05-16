@@ -3,11 +3,11 @@ KEEP_SRC=${KEEP_SRC:-false}
 PATH="/cvmfs/lhcb.cern.ch/lib/contrib/git/2.14.2/bin${PATH:+:${PATH}}"
 
 setup() {
-    REPO="$1"
-    SHA="$2"
-    SRC="$CONTRIB/src/$(basename $REPO .git)"
-    OLD_DIR=$(pwd)
-
+    local REPO="$1"
+    local SHA="$2"
+    local SRC="$CONTRIB/src/$(basename $REPO .git)"
+    local OLD_DIR=$(pwd)
+    local REMOVE=false
     
     if [ ! -d "$SRC" ] ; then
         # if the source directory does not exist, clone and remove it afterwards
@@ -25,8 +25,6 @@ setup() {
         # full clone with checkout
         # git clone "$REPO" "$SRC"
         # git checkout "$SHA"
-    else
-        REMOVE=false  # never remove $SRC if already existed
     fi
 
     if [ "$REMOVE" = true ]; then
