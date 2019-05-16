@@ -15,7 +15,6 @@ nproc=$(nproc)
 nproc2x=$(expr $nproc \* 2)
 
 export PATH=$LOCAL_TOOLS/bin:$PATH
-export PATH=~/cmake/bin:$PATH
 #export PATH=/cvmfs/lhcb.cern.ch/lib/contrib/CMake/3.14.3/Linux-x86_64/bin:$PATH
 # Make absolutely sure cmake will use the local install of ninja, ccache and distcc
 export CMAKEFLAGS="$CMAKEFLAGS -DCMAKE_MAKE_PROGRAM:FILEPATH=$LOCAL_TOOLS/bin/ninja"
@@ -122,8 +121,7 @@ if [ "$USE_CCACHE" = true ]; then
 
   export CCACHE_DEPEND=1  # use generated depenencies instead of the preprocessor
   
-  # export CCACHE_DIR=${PWD}/.ccache
-  export CCACHE_DIR=~/ccache
+  export CCACHE_DIR=${PWD}/.ccache
   export CCACHE_TEMPDIR=${XDG_RUNTIME_DIR:-$(dirname $(mktemp -u))/$(id -u)}/ccache-tmp  # use a faster TMPDIR
   export CCACHE_DEBUG=1
   export CCACHE_LOGFILE=${PWD}/.ccache.log
