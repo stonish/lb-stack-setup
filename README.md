@@ -3,6 +3,8 @@
 ## Prerequisites
 ### Operating system
 #### CentOS 7 (e.g. a shared machine)
+__THIS IS NOT WORKING RIGHT NOW__
+
 Confirm that you are on CentOS 7 with
 ```sh
 grep PRETTY_NAME /etc/os-release
