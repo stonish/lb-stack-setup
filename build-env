@@ -3,6 +3,19 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 BINARY_TAG="$( git config --file "${DIR}/config" platform.binaryTag )"
 USE_DOCKER="$( git config --file "${DIR}/config" --bool platform.useDocker )"
 
+if [ "$USE_DOCKER" != true ]; then
+    HOST_OS=$(/cvmfs/lhcb.cern.ch/lib/bin/host_os)
+    if [ "$USE_DOCKER" = false ]; then
+        if [ "$HOST_OS" != x86_64-centos7 ]; then
+            echo "Host OS $HOST_OS is not supported. Find a CentOS 7 machine\n" \
+                 "or use docker by setting useDocker = true in ${DIR}/config." >&2
+            exit 1
+        fi
+    # else  # USE_DOCKER is not set in config
+    #     # TODO check and propose?
+    fi
+fi
+
 # TODO make kerberos optional
 # TODO is there a way to forward cache from types other than FILE, e.g KCM?
 # TODO if USE_DOCKER is false, any cache type is ok (no need to forward)

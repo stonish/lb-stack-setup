@@ -3,14 +3,13 @@
 ## Prerequisites
 ### Operating system
 #### CentOS 7 (e.g. a shared machine)
-__THIS IS NOT WORKING RIGHT NOW__
 
 Confirm that you are on CentOS 7 with
 ```sh
 grep PRETTY_NAME /etc/os-release
 # PRETTY_NAME="CentOS Linux 7 (Core)"
 ```
-_TODO: write special instructions for lxplus_
+_TODO: Do we need special instructions for lxplus?_
 
 #### Other than CentOS 7 (e.g. a laptop)
 You need docker to run a CentOS 7 container.
@@ -43,6 +42,12 @@ Create a workspace directory, e.g. `stack`, and clone this repo inside in a dire
 mkdir stack
 cd stack
 git clone -b mess ssh://git@gitlab.cern.ch:7999/rmatev/lb-stack-setup.git utils
+```
+
+Configure your environment (e.g. docker or native) and projects
+```sh
+$EDITOR utils/config
+$EDITOR utils/configuration.mk
 ```
 
 Install recent (or patched) versions of CMake, Ninja, ccache and distcc. Also installs a bunch of useful scripts. It should take less than 5 minutes.
