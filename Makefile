@@ -108,11 +108,11 @@ fast/$(1): fast/$(1)/install
 $(1)-clean: $(patsubst %,%-clean,$($(1)_INV_DEPS))
 	$$(MAKE) -C fast/$(1)-clean
 fast/$(1)-clean:
-	-test -d $(1)/build.$$(CMTCONFIG) && $$(MAKE) $(1)/clean
+	@test -d $(1)/build.$$(CMTCONFIG) && $$(MAKE) $(1)/clean || true
 	$(RM) -r $(1)/InstallArea/$$(CMTCONFIG)
 # purge
 $(1)-purge:
-	-test -e $(1) && $$(MAKE) fast/$(1)/purge
+	@test -e $(1) && $$(MAKE) fast/$(1)/purge || true
 endef
 $(foreach proj,$(PROJECTS),$(eval $(call PROJECT_settings,$(proj))))
 
