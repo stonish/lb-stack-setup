@@ -1,10 +1,11 @@
 #!/bin/bash
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-cd ${DIR}
-BINARY_TAG="$( grep -m 1 "^[^#]" binary_tag )"
+BINARY_TAG="$( git config --file "${DIR}/config" platform.binaryTag )"
+USE_DOCKER="$( git config --file "${DIR}/config" --bool platform.useDocker )"
 
 # TODO make kerberos optional
 # TODO is there a way to forward cache from types other than FILE, e.g KCM?
+# TODO if USE_DOCKER is false, any cache type is ok (no need to forward)
 export KRB5CCNAME=$(klist 2>/dev/null | head -1 | grep -o 'FILE:.*')
 if [ -z "$KRB5CCNAME" ]; then
     echo -e \
@@ -16,7 +17,16 @@ Please do this to forward a kerberos ticket to the conainer:
     exit 1
 fi
 
-./lb-docker-run \
-    --quiet-env --lbenv -c ${BINARY_TAG} \
-    -C .. --use-absolute-path --kerberos \
+if [ "$USE_DOCKER" = true ]; then
+    "${DIR}/lb-docker-run" \
+        --quiet-env --lbenv -c ${BINARY_TAG} \
+        -C "${DIR}/.." --use-absolute-path --kerberos \
+        ${LB_DOCKER_RUN_FLAGS} \
+        "$@"
+else
+    # TODO start a clean LbEnv a la lb-docker-run
+    #      eg /cvmfs/lhcb.cern.ch/lib/LbEnv -c ${BINARY_TAG} ...
+    export BINARY_TAG
+    export CMTCONFIG="${BINARY_TAG}"
     "$@"
+fi
