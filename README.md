@@ -35,6 +35,10 @@ Check that you have at least `git 2.13`
 ```sh
 git --version
 ```
+If not, the simplest solution is to define the alias
+```sh
+alias git=/cvmfs/lhcb.cern.ch/lib/contrib/git/2.14.2/bin/git
+```
 
 ## Get started
 Create a workspace directory, e.g. `stack`, and clone this repo inside in a directory `utils`:
