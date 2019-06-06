@@ -6,8 +6,11 @@ USE_DISTCC="${USE_DISTCC:-true}"
 USE_DISTCC_PUMP="${USE_DISTCC_PUMP:-true}"
 USE_CCACHE="${USE_CCACHE:-true}"
 
+TMPDIR=${XDG_RUNTIME_DIR:-$(dirname $(mktemp -u))/$(id -u)}
+# TODO the above may result in /tmp/<username>/<id> which is a bit redundant
+
 DEBUG_DISTCC=false
-TMPDIR_DISTCC=`pwd`/.distcc
+TMPDIR_DISTCC=$TMPDIR/distcc
 LOCAL_TOOLS=`pwd`/contrib
 
 # take localslots{_cpp} from the number of logical cores
@@ -122,7 +125,7 @@ if [ "$USE_CCACHE" = true ]; then
   export CCACHE_DEPEND=1  # use generated depenencies instead of the preprocessor
   
   export CCACHE_DIR=${PWD}/.ccache
-  export CCACHE_TEMPDIR=${XDG_RUNTIME_DIR:-$(dirname $(mktemp -u))/$(id -u)}/ccache-tmp  # use a faster TMPDIR
+  export CCACHE_TEMPDIR=$TMPDIR/ccache-tmp  # use a faster TMPDIR
   # export CCACHE_DEBUG=1
   export CCACHE_LOGFILE=${PWD}/.ccache.log
   mkdir -p ${CCACHE_TEMPDIR}
