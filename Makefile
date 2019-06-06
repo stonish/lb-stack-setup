@@ -96,8 +96,11 @@ $(1)-update: $(1)-checkout
 	@cd $(1) && git pull origin $$($(1)_BRANCH)
 # generic build target
 $(1)/%: $$($(1)_DEPS) fast/$(1)/% ;
+# In the old setup make passes variables automatically to the submake.
+# https://www.gnu.org/software/make/manual/html_node/Variables_002fRecursion.html
+# TODO special chars do not work, e.g. ARGS='-R -N xyz$'
 fast/$(1)/%: $(1)/Makefile utils/setup.sh
-	@utils/build-env bash -c '(. `pwd`/utils/setup.sh -m $(1); (set -v ; $$(MAKE) -C $(1) $$*); `pwd`/utils/setup.sh -s)'
+	@utils/build-env bash -c '(. `pwd`/utils/setup.sh -m $(1); (set -v ; $$(MAKE) -C $(1) $$* ARGS="$(ARGS)"); `pwd`/utils/setup.sh -s)'
 # exception for purge and clean: always do fast/Project/purge or clean
 $(1)/purge: fast/$(1)/purge utils/setup.sh ;
 $(1)/clean: fast/$(1)/clean utils/setup.sh ;
