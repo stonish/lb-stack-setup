@@ -80,8 +80,9 @@ utils/run-env Moore gaudirun.py ...
 ```
 
 ## Known issues
-- Need to be able to run docker without sudo.
+- We don't know how to run over GRID files
 - You MUST run the top-level `make` from the directory where it resides.
+- Need to be able to run docker without sudo.
 - You MUST be on the CERN network to profit from distcc.
 - CMake emits a bunch of warnings.
 ```
@@ -106,3 +107,4 @@ distcc[3977] Warning: failed to distribute ../Rec/ChargedProtoANNPID/src/TMVAImp
 - Manual initial setup can be improved with e.g. cookiecutter.
 - Settings are scattered in `configuration.mk`, `binary_tag`, `setup.sh`.
 - lb-docker-run should be upstreamed and removed from this repo.
+- One MUST NOT `make` directly in the project directories.
