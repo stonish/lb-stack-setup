@@ -15,6 +15,10 @@ LOCAL_TOOLS=`pwd`/contrib
 
 # take localslots{_cpp} from the number of logical cores
 nproc=$(nproc)
+# Tweaks for LXPLUS
+if [[ $(hostname) == lxplus* ]]; then
+    nproc=$(nproc --ignore 2)
+fi
 nproc2x=$(expr $nproc \* 2)
 
 export PATH=$LOCAL_TOOLS/bin:$PATH
@@ -186,12 +190,6 @@ if [ "$MAKE" = true ]; then
       echo "Could not setup hosts for distcc"
       exit 1
     fi
-  fi
-
-  # Tweaks for LXPLUS
-  if [[ $(hostname) == lxplus* ]]; then
-    # don't be too aggressive or else g++ gets killed
-    export NINJAFLAGS=-j6
   fi
 fi  # BUILD
 
