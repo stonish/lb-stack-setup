@@ -1,4 +1,5 @@
 #!/bin/bash
+set -eo pipefail
 
 . $(dirname $0)/install-common.sh
 
