@@ -2,8 +2,8 @@
 set -eo pipefail
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-BINARY_TAG="$( git config --file "${DIR}/config" platform.binaryTag )"
-USE_DOCKER="$( git config --file "${DIR}/config" --bool platform.useDocker )"
+BINARY_TAG="$( "$DIR/get-config" platform.binaryTag )"
+USE_DOCKER="$( "$DIR/get-config" --bool platform.useDocker )"
 
 if [ "$USE_DOCKER" != true ]; then
     HOST_OS=$(/cvmfs/lhcb.cern.ch/lib/bin/host_os)

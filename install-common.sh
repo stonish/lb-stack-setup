@@ -1,3 +1,5 @@
+set -eo pipefail
+
 CONTRIB=${CONTRIB:-$(pwd)/contrib}
 KEEP_SRC=${KEEP_SRC:-false}
 PATH="/cvmfs/lhcb.cern.ch/lib/contrib/git/2.14.2/bin${PATH:+:${PATH}}"

@@ -2,7 +2,7 @@
 set -eo pipefail
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-BINARY_TAG="$( git config --file "${DIR}/config" platform.binaryTag )"
+BINARY_TAG="$( "$DIR/get-config" platform.binaryTag )"
 
 # Find the project, i.e. the first option not starting with a dash
 for iproject in $(seq 1 $#); do
