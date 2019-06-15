@@ -5,13 +5,14 @@
 Chose a workspace directory, e.g. `stack`, and run the following command
 
 ```sh
-curl https://gitlab.cern.ch/rmatev/lb-stack-setup/raw/mess/setup.py | python - stack
+curl https://gitlab.cern.ch/rmatev/lb-stack-setup/raw/mess/setup.py \
+    | python - stack
 ```
 
 The script will first check that all prerequisites are met. If it fails, check
-[doc/prerequisites.md] for more information. Then it will clone this repo
-inside a new directory `stack/utils` and do the initial setup. It will choose
-a default environment for you.
+[doc/prerequisites.md](doc/prerequisites.md) for more information.
+Then it will clone this repo inside a new directory `stack/utils` and do the
+initial setup. It will choose a default environment for you.
 
 Install recent (or patched) versions of CMake, Ninja, ccache and distcc.
 It also installs a bunch of useful scripts and should take less than 5 minutes.
