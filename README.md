@@ -2,7 +2,7 @@
 
 ## Get started
 
-Chose a workspace directory, e.g. `stack`, and run the following command
+Choose a workspace directory, for example, `stack`, and run the following command
 
 ```sh
 curl https://gitlab.cern.ch/rmatev/lb-stack-setup/raw/mess/setup.py \
@@ -94,22 +94,17 @@ sync to the latest changes.
 - Need to be able to run docker without sudo.
 - You MUST be on the CERN network to profit from distcc.
 - CMake emits a bunch of warnings.
-
     ```log
       No project() command is present.  The top-level CMakeLists.txt file must
       contain a literal, direct call to the project() command.  Add a line of
       code such as
     ```
-
 - distcc is not happy about some of our generated files (can be ignored)
-
     ```log
     distcc[2541] (dcc_talk_to_include_server) Warning: include server gave up analyzing
     distcc[2541] (dcc_build_somewhere) Warning: failed to get includes from include server, preprocessing locally
     ```
-
 - `TMVAImpFactory-MCUpTuneV1.cpp` takes forever to compile.
-
     ```log
     [8>1>1183/1191] Building CXX object Rec/ChargedProtoANNPID/CMakeFiles/ChargedProtoANNPID.dir/src/TMVAImpFactory-MCUpTuneV1.cpp.o
     distcc[3977] (dcc_select_for_read) ERROR: IO timeout
@@ -117,7 +112,6 @@ sync to the latest changes.
     distcc[3977] (dcc_r_result_header) ERROR: server provided no answer. Is the server configured to allow access from your IP address? Is the server performing authentication and your client isn't? Does the server have the compiler installed? Is the server configured to access the compiler?
     distcc[3977] Warning: failed to distribute ../Rec/ChargedProtoANNPID/src/TMVAImpFactory-MCUpTuneV1.cpp to lbquantaperf02.cern.ch/40,cpp,lzo,auth, running locally instead
     ```
-
 - There are no tests. None whatsoever.
 - Manual initial setup can be improved with e.g. cookiecutter.
 - Settings are scattered in `configuration.mk`, `config`, `setup.sh`.
