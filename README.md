@@ -5,7 +5,7 @@
 Chose a workspace directory, e.g. `stack`, and run the following command
 
 ```sh
-curl https://gitlab.cern.ch/rmatev/lb-stack-setup/raw/mess/lb-docker-run | python - stack
+curl https://gitlab.cern.ch/rmatev/lb-stack-setup/raw/mess/setup.py | python - stack
 ```
 
 The script will first check that all prerequisites are met. If it fails, check
