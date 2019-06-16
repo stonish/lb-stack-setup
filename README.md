@@ -24,7 +24,7 @@ bash utils/install.sh
 Configure your environment (e.g. docker or native) and projects to build
 
 ```sh
-$EDITOR utils/config
+$EDITOR utils/config.json
 $EDITOR utils/configuration.mk
 ```
 
@@ -73,10 +73,10 @@ The platform set in your shell when running `make` or `run-env` is irrelevant.
 In order to change the platform used to compile and run, do the following
 
 ```sh
-git config --file utils/config platfrom.binaryTag x86_64-centos7-gcc8-opt+g
+utils/config.py binaryTag x86_64-centos7-gcc8-opt+g
 ```
 
-or edit the file `utils/config` directly.
+or edit the file `utils/config.json` directly.
 
 ### Update the setup
 
@@ -92,7 +92,6 @@ sync to the latest changes.
 - We don't know how to run over GRID files
 - You MUST run the top-level `make` from the directory where it resides.
 - Need to be able to run docker without sudo.
-- You MUST be on the CERN network to profit from distcc.
 - CMake emits a bunch of warnings.
     ```log
       No project() command is present.  The top-level CMakeLists.txt file must
@@ -114,6 +113,7 @@ sync to the latest changes.
     ```
 - There are no tests. None whatsoever.
 - Manual initial setup can be improved with e.g. cookiecutter.
-- Settings are scattered in `configuration.mk`, `config`, `setup.sh`.
+- Settings are scattered in `configuration.mk`, `config.json`, `setup.sh`.
 - `lb-docker-run` should be upstreamed and removed from this repo.
 - One MUST NOT `make` directly in the project directories.
+- Logging is not uniform, and worse not documented

@@ -1,0 +1,20 @@
+{
+	"binaryTag": "x86_64-centos7-gcc8-opt",
+	"useDocker": false,
+	"distccHosts": [
+		{
+			"spec": "lbquantaperf01.cern.ch/40,cpp,lzo,auth",
+			"gateway": "lxplus.cern.ch",
+			"localPort": 36321
+		},
+		{
+			"spec": "lbquantaperf02.cern.ch/40,cpp,lzo,auth",
+			"gateway": "lxplus.cern.ch",
+			"localPort": 36322
+		}
+	],
+	"distccPrincipal": "distccd",
+	"distccLocalslots": -1,
+	"distccLocalslotsCpp": -1,
+	"distccRandomize": true
+}

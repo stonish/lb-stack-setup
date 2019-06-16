@@ -2,12 +2,13 @@ set -eo pipefail
 
 CONTRIB=${CONTRIB:-$(pwd)/contrib}
 KEEP_SRC=${KEEP_SRC:-false}
+SRC_BASE=${SRC_BASE:-$(mktemp --tmpdir -d lb-stack-setup-install.XXXXX)}
 PATH="/cvmfs/lhcb.cern.ch/lib/contrib/git/2.14.2/bin${PATH:+:${PATH}}"
 
 setup() {
     local REPO="$1"
     local SHA="$2"
-    local SRC="$(mktemp --tmpdir -d lb-stack-setup-install.XXXXX)/$(basename $REPO .git)"
+    local SRC="$SRC_BASE/$(basename $REPO .git)"
     local OLD_DIR=$(pwd)
     local REMOVE=false
     

@@ -37,6 +37,17 @@ chown distcc:distcc /etc/krb5.keytab.distccd
 k5srvutil -f /etc/krb5.keytab.distccd list
 ```
 
+### Test authentication with port forwarding
+
+```sh
+ssh -4 -f -N -o ExitOnForwardFailure=yes -L 12345:lbquantaperf02.cern.ch:3632 lxplus.cern.ch
+echo 'int main() { return 0; }' >test.cpp
+rm -rf ~/.distcc/
+DISTCC_PRINCIPAL=distccd DISTCC_HOSTS="127.0.0.1:12345/1,auth=lbquantaperf02.cern.ch --localslots=1" DISTCC_VERBOSE=1 \
+    contrib/bin/distcc -o test.o -c test.cpp
+```
+
+
 ### Create a whitelist of users that have access
 
 The whitelist is a file containing CERN usernames, one on each line.

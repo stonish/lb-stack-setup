@@ -6,6 +6,7 @@ USE_DISTCC="${USE_DISTCC:-true}"
 USE_DISTCC_PUMP="${USE_DISTCC_PUMP:-true}"
 USE_CCACHE="${USE_CCACHE:-true}"
 
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 TMPDIR=${XDG_RUNTIME_DIR:-$(dirname $(mktemp -u))/$(id -u)}
 # TODO the above may result in /tmp/<username>/<id> which is a bit redundant
 
@@ -32,27 +33,14 @@ export NINJA_STATUS="[%u>%r>%f/%t] "
 
 
 setup_distcc_hosts() {
-  export DISTCC_HOSTS="--localslots=$nproc --localslots_cpp=$nproc2x --randomize"
-  export DISTCC_HOSTS="$DISTCC_HOSTS lbquantaperf01.cern.ch/40,cpp,lzo,auth"
-  export DISTCC_HOSTS="$DISTCC_HOSTS lbquantaperf02.cern.ch/40,cpp,lzo,auth"
-  # export DISTCC_HOSTS="$DISTCC_HOSTS 127.0.0.1:36321/40,cpp,lzo,auth=lbquantaperf01.cern.ch"
-  export DISTCC_PRINCIPAL=distccd
-  export NINJAFLAGS=${NINJAFLAGS:-"-j100"}
-  return 0
-  set +e
-  nc -w 2 localhost 11111 </dev/null 2> /dev/null || \
-    ssh -f -N -o ExitOnForwardFailure=yes -L 11111:hltperf-quanta01-e52630v4:12345 -L 11112:hltperf-quanta02-e52630v4:12345 lbgw.cern.ch
-  ok=$?
-  set -e
-  if [ $ok -eq 0 ]; then
-    # "localhost" has a special meaning for distcc -> use "127.0.0.1"
-    # TODO add cpp conditionally on USE_DISTCC_PUMP
-    export DISTCC_HOSTS="$DISTCC_HOSTS 127.0.0.1:11111/40,lzo,cpp 127.0.0.1:11112/40,lzo,cpp"
-    export NINJAFLAGS=${NINJAFLAGS:-"-j100"}
-    echo $NINJAFLAGS
-    # TODO The number of jobs needs automation
-  fi
-  return $ok
+  # TODO setup_distcc_hosts is slow when outside CERN.
+  # Consider doing port forwarding it a distcc wrapper.
+
+  # eval $(python "$DIR/setup-distcc.py")  # this hangs for some reason!
+  python "$DIR/setup-distcc.py" > .distcc.sh
+  source .distcc.sh
+  ndistcc=$(echo "$($LOCAL_TOOLS/bin/distcc -j) * 5/4" | bc)
+  export NINJAFLAGS="$NINJAFLAGS -j$ndistcc"
 }
 
 pump_startup() {
@@ -163,11 +151,10 @@ if [ "$MAKE" = true ]; then
     export CCACHE_NOCPP2=1  # give distcc the preprocessed source and skip the double preprocessing on cache miss
     export CMAKEFLAGS="${CMAKEFLAGS} -DCMAKE_USE_DISTCC=ON"
     export CMAKEFLAGS="${CMAKEFLAGS} -DCMAKE_JOB_POOLS='local=$nproc2x' -DCMAKE_JOB_POOL_LINK=local -DCMAKE_JOB_POOL_GENREFLEX=local"
-    export DISTCC_HOSTS="localhost"
-    setup_distcc_hosts
-    if [ $? -eq 0 ]; then
+
+    if setup_distcc_hosts ; then
       # limit local preprocessing by ccache as doing 100s at a time is bad
-      export CCACHE_PREFIX_CPP="`pwd`/cpp_prefix.sh"
+      export CCACHE_PREFIX_CPP="`pwd`/utils/cpp_prefix.sh"
 
       if [ "$USE_DISTCC_PUMP" = true ]; then
         unset CCACHE_NOCPP2  # pump mode does not work with preprocessed files

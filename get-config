@@ -1,7 +1,0 @@
-#!/bin/bash
-set -eo pipefail
-
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-# try config and then default.config
-git config --file "${DIR}/config" "$@" || \
-    git config --file "${DIR}/default.config" "$@"
