@@ -5,7 +5,7 @@
 Choose a workspace directory, for example, `stack`, and run the following command
 
 ```sh
-curl https://gitlab.cern.ch/rmatev/lb-stack-setup/raw/mess/setup.py \
+curl https://gitlab.cern.ch/rmatev/lb-stack-setup/raw/master/setup.py \
     | python - stack
 ```
 

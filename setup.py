@@ -22,7 +22,7 @@ CVMFS_DIRS = [
 ]
 GIT = '/cvmfs/lhcb.cern.ch/lib/contrib/git/2.14.2/bin/git'
 REPO = 'https://gitlab.cern.ch/rmatev/lb-stack-setup.git'
-BRANCH = 'mess'
+BRANCH = 'master'
 # TODO test that url and branch matches repo in a CI test?
 
 parser = argparse.ArgumentParser('LHCb stack setup')
