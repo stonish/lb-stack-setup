@@ -117,3 +117,5 @@ sync to the latest changes.
 - `lb-docker-run` should be upstreamed and removed from this repo.
 - One MUST NOT `make` directly in the project directories.
 - Logging is not uniform, and worse not documented
+- When using docker outside CERN, the port forwarding for distcc is done in
+  the container, which makes it execute quite frequently and adds overhead.
