@@ -28,6 +28,10 @@ $EDITOR utils/config.json
 $EDITOR utils/configuration.mk
 ```
 
+All configuration settings and their defaults are stored in
+[default-config.json](default-config.json).
+Any settings you specify `config.json` file will override the defaults.
+
 ## Compile
 
 You are now ready to go! Type `make [Project]` which will checkout all relevant
