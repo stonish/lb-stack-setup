@@ -8,6 +8,7 @@ if sys.version_info < (2, 7):
 import argparse
 import os
 import errno
+import platform
 import warnings
 from os.path import join
 from subprocess import check_call, check_output, CalledProcessError
@@ -20,7 +21,10 @@ CVMFS_DIRS = [
     ('/cvmfs/lhcbdev.cern.ch', False),
     ('/cvmfs/sft.cern.ch', False),
 ]
-GIT = '/cvmfs/lhcb.cern.ch/lib/contrib/git/2.14.2/bin/git'
+if platform.system().lower() == 'linux':
+    GIT = '/cvmfs/lhcb.cern.ch/lib/contrib/git/2.14.2/bin/git'
+else:
+    GIT = 'git'
 REPO = 'https://gitlab.cern.ch/rmatev/lb-stack-setup.git'
 BRANCH = 'master'
 # TODO test that url and branch matches repo in a CI test?
