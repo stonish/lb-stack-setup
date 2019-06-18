@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 from __future__ import print_function
+import errno
 import json
 import os
 from collections import OrderedDict
@@ -32,7 +33,7 @@ def read_config(original=False):
         with open(CONFIG) as f:
             overrides = json.load(f, object_pairs_hook=OrderedDict)
     except IOError as e:
-        if e.errno == errno.EEXIST:
+        if e.errno == errno.ENOENT:
             overrides = {}
         else:
             raise
