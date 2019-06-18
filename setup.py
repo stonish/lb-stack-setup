@@ -99,7 +99,7 @@ print("""
 Now do
 
     cd "{!s}"
-    $EDITOR utils/config
+    $EDITOR utils/config.json
     $EDITOR utils/configuration.mk
     bash utils/install.sh
     make
