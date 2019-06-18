@@ -45,9 +45,10 @@ for path, mandatory in CVMFS_DIRS:
         raise RuntimeError(msg)
 
 # Check host OS
-host_os = check_output('/cvmfs/lhcb.cern.ch/lib/bin/host_os').strip()
+host_os = (check_output('/cvmfs/lhcb.cern.ch/lib/bin/host_os')
+	   .decode('ascii').strip())
 use_docker = False
-if host_os == b'x86_64-centos7':
+if host_os == 'x86_64-centos7':
     # test native setup
     pass
 else:
@@ -61,7 +62,7 @@ else:
     use_docker = True
 
 # Check git version and suggest alias if too old
-git_ver_str = check_output(['git', '--version'])
+git_ver_str = check_output(['git', '--version']).decode('ascii').strip()
 git_ver = LooseVersion(git_ver_str.split()[2])
 if git_ver < LooseVersion('2.13'):
     print('Old unspported git version {} detected. Consider using\n'
