@@ -82,13 +82,13 @@ for gateway, hosts in proxied_hosts.items():
 n_localslots = config['distccLocalslots']
 if n_localslots <= 0:
     n_localslots = multiprocessing.cpu_count()
-found_hosts.append('--localhosts={}'.format(n_localslots))
+found_hosts.append('--localslots={}'.format(n_localslots))
 # Specify how many preprocessors will run in parallel on the local machine.
 # (only relevant for non-pump mode)
 n_localslots_cpp = config['distccLocalslotsCpp']
 if n_localslots_cpp <= 0:
     n_localslots_cpp = n_localslots * 2
-found_hosts.append('--localhosts_cpp={}'.format(n_localslots_cpp))
+found_hosts.append('--localslots_cpp={}'.format(n_localslots_cpp))
 
 if config['distccRandomize']:
     found_hosts.append('--randomize')
