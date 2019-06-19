@@ -2,6 +2,12 @@
 
 ## Get started
 
+> **Important:** This setup relies on some very recent fixes and improvements
+> in Gaudi (collected in the
+> [lb-stack-setup](https://gitlab.cern.ch/rmatev/Gaudi/tree/lb-stack-setup)
+> branch of [rmatev/Gaudi](https://gitlab.cern.ch/rmatev/Gaudi))
+> and external software (see below).
+
 Choose a workspace directory, for example, `stack`, and run the following command
 
 ```sh
