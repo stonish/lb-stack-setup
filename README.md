@@ -123,3 +123,7 @@ sync to the latest changes.
 - Logging is not uniform, and worse not documented
 - When using docker outside CERN, the port forwarding for distcc is done in
   the container, which makes it execute quite frequently and adds overhead.
+- Iteratively trying to compile something is slow. Typically you fail over and
+  over on the same cpp and every time you have to start include server, send
+  headers, compile. We can at least have a way to force local compilation
+  with e.g. "make local".
