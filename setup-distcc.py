@@ -95,5 +95,6 @@ if config['distccRandomize']:
 
 print('export DISTCC_HOSTS="{}"'.format(' '.join(found_hosts)))
 print('export DISTCC_PRINCIPAL="{}"'.format(config['distccPrincipal']))
+print('export DISTCC_SKIP_LOCAL_RETRY=1')
 
 # TODO add cpp conditionally on USE_DISTCC_PUMP? Does non-pump work now?
