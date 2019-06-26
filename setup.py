@@ -32,6 +32,8 @@ BRANCH = 'master'
 parser = argparse.ArgumentParser('LHCb stack setup')
 parser.add_argument('path', help='Path to stack directory',
                     **({'nargs': '?'} if FROM_FILE else {}))
+parser.add_argument('--repo', '-u', default=REPO, help='Repository URL')
+parser.add_argument('--branch', '-b', default=BRANCH, help='Branch')
 args = parser.parse_args()
 
 if not args.path:
@@ -92,9 +94,8 @@ if update_setup:
     sys.exit('Updating not implemented yet. '
              'Please update manually with git pull in utils.')
 
-check_call([GIT, 'clone', '-b', BRANCH, REPO, join(stack_dir, 'utils')])
-check_call([GIT, 'config', '--file', config_file, '--bool',
-        'platform.useDocker', str(use_docker)])
+check_call([GIT, 'clone', '-b', args.branch, args.repo, join(stack_dir, 'utils')])
+check_call([join(utils_dir, 'config.py'), 'useDocker', str(use_docker).lower()])
 # the target needs to be relative
 os.symlink(join('utils', 'Makefile'), join(stack_dir, 'Makefile'))
 

@@ -1,6 +1,13 @@
 {
 	"binaryTag": "x86_64-centos7-gcc8-opt",
 	"useDocker": false,
+	"useCcache": true,
+	"useDistcc": true,
+	"projectPath": "..",
+	"contribPath": "../contrib",
+	"ccachePath": "../.ccache",
+	"outputPath": "../.output",
+	"localPoolDepth": null,
 	"distccHosts": [
 		{
 			"spec": "lbquantaperf01.cern.ch/40,cpp,lzo,auth",
@@ -14,7 +21,7 @@
 		}
 	],
 	"distccPrincipal": "distccd",
-	"distccLocalslots": -1,
-	"distccLocalslotsCpp": -1,
+	"distccLocalslots": null,
+	"distccLocalslotsCpp": null,
 	"distccRandomize": true
 }

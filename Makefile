@@ -1,10 +1,11 @@
+DIR := $(abspath $(dir $(realpath $(lastword $(MAKEFILE_LIST)))))
+
 # settings
-include utils/configuration.mk
+include $(DIR)/configuration.mk
+-include $(DIR)/.projects_deps.mk
 
 # default target
 all:
-
-CCACHE_DIR := $(shell . `pwd`/utils/setup.sh; echo $${CCACHE_DIR})
 
 GIT_BASE := $(or $(GIT_BASE),https://gitlab.cern.ch)
 
@@ -16,21 +17,9 @@ PROJECTS := $(foreach p,$(PROJECTS),$(call project,$(p)))
 
 # main targets
 all: build
-.git-setup.stamp:
-	@if [ -z $$(git config --global user.email) ] ; then \
-		echo "warning: setting dummy user.email for Git to noreply-lhcb-upgrade-hackathon@cern.ch" ; \
-		git config --global user.email "noreply-lhcb-upgrade-hackathon@cern.ch" ; \
-	fi
-	@if [ -z $$(git config --global user.name) ] ; then \
-		echo "warning: setting dummy user.name for Git to $$USER" ; \
-		git config --global user.name "$$USER" ; \
-	fi
-	@touch $@
 
 checkout: $(patsubst %,%-checkout,$(PROJECTS))
 	@echo "checkout completed"
-update: checkout $(patsubst %,%-update,$(PROJECTS))
-	@echo "update completed"
 use-git-https:
 	@$(MAKE) set-git-remote-url GIT_BASE=https://gitlab.cern.ch
 use-git-ssh:
@@ -45,27 +34,12 @@ for-each:
 build: $(PROJECTS)
 clean: $(patsubst %,%-clean,$(PROJECTS))
 purge: $(patsubst %,%-purge,$(PROJECTS))
-deep-purge:
-	$(RM) -r $(PROJECTS)
 
 help:
 	@for t in $(ALL_TARGETS) ; do echo .. $$t ; done
 
 # public targets: main targets
-ALL_TARGETS = all build checkout update clean purge deep-purge use-git-https use-git-ssh use-git-krb5
-
-# distribution
-DIST_TAG := $(or $(DIST_TAG),$(shell git describe --match "*" --abbrev=0 --tags 2> /dev/null))
-ifneq ($(DIST_TAG),)
-PRE_BUILT_IMAGE := $(DIST_TAG).$(CMTCONFIG).tar.xz
-$(PRE_BUILT_IMAGE):
-	$(MAKE) build
-	$(MAKE) build
-	tar -c --xz -f $@ .ccache $(PROJECTS)
-dist: $(PRE_BUILT_IMAGE)
-pull-build: .git-setup.stamp
-	curl http://lhcbproject.web.cern.ch/lhcbproject/dist/$(PRE_BUILT_IMAGE) | tar -x --xz -f -
-endif
+ALL_TARGETS = all build checkout clean purge use-git-https use-git-ssh use-git-krb5
 
 # ----------------------
 # implementation details
@@ -75,35 +49,29 @@ $(foreach p,$(PROJECTS),$(eval $(p)_DEPS := $(filter $($(p)_DEPS), $(PROJECTS)))
 # compute inverse deps for "clean" targets
 $(foreach p,$(PROJECTS),$(foreach d,$($(p)_DEPS),$(eval $(d)_INV_DEPS += $(p))))
 # public targets: project targets
-ALL_TARGETS += $(foreach p,$(PROJECTS),$(p) $(p)-checkout $(p)-update $(p)-clean $(p)-purge fast/$(p) fast/$(p)-clean)
+ALL_TARGETS += $(foreach p,$(PROJECTS),$(p) $(p)-checkout $(p)-clean $(p)-purge fast/$(p) fast/$(p)-clean)
 
 define PROJECT_settings
 # project settings
 $(1)_GITGROUP := $$(or $$($(1)_GITGROUP),lhcb)
 $(1)_URL := $$(or $$($(1)_URL),$(GIT_BASE)/$$($(1)_GITGROUP)/$(1).git)
 $(1)_BRANCH := $$(or $$($(1)_BRANCH),$(DEFAULT_BRANCH))
-# checkout/update
+# checkout
 $(1)-checkout:
 	@test -e $(1) || git clone --recurse-submodules -b $$($(1)_BRANCH) $$($(1)_URL) $(1)
-$(1)/Makefile: $(1)-checkout
-	@test -e $(1)/Makefile || utils/build-env lb-project-init $(1)
-	@grep -Fxq "toolchain.cmake" $(1)/.git/info/exclude || echo "toolchain.cmake" >> $(1)/.git/info/exclude
-	@test -h $(1)/run -o -e $(1)/run || (\
-		echo -e '#!/bin/bash\n$$$$(dirname "$$$${BASH_SOURCE[0]}")/build.$$$${CMTCONFIG}/run "$$$$@"' > $(1)/run && \
-		chmod +x $(1)/run)
-	@grep -Fxq "run" $(1)/.git/info/exclude || echo "run" >> $(1)/.git/info/exclude
-$(1)-update: $(1)-checkout
-	@cd $(1) && git pull origin $$($(1)_BRANCH)
+# TODO add a run command?
+# $(1)-checkout:
+# 	@test -h $(1)/run -o -e $(1)/run || (\
+# 		echo -e '#!/bin/bash\n$$$$(dirname "$$$${BASH_SOURCE[0]}")/build.$$$${CMTCONFIG}/run "$$$$@"' > $(1)/run && \
+# 		chmod +x $(1)/run)
+# 	@grep -Fxq "run" $(1)/.git/info/exclude || echo "run" >> $(1)/.git/info/exclude
 # generic build target
 $(1)/%: $$($(1)_DEPS) fast/$(1)/% ;
-# In the old setup make passes variables automatically to the submake.
-# https://www.gnu.org/software/make/manual/html_node/Variables_002fRecursion.html
-# TODO special chars do not work, e.g. ARGS='-R -N xyz$'
-fast/$(1)/%: $(1)/Makefile utils/setup.sh
-	@utils/build-env bash -c '(. `pwd`/utils/setup.sh -m $(1); (set -v ; $$(MAKE) -C $(1) $$* ARGS="$(ARGS)"); `pwd`/utils/setup.sh -s)'
+fast/$(1)/%: $(1)-checkout
+	@$(DIR)/build-env $(DIR)/make.sh $(1) $$*
 # exception for purge and clean: always do fast/Project/purge or clean
-$(1)/purge: fast/$(1)/purge utils/setup.sh ;
-$(1)/clean: fast/$(1)/clean utils/setup.sh ;
+$(1)/purge: fast/$(1)/purge ;
+$(1)/clean: fast/$(1)/clean ;
 # build... delegate to generic target
 $(1): $(1)/install
 fast/$(1): fast/$(1)/install
@@ -119,18 +87,10 @@ $(1)-purge:
 endef
 $(foreach proj,$(PROJECTS),$(eval $(call PROJECT_settings,$(proj))))
 
-$(CCACHE_DIR):
-	utils/build-env bash -c '( . `pwd`/utils/setup.sh; ccache -F 20000 -M 0 )'
-$(PROJECTS): $(CCACHE_DIR)
-
 set-git-remote-url:
 	@$(foreach p,$(PROJECTS),if [ -d $p ] ; then ( cd $p && pwd && git remote set-url origin $(GIT_BASE)/$($p_GITGROUP)/$p.git && git remote -v ) ; fi ;)
 
-.PHONY: $(ALL_TARGETS) dist pull-build
+.PHONY: $(ALL_TARGETS)
 
 # debugging
-print-%  : ; @echo $* = $($*)
-
-.PHONY: list
-list:
-	@$(MAKE) -pRrq -f $(lastword $(MAKEFILE_LIST)) : 2>/dev/null | awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($$1 !~ "^[#.]") {print $$1}}' | sort | egrep -v -e '^[^[:alnum:]]' -e '^$@$$'
+# print-%  : ; @echo $* = $($*)

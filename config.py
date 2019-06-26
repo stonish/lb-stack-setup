@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 from __future__ import print_function
 import errno
 import json
@@ -17,13 +17,34 @@ DEFAULT_CONFIG = os.path.join(DIR, 'default-config.json')
 CONFIG = os.path.join(DIR, 'config.json')
 
 
-def check_type(key, value, expected_type):
-    if not isinstance(value, expected_type):
+def cpu_count():
+    from multiprocessing import cpu_count
+    return cpu_count()
+
+
+AUTOMATIC_DEFAULTS = {
+    'localPoolDepth': lambda: 2*cpu_count(),
+    'distccLocalslots': cpu_count,
+    'distccLocalslotsCpp': lambda: 2*cpu_count(),
+}
+
+
+def check_type(key, value, default_value):
+    expected_type = type(default_value)
+    if default_value is not None and not isinstance(value, expected_type):
         import warnings
-        warnings.warn('Got {!r} for key {!r}, expected {} type.\n'
-                    'See {} for supported configuration.'
-                    .format(value, key, expected_type, DEFAULT_CONFIG),
-                    stacklevel=2)
+        warnings.warn(
+            'Got {!r} ({}) for key {!r}, expected {} type.\n'
+            'See {} for supported configuration.'
+            .format(value, type(value).__name__, key,
+                    expected_type.__name__, DEFAULT_CONFIG),
+            stacklevel=2)
+
+
+def write_config(config):
+    with open(CONFIG, 'w') as f:
+        json.dump(config, f, indent=4)
+
 
 def read_config(original=False):
     with open(DEFAULT_CONFIG) as f:
@@ -40,20 +61,39 @@ def read_config(original=False):
 
     for key, value in overrides.items():
         try:
-            check_type(key, value, type(defaults[key]))
+            check_type(key, value, defaults[key])
         except KeyError:
             import warnings
-            warnings.warn('Key {} not in {}.\nSee {} for supported configuration.'
-                        .format(key, CONFIG, DEFAULT_CONFIG), stacklevel=2)
+            warnings.warn('Unknown key {} found in {}.\n'
+                          'See {} for supported configuration.'
+                          .format(key, CONFIG, DEFAULT_CONFIG), stacklevel=2)
 
     config = OrderedDict(list(defaults.items()) + list(overrides.items()))
+
+    # Assign automatic defaults
+    dirty = False
+    for key in config:
+        if config[key] is None and key in AUTOMATIC_DEFAULTS:
+            dirty = True
+            config[key] = overrides[key] = AUTOMATIC_DEFAULTS[key]()
+
+    # Write automatic defaults to user config
+    if dirty:
+        write_config(overrides)
+
+    # Expand non-absolute *Path variables
+    for key in config:
+        if key.endswith('Path'):
+            p = config[key]
+            config[key] = os.path.abspath(p if os.path.isabs(p)
+                                          else os.path.join(DIR, p))
+
     return (config, defaults, overrides) if original else config
     # TODO think if we need nested updates and in any case document behaviour
 
 
 if __name__ == '__main__':
     import argparse
-    import sys
 
     parser = argparse.ArgumentParser()
     parser.add_argument('key', nargs='?', help='Configuration key')
@@ -73,6 +113,5 @@ if __name__ == '__main__':
         except ValueError:
             value = args.value
         overrides[args.key] = value
-        check_type(args.key, value, type(defaults[args.key]))
-        with open(CONFIG, 'w') as f:
-            json.dump(overrides, f, indent=4)
+        check_type(args.key, value, defaults[args.key])
+        write_config(overrides)

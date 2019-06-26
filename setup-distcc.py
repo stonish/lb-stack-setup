@@ -1,6 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 from __future__ import print_function
-import multiprocessing
 import os
 import re
 import sys
@@ -58,13 +57,15 @@ for host in config['distccHosts']:
         else:
             # collect hosts to proxy
             proxied_hosts[host['gateway']].append(
-                (write_spec(new_spec), host['localPort'], spec['hostid'], spec['port'])
+                (write_spec(new_spec), host['localPort'], spec['hostid'],
+                 spec['port'])
             )
 
 for gateway, hosts in proxied_hosts.items():
     forwards = ' '.join(['-L {}:{}:{}'.format(local, host, port)
                         for _, local, host, port in hosts])
-    cmd = ('ssh -f -N -F "{}" -o BatchMode=yes -o ExitOnForwardFailure=yes {} {}'
+    cmd = ('ssh -f -N -F "{}" -o BatchMode=yes -o ExitOnForwardFailure=yes '
+           '{} {} >/dev/null'
            .format(SSH_CONFIG, forwards, gateway))
     # TODO use logging
     print(cmd, file=sys.stderr)
@@ -73,21 +74,23 @@ for gateway, hosts in proxied_hosts.items():
         found_hosts.extend(h[0] for h in hosts)
     else:
         # TODO use logging
-        print('Failed to forward ports. Make sure passwordless login to {} works'
+        print('Failed to forward ports. '
+              'Make sure passwordless login to {} works'
               .format(gateway),
               file=sys.stderr)
+
+if not found_hosts:
+    # TODO use logging
+    print("No distcc hosts found!", file=sys.stderr)
+    exit(1)
 
 # Specify how many jobs that cannot be run remotely can be run concurrently
 # on the local machine
 n_localslots = config['distccLocalslots']
-if n_localslots <= 0:
-    n_localslots = multiprocessing.cpu_count()
 found_hosts.append('--localslots={}'.format(n_localslots))
 # Specify how many preprocessors will run in parallel on the local machine.
 # (only relevant for non-pump mode)
 n_localslots_cpp = config['distccLocalslotsCpp']
-if n_localslots_cpp <= 0:
-    n_localslots_cpp = n_localslots * 2
 found_hosts.append('--localslots_cpp={}'.format(n_localslots_cpp))
 
 if config['distccRandomize']:

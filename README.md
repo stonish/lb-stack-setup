@@ -3,16 +3,12 @@
 ## Get started
 
 > **Important:** This setup relies on some very recent fixes and improvements
-> in Gaudi (collected in the
-> [lb-stack-setup](https://gitlab.cern.ch/rmatev/Gaudi/tree/lb-stack-setup)
-> branch of [rmatev/Gaudi](https://gitlab.cern.ch/rmatev/Gaudi))
-> and external software (see below).
+> in external software (see below).
 
 Choose a workspace directory, for example, `stack`, and run the following command
 
 ```sh
-curl https://gitlab.cern.ch/rmatev/lb-stack-setup/raw/master/setup.py \
-    | python - stack
+curl https://gitlab.cern.ch/rmatev/lb-stack-setup/raw/master/setup.py | python - stack
 ```
 
 The script will first check that all prerequisites are met. If it fails, check
@@ -27,7 +23,7 @@ It also installs a bunch of useful scripts and should take less than 5 minutes.
 bash utils/install.sh
 ```
 
-Configure your environment (e.g. docker or native) and projects to build
+Configure your setup (e.g. desired platform) and projects to build
 
 ```sh
 $EDITOR utils/config.json
@@ -90,12 +86,30 @@ or edit the file `utils/config.json` directly.
 
 ### Update the setup
 
-In case there is a fix or an update to the setup, you can do the following to
-sync to the latest changes.
+In case there is a fix or an update to the setup, just pull the latest master
+and verify your configuration (to catch issues with new or modified settings).
 
 ```sh
-# TODO
+cd utils && git pull && cd ..
+utils/config.py
 ```
+
+Then, try to build again and follow any instructions you may get.
+If that is not sufficient (e.g. because the toolchain changed),
+the best is to purge all your projects with
+
+```sh
+make purge
+```
+
+### Migrate from another stack setup
+
+- Follow the [Get started](#get-started) instructions and stop before compiling.
+- Copy your existing projects in the stack directory, where each project goes in
+  a folder with the standard letter case found on GitLab (e.g. LHCb, Lbcom, Rec).
+- Run `make purge` to delete all existing build products. Your code is safe.
+- Run `make`. Required projects that you don't have (like Gaudi) will be
+  cloned for you.
 
 ## Known issues
 
@@ -123,13 +137,8 @@ sync to the latest changes.
     ```
 - There are no tests. None whatsoever.
 - Manual initial setup can be improved with e.g. cookiecutter.
-- Settings are scattered in `configuration.mk`, `config.json`, `setup.sh`.
+- Settings are scattered in `configuration.mk` and `default-config.json`.
 - `lb-docker-run` should be upstreamed and removed from this repo.
-- One MUST NOT `make` directly in the project directories.
 - Logging is not uniform, and worse not documented
 - When using docker outside CERN, the port forwarding for distcc is done in
   the container, which makes it execute quite frequently and adds overhead.
-- Iteratively trying to compile something is slow. Typically you fail over and
-  over on the same cpp and every time you have to start include server, send
-  headers, compile. We can at least have a way to force local compilation
-  with e.g. "make local".
