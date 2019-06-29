@@ -52,6 +52,8 @@ Run jobs in the right environment with
 
 ```sh
 utils/run-env Moore gaudirun.py #...
+# or simply
+Moore/run gaudirun.py #...
 ```
 
 ## Test

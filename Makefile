@@ -2,7 +2,6 @@ DIR := $(abspath $(dir $(realpath $(lastword $(MAKEFILE_LIST)))))
 
 # settings
 include $(DIR)/configuration.mk
--include $(DIR)/.projects_deps.mk
 
 # default target
 all:
@@ -59,15 +58,13 @@ $(1)_BRANCH := $$(or $$($(1)_BRANCH),$(DEFAULT_BRANCH))
 # checkout
 $(1)-checkout:
 	@test -e $(1) || git clone --recurse-submodules -b $$($(1)_BRANCH) $$($(1)_URL) $(1)
-# TODO add a run command?
-# $(1)-checkout:
-# 	@test -h $(1)/run -o -e $(1)/run || (\
-# 		echo -e '#!/bin/bash\n$$$$(dirname "$$$${BASH_SOURCE[0]}")/build.$$$${CMTCONFIG}/run "$$$$@"' > $(1)/run && \
-# 		chmod +x $(1)/run)
-# 	@grep -Fxq "run" $(1)/.git/info/exclude || echo "run" >> $(1)/.git/info/exclude
+# TODO the following is executed every time because $(1)-checkout is phony
+$(1)/run: $(1)-checkout $(DIR)/project-run.sh
+	@ln -sf $(DIR)/project-run.sh $(1)/run
+	@grep -Fxq "run" $(1)/.git/info/exclude || echo "run" >> $(1)/.git/info/exclude
 # generic build target
 $(1)/%: $$($(1)_DEPS) fast/$(1)/% ;
-fast/$(1)/%: $(1)-checkout
+fast/$(1)/%: $(1)-checkout $(1)/run
 	@$(DIR)/build-env $(DIR)/make.sh $(1) $$*
 # exception for purge and clean: always do fast/Project/purge or clean
 $(1)/purge: fast/$(1)/purge ;
