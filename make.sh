@@ -6,7 +6,11 @@ set -eo pipefail
 #                  date -f - +%s.%N >/tmp/sample-time.$$.tim)
 # set -x  # trace the script for debugging
 
+
+
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+source "$DIR/helpers.sh"
+logname="make.sh"
 
 PROJECT="$1"
 TARGET="$2"
@@ -14,10 +18,6 @@ if [ "$#" -ne 2 ]; then
     echo "usage: $(basename $0) project target" >&2
     exit 2
 fi
-
-# helpers
-config() { "${DIR}/config.py" "$@"; }
-gitc() { pushd "$1" >/dev/null && git "${@:2}" && popd >/dev/null; }
 
 # steering options
 CONTRIB="$(config contribPath)"
@@ -155,7 +155,7 @@ setup_distcc() {
       export NINJAFLAGS="$NINJAFLAGS -j1"  # one job at a time
     fi
   else
-    echo "Could not setup hosts for distcc"
+    log ERROR "Failed to set up hosts for distcc"
     exit 1
   fi
 }
@@ -165,8 +165,8 @@ setup_distcc() {
 if [ "$USE_DISTCC" = true ]; then
   if ! gitc "$PROJECT/../Gaudi" grep -q GENREFLEX_JOB_POOL -- \
       cmake/modules/EnableROOT6.cmake; then
-    echo -e "\nERROR: GENREFLEX_JOB_POOL not supported by Gaudi cmake!"
-    echo -e "Please update to latest master or cherry pick 5dd5dceb26\n"
+    log ERROR "GENREFLEX_JOB_POOL not supported by Gaudi cmake!"
+    log ERROR "Please update to latest master or cherry pick 5dd5dceb26"
     exit 1
   fi
 fi
@@ -180,8 +180,8 @@ if [ -f Makefile ]; then
       # hide the removed file from status and diffs
       gitc "$PROJECT" update-index --assume-unchanged Makefile
     else
-      echo -e "\nERROR: Could not remove Gaudi/Makefile safely!"
-      echo -e "Please commit or undo any local modifications\n"
+      log ERROR "Could not remove Gaudi/Makefile safely!"
+      log ERROR "Please commit or undo any local modifications"
       exit 1
     fi
   else

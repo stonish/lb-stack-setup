@@ -2,6 +2,9 @@
 set -eo pipefail
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+source "$DIR/helpers.sh"
+logname="build-env"
+
 BINARY_TAG="$( "$DIR/config.py" binaryTag )"
 USE_DOCKER="$( "$DIR/config.py" useDocker )"
 
@@ -9,12 +12,10 @@ if [ "$USE_DOCKER" != true ]; then
     HOST_OS=$(/cvmfs/lhcb.cern.ch/lib/bin/host_os)
     if [ "$USE_DOCKER" = false ]; then
         if [ "$HOST_OS" != x86_64-centos7 ]; then
-            echo "Host OS $HOST_OS is not supported. Find a CentOS 7 machine\n" \
-                 "or use docker by setting useDocker = true in ${DIR}/config." >&2
+            log ERROR "Host OS $HOST_OS is not supported. Find a CentOS 7 machine"
+            log ERROR "or use docker by setting useDocker = true in ${DIR}/config."
             exit 1
         fi
-    # else  # USE_DOCKER is not set in config
-    #     # TODO check and propose?
     fi
 fi
 
@@ -23,12 +24,20 @@ fi
 # TODO if USE_DOCKER is false, any cache type is ok (no need to forward)
 export KRB5CCNAME=$(klist 2>/dev/null | head -1 | grep -o 'FILE:.*')
 if [ -z "$KRB5CCNAME" ]; then
-    echo -e \
-"No kerberos ticket cache of the form 'FILE:path/to/file' was found.
-Please do this to forward a kerberos ticket to the conainer:
+    log ERROR "No kerberos ticket cache of the form 'FILE:path/to/file' was found."
+    log ERROR "Please do this to forward a kerberos ticket to the conainer:"
+    log ERROR
+    log ERROR "    export KRB5CCNAME='FILE:/tmp/krb5cc_$(id -u)'; kinit <username>@CERN.CH"
+    log ERROR
+    exit 1
+fi
 
-    export KRB5CCNAME='FILE:/tmp/krb5cc_$(id -u)'; kinit <username>@CERN.CH
-"
+# Check for a valid ticket and try renewing it
+if ! ( klist -s | kinit -R ); then
+    log ERROR "No valid ticket found. Please get a new one with"
+    log ERROR
+    log ERROR "    kinit <username>@CERN.CH"
+    log ERROR
     exit 1
 fi
 

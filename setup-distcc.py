@@ -1,8 +1,9 @@
 #!/usr/bin/python
 from __future__ import print_function
+import logging
 import os
 import re
-import sys
+import subprocess
 from collections import defaultdict
 from config import read_config
 
@@ -10,8 +11,30 @@ SSH_CONFIG = os.path.join(os.path.dirname(__file__), 'ssh_config')
 config = read_config()
 
 
+# set up logging
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s.%(msecs)03d %(name)-15s %(levelname)-8s %(message)s',
+    datefmt='%Y-%m-%dT%H:%M:%S',
+    filename=os.path.join(config['outputPath'], 'log'),
+    filemode='a')
+console = logging.StreamHandler()
+console.setLevel(logging.INFO)
+console.setFormatter(
+    logging.Formatter('%(levelname)-8s %(message)s'))
+logging.getLogger('').addHandler(console)
+log = logging.getLogger(os.path.basename(__file__))
+log.debug('-' * 20)
+
+
+def run(command):
+    log.debug('command: ' + repr(command))
+    code = subprocess.call(command, shell=True)
+    log.debug('retcode: ' + str(code))
+    return code
+
+
 def parse_spec(spec):
-    # FIXME: matches only HOSTID[:PORT][/LIMIT][OPTIONS] for now
     m = re.match(r'^(?P<hostid>[a-zA-Z0-9-.]+)(:(?P<port>[0-9]+))?'
                  r'(/(?P<limit>[0-9]+))?(,(?P<options>[^ ]+))?$',
                  spec)
@@ -30,18 +53,38 @@ def write_spec(spec):
 
 
 def reachable(host, port):
-    code = os.system('nc --send-only --wait 0.2 {} {} </dev/null 2>/dev/null'
+    code = run('nc --send-only --wait 0.2 {} {} </dev/null 2>/dev/null'
                      .format(host, port))
     return code == 0
+
+
+def have_valid_ticket():
+    try:
+        return have_valid_ticket.cache
+    except AttributeError:
+        # quick check for a valid ticket
+        code = run('klist -s')
+        # if not, attempt renewal
+        if code != 0:
+            code = run('kinit -R')
+        have_valid_ticket.cache = code == 0
+        return have_valid_ticket.cache
 
 
 found_hosts = []
 proxied_hosts = defaultdict(list)
 for host in config['distccHosts']:
     spec = parse_spec(host['spec'])
+    if 'auth' in spec['options']:
+        if not have_valid_ticket():
+            log.warning('No valid kerberos ticket, disabling distcc host ' +
+                        host['spec'])
+            continue
     if reachable(spec['hostid'], spec['port']):
+        # The host is directly reachable
         found_hosts.append(host['spec'])
     else:
+        # The host needs to be proxied
         new_spec = {
             # "localhost" has a special meaning for distcc -> use "127.0.0.1"
             'hostid': '127.0.0.1',
@@ -57,31 +100,31 @@ for host in config['distccHosts']:
         else:
             # collect hosts to proxy
             proxied_hosts[host['gateway']].append(
-                (write_spec(new_spec), host['localPort'], spec['hostid'],
+                (write_spec(new_spec), host['spec'], host['localPort'], spec['hostid'],
                  spec['port'])
             )
 
 for gateway, hosts in proxied_hosts.items():
+    log.info('Starting ssh port forwarding for distcc hosts ' +
+             ' '.join(h[1] for h in hosts))
     forwards = ' '.join(['-L {}:{}:{}'.format(local, host, port)
-                        for _, local, host, port in hosts])
-    cmd = ('ssh -f -N -F "{}" -o BatchMode=yes -o ExitOnForwardFailure=yes '
+                        for _, _, local, host, port in hosts])
+    cmd = ('ssh -f -N -F "{}" '
+           '-o BatchMode=yes '
+           '-o ExitOnForwardFailure=yes '
+           '-o UserKnownHostsFile=.known_hosts '
+           '-o LogLevel=ERROR '
            '{} {} >/dev/null'
            .format(SSH_CONFIG, forwards, gateway))
-    # TODO use logging
-    print(cmd, file=sys.stderr)
-    code = os.system(cmd)
+    code = run(cmd)
     if code == 0:
         found_hosts.extend(h[0] for h in hosts)
     else:
-        # TODO use logging
-        print('Failed to forward ports. '
-              'Make sure passwordless login to {} works'
-              .format(gateway),
-              file=sys.stderr)
+        log.error('Failed to forward ports. Make sure passwordless login to '
+                  '{} works'.format(gateway))
 
 if not found_hosts:
-    # TODO use logging
-    print("No distcc hosts found!", file=sys.stderr)
+    log.error("No distcc hosts found!")
     exit(1)
 
 # Specify how many jobs that cannot be run remotely can be run concurrently
