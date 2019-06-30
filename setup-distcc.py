@@ -62,11 +62,7 @@ def have_valid_ticket():
     try:
         return have_valid_ticket.cache
     except AttributeError:
-        # quick check for a valid ticket
         code = run('klist -s')
-        # if not, attempt renewal
-        if code != 0:
-            code = run('kinit -R')
         have_valid_ticket.cache = code == 0
         return have_valid_ticket.cache
 
