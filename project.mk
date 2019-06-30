@@ -40,6 +40,9 @@
 #
 ################################################################################
 
+# record the environment we're executed in (added by RM)
+_dummy:=$(shell printenv | sort > $$($(dir $(lastword $(MAKEFILE_LIST)))/config.py outputPath)/project.mk.env)
+
 # settings
 CMAKE := cmake
 CTEST := ctest

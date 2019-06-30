@@ -6,11 +6,10 @@ set -eo pipefail
 #                  date -f - +%s.%N >/tmp/sample-time.$$.tim)
 # set -x  # trace the script for debugging
 
-
-
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 source "$DIR/helpers.sh"
 logname="make.sh"
+printenv | sort > "$OUTPUT/make.sh.env"
 
 PROJECT="$1"
 TARGET="$2"

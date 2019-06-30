@@ -1,5 +1,8 @@
 DIR := $(abspath $(dir $(realpath $(lastword $(MAKEFILE_LIST)))))
 
+# record the environment we're executed in
+_dummy:=$(shell printenv | sort > $$($(DIR)/config.py outputPath)/host.env)
+
 # settings
 include $(DIR)/configuration.mk
 
