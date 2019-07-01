@@ -41,7 +41,8 @@
 ################################################################################
 
 # record the environment we're executed in (added by RM)
-_dummy:=$(shell printenv | sort > $$($(dir $(lastword $(MAKEFILE_LIST)))/config.py outputPath)/project.mk.env)
+_output_path := $(shell "$(dir $(lastword $(MAKEFILE_LIST)))/config.py" outputPath)
+_dummy := $(shell mkdir -p "$(_output_path)" && printenv | sort > "$(_output_path)/project.mk.env")
 
 # settings
 CMAKE := cmake

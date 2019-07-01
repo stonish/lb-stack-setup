@@ -13,5 +13,6 @@ log() {
 
 OUTPUT="$(config outputPath)"
 LOG_FILE="$OUTPUT/log"
+mkdir -p "$OUTPUT"
 
 # TODO log *everything* with https://askubuntu.com/a/1001404/417217
