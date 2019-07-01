@@ -24,7 +24,6 @@ console.setFormatter(
     logging.Formatter('%(levelname)-8s %(message)s'))
 logging.getLogger('').addHandler(console)
 log = logging.getLogger(os.path.basename(__file__))
-log.debug('-' * 20)
 
 
 def run(command):

@@ -24,11 +24,12 @@ OUTPUT="$(config outputPath)"
 USE_CCACHE=$(config useCcache)
 USE_DISTCC=$(config useDistcc)
 USE_DISTCC_PUMP=true
-DEBUG_DISTCC=false
+# DEBUG_DISTCC=true; USE_CCACHE=false
 
 # explicitly define a fast TMPDIR
 # FIXME this may result in /tmp/<username>/<id> which is a bit redundant
 export TMPDIR="${XDG_RUNTIME_DIR:-$(dirname $(mktemp -u))/$(id -u)}"
+mkdir -p $TMPDIR
 # use our CMake and set the toolchain
 export PATH=$CONTRIB/bin:$PATH
 export CMAKEFLAGS="$CMAKEFLAGS '-DCMAKE_TOOLCHAIN_FILE=$DIR/toolchain.cmake'"
@@ -199,7 +200,7 @@ fi
 
 # Disable distcc when there are few cxx to build.
 # This saves the overheads when iterating on some file.
-if [ "$USE_DISTCC" = true ]; then
+if [ "$USE_DISTCC" = true -a "$DEBUG_DISTCC" != true ]; then
   if [ -f "$PROJECT/build.$BINARY_TAG/build.ninja" ]; then
     n_cxx_to_build=$("$CONTRIB/bin/ninja" -C "$PROJECT/build.$BINARY_TAG" -n | \
       grep 'Building CXX object' | head -2 | wc -l || true)
