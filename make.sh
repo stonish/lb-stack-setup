@@ -11,6 +11,17 @@ source "$DIR/helpers.sh"
 logname="make.sh"
 printenv | sort > "$OUTPUT/make.sh.env"
 
+# Check for old environment FIXME remove when LbLogin is decommissioned
+if [ -z "$LBENV_SOURCED" -o -n "$LBLOGIN_SOURCED" ] ; then
+    log ERROR "This setup only works with the new LbEnv environment"
+    log ERROR "See https://twiki.cern.ch/twiki/bin/view/LHCb/LHCbGroupLogin for instructions"
+    echo -e "         In most cases the following is sufficient\n" >&2
+    echo -e "             echo \"testing\" > ~/.lbenv_flavour" >&2
+    echo -e "             exit  # and login again" >&2
+    echo -e "             make purge\n" >&2
+    exit 1
+fi
+
 PROJECT="$1"
 TARGET="$2"
 if [ "$#" -ne 2 ]; then
