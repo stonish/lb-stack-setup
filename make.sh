@@ -243,6 +243,10 @@ fi
 make -f "$DIR/project.mk" -C "$PROJECT" "$TARGET"
 # TODO catch CTRL-C during make here and do the clean up, see
 #      https://unix.stackexchange.com/questions/163561/control-which-process-gets-cancelled-by-ctrlc
+run_cmd="$PROJECT/build.$BINARY_TAG/run"
+if [ -f $run_cmd ]; then
+  $run_cmd >"$PROJECT/build.$BINARY_TAG/python.env" &2>/dev/null || true
+fi
 
 ###########################################################
 # clean up
