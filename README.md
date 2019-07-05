@@ -73,6 +73,15 @@ make fast/Moore/test ARGS='-R hlt1_example$$'
 make fast/Moore/test ARGS='-R hlt1_example -V'
 ```
 
+## Integrations
+
+### Visual Studio Code
+
+Experimental VS Code support exists in the [vscode](/../tree/vscode) branch.
+Currently, only intellisense for C++ and Python are supported and there are no
+other integrations such as building and testing from within VS Code.
+See [doc/vscode.md](/../tree/vscode/doc/vscode.md) for more information.
+
 ## HOWTOs
 
 ### Change the platform
