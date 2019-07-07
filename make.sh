@@ -36,6 +36,7 @@ USE_CCACHE=$(config useCcache)
 USE_DISTCC=$(config useDistcc)
 USE_DISTCC_PUMP=true
 # DEBUG_DISTCC=true; USE_CCACHE=false
+# DEBUG_CCACHE=true
 
 # explicitly define a fast TMPDIR
 # FIXME this may result in /tmp/<username>/<id> which is a bit redundant
@@ -81,7 +82,10 @@ setup_ccache() {
   mkdir -p "$CCACHE_TEMPDIR" "$OUTPUT"
   rm -f "$CCACHE_LOGFILE"  # clear logfile
 
-  # export CCACHE_DEBUG=1
+  if [ "$DEBUG_CCACHE" = true ]; then
+    CCACHE_DEBUG=1
+    CCACHE_READONLY=1
+  fi
 }
 
 
