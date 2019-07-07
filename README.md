@@ -113,6 +113,27 @@ make purge
 - Run `make`. Required projects that you don't have (like Gaudi) will be
   cloned for you.
 
+### Troubleshooting
+
+1. Check your configuration files `utils/config.json` and `utils/default-config.json`.
+   Check how they are interpreted by running `utils/config.py`.
+2. Check the content of your output directory (by default this is `.output`) and
+   in particular look into
+   - the log at `.output/log`
+   - the host environment (in which you run `make`): `.output/host.env`
+   - the LHCb "build-env" environment (in which `make.sh` is run):
+     `.output/make.sh.env`
+   - the compilation environment (in which `project.mk` is invoked):
+     `.output/project.mk.env`
+
+If you fixed it, great! If you think it's possible that someone else hits the
+same problem, plese [open an issue](/../issues/new) or submit a merge request.
+
+If you couldn't figure it out, seek help on
+[Mattermost](https://mattermost.web.cern.ch/lhcb/messages/@rmatev)
+or open an [open an issue](/../issues/new), ideally provinding steps to
+reproduce the problem.
+
 ## Known issues
 
 - We don't know how to run over GRID files
