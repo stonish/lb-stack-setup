@@ -85,8 +85,12 @@ def read_config(original=False):
     for key in config:
         if key.endswith('Path'):
             p = config[key]
-            config[key] = os.path.abspath(p if os.path.isabs(p)
-                                          else os.path.join(DIR, p))
+            p = os.path.expandvars(p)
+            p = os.path.expanduser(p)
+            if not os.path.isabs(p):
+	        p = os.path.join(DIR, p)
+            p = os.path.abspath(p)
+            config[key] = p
 
     return (config, defaults, overrides) if original else config
     # TODO think if we need nested updates and in any case document behaviour
