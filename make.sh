@@ -217,10 +217,14 @@ fi
 # This saves the overheads when iterating on some file.
 if [ "$USE_DISTCC" = true -a "$DEBUG_DISTCC" != true ]; then
   if [ -f "$PROJECT/build.$BINARY_TAG/build.ninja" ]; then
-    n_cxx_to_build=$("$CONTRIB/bin/ninja" -C "$PROJECT/build.$BINARY_TAG" -n | \
-      grep 'Building CXX object' | head -2 | wc -l || true)
-    if [[ $n_cxx_to_build -le 1 ]]; then
-      USE_DISTCC=false
+    ninja_todo=$("$CONTRIB/bin/ninja" -C "$PROJECT/build.$BINARY_TAG" -n | \
+      grep 'Building CXX object\|Re-running CMake' | head -2 || true)
+    # do not disable distcc when rerunning CMake
+    if [[ $ninja_todo != *'CMake'* ]]; then
+      n_cxx_to_build=$(printf '%s' "$ninja_todo" | wc -l)
+      if [[ $n_cxx_to_build -le 1 ]]; then
+        USE_DISTCC=false
+      fi
     fi
   fi
 fi
