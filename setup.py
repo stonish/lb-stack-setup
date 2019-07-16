@@ -21,10 +21,8 @@ CVMFS_DIRS = [
     ('/cvmfs/lhcbdev.cern.ch', False),
     ('/cvmfs/sft.cern.ch', False),
 ]
-if platform.system().lower() == 'linux':
-    GIT = '/cvmfs/lhcb.cern.ch/lib/contrib/git/2.14.2/bin/git'
-else:
-    GIT = 'git'
+CVMFS_GIT = '/cvmfs/lhcb.cern.ch/lib/contrib/git/2.14.2/bin/git'
+GIT = 'git'
 REPO = 'https://gitlab.cern.ch/rmatev/lb-stack-setup.git'
 BRANCH = 'master'
 # TODO test that url and branch matches repo in a CI test?
@@ -72,7 +70,7 @@ git_ver_str = check_output(['git', '--version']).decode('ascii').strip()
 git_ver = LooseVersion(git_ver_str.split()[2])
 if git_ver < LooseVersion('2.13'):
     print('Old unspported git version {} detected. Consider using\n'
-          '    alias git={}'.format(git_ver, GIT))
+          '    alias git={}'.format(git_ver, CVMFS_GIT))
 
 stack_dir = args.path
 utils_dir = join(stack_dir, 'utils')
@@ -94,7 +92,8 @@ if update_setup:
     sys.exit('Updating not implemented yet. '
              'Please update manually with git pull in utils.')
 
-check_call([GIT, 'clone', '-b', args.branch, args.repo, join(stack_dir, 'utils')])
+check_call([GIT, 'clone', '-q', args.repo, join(stack_dir, 'utils')])
+check_call([GIT, 'checkout', args.branch], cwd=join(stack_dir, 'utils'))
 check_call([join(utils_dir, 'config.py'), 'useDocker', str(use_docker).lower()])
 # the target needs to be relative
 os.symlink(join('utils', 'Makefile'), join(stack_dir, 'Makefile'))
