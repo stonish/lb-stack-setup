@@ -8,7 +8,13 @@ log() {
     if [ "$level" != DEBUG ]; then
         printf "%-8s %s\n" "$1" "$2" >&2
     fi
-    printf "%(%FT%T    )T %-15s %-8s %s\n" -1 "${logname:-bash}" "$1" "$2" >> "$LOG_FILE"
+    local ts=
+    if [[ "$OSTYPE" == "linux-gnu" ]]; then
+        printf -v ts '%(%FT%T    )T\n' -1
+    else
+        ts=$(date "+%Y-%m-%dT%H:%M:%S    ")
+    fi
+    printf "%s %-15s %-8s %s\n" "$ts" "${logname:-bash}" "$1" "$2" >> "$LOG_FILE"
 }
 
 OUTPUT="$(config outputPath)"
