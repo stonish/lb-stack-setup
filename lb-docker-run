@@ -297,7 +297,7 @@ if not opts.force_cvmfs and not opts.no_cvmfs and os.path.exists(
     if cvmfs_on_autofs():
         opts.volume.append('/cvmfs:/cvmfs:shared')
     else:
-        opts.volume.append('/cvmfs:/cvmfs')
+        opts.volume.append('/cvmfs:/cvmfs:cached,ro')
 else:
     opts.force_cvmfs = not opts.no_cvmfs
 
@@ -347,13 +347,16 @@ if opts.kerberos:
     opts.env.append('KRB5CCNAME')
     opts.volume.append(os.environ['KRB5CCNAME'].split(':')[1])
 
-if not opts.user and not (opts.no_map_user or sys.platform == 'darwin'):
-    logging.debug('using current user name and id in the container')
-    opts.env.extend([
-        'USER=' + pwd.getpwuid(os.getuid()).pw_name,
-        'GROUP=' + grp.getgrgid(os.getgid()).gr_name
-    ])
-    opts.user = '{0}:{1}'.format(os.getuid(), os.getgid())
+if not opts.user and not opts.no_map_user:
+    if not sys.platform == 'darwin':
+        logging.debug('using current user name and id in the container')
+        opts.env.extend([
+            'USER=' + pwd.getpwuid(os.getuid()).pw_name,
+            'GROUP=' + grp.getgrgid(os.getgid()).gr_name
+        ])
+        opts.user = '{0}:{1}'.format(os.getuid(), os.getgid())
+    else:
+        opts.user = '1000'
 
 concat = itertools.chain.from_iterable
 
