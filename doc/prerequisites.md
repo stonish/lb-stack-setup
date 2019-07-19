@@ -4,7 +4,7 @@
 
 ### CentOS 7 (e.g. a shared machine)
 
-Confirm that you are on CentOS 7 with
+You can check that you are on a CentOS 7 machine with
 
 ```sh
 grep PRETTY_NAME /etc/os-release
@@ -22,19 +22,22 @@ docker run --rm -it hello-world
 sudo docker run --rm -it hello-world
 ```
 
-If not, go to [setup-docker].
-
-_TODO: OSX caveats? Windows??_
+If not, install docker for your platform.
+Follow official instructions at [https://docs.docker.com/install/](https://docs.docker.com/install/)
+Condensed instructions are below.
 
 ## CVMFS
 
 Check that you have the following CVMFS directories accessible:
 
 ```sh
-ls -ld /cvmfs/lhcb.cern.ch /cvmfs/lhcbdev.cern.ch /cvmfs/sft.cern.ch
+ls -l /cvmfs/lhcb.cern.ch /cvmfs/lhcb-condb.cern.ch /cvmfs/lhcbdev.cern.ch /cvmfs/sft.cern.ch
 ```
 
-If not, go to [setup-cvmfs].
+If not, install CVMFS by following the official instructions
+[here](https://cernvm.cern.ch/portal/filesystem/quickstart)
+or [here](https://cvmfs.readthedocs.io/en/stable/cpt-quickstart.html).
+Condensed instructions are below.
 
 ## Git
 
@@ -44,8 +47,82 @@ Check that you have at least `git 2.13`
 git --version
 ```
 
-If not, the simplest solution is to define the alias
+If not, the simplest solution (on Linux) is to define the alias
 
 ```sh
 alias git=/cvmfs/lhcb.cern.ch/lib/contrib/git/2.14.2/bin/git
 ```
+
+## Using macOS 
+
+### Docker on macOS
+
+If you are on macOS 10.12 Sierra or newer, install
+[Docker Desktop for Mac](https://docs.docker.com/docker-for-mac/install/).
+If you don't want to create a docker account in order to download it,
+check for a direct link [here](https://docs.docker.com/docker-for-mac/release-notes/).
+Once installed, you can ignore the popup that asks you to log in with your Docker ID.
+
+> __Note:__ On older systems you can try
+[Docker Toolbox](https://docs.docker.com/toolbox/toolbox_install_mac/)
+but it is highly recommended you upgrade as support is lacking.
+
+
+### CVMFS on macOS
+> __Note:__ tested on 10.10 Yosemite and 10.14 Mojave: FUSE 3.9.2 and CVMFS 2.6.0
+
+
+Download and install the latest FUSE for macOS release from
+[github](https://github.com/osxfuse/osxfuse/releases):
+
+```sh
+wget https://github.com/osxfuse/osxfuse/releases/download/osxfuse-3.9.2/osxfuse-3.9.2.dmg
+sudo hdiutil attach osxfuse-3.9.2.dmg
+sudo installer -pkg "/Volumes/FUSE for macOS/FUSE for macOS.pkg" -target /
+sudo hdiutil detach "/Volumes/FUSE for macOS"
+rm osxfuse-3.9.2.dmg
+```
+
+Download and install the latest CVMFS from [here](https://cernvm.cern.ch/portal/filesystem/downloads):
+
+```sh
+wget https://ecsft.cern.ch/dist/cvmfs/cvmfs-2.6.0/cvmfs-2.6.0.pkg
+sudo installer -pkg cvmfs-2.6.0.pkg -target /
+rm cvmfs-2.6.0.pkg
+```
+
+Configure the repositories and proxy. Use `http://ca-proxy.cern.ch:3128`
+instead of `DIRECT` if the computer is always in the CERN network.
+
+```sh
+echo -e "CVMFS_REPOSITORIES=lhcb.cern.ch,lhcb-condb.cern.ch,lhcbdev.cern.ch,sft.cern.ch" | \
+    sudo tee -a /etc/cvmfs/default.local
+echo -e "CVMFS_HTTP_PROXY=DIRECT" | \
+    sudo tee -a /etc/cvmfs/default.local
+```
+
+Mount the `/cvmfs` directories. Note that the mounts are not persisted after
+reboot, so you might want to put this in a script.
+
+> _TODO:_ suggest how to mount on boot
+
+```sh
+for repo in lhcb lhcb-condb lhcbdev sft; do
+    sudo mkdir -p /cvmfs/$repo.cern.ch
+    sudo mount -t cvmfs $repo.cern.ch /cvmfs/$repo.cern.ch
+done
+```
+
+Now check that CVMFS is accessible with
+
+```sh
+cvmfs_config probe
+```
+
+Finally, make `/cvmfs` known to Docker by configuring the shared paths from
+`Docker -> Preferences... -> File Sharing`.
+See [this page](https://docs.docker.com/docker-for-mac/osxfs/#namespaces) for more info.
+If using Docker Toolbox, check
+[these instructions](https://docs.docker.com/v17.12/toolbox/toolbox_install_mac/#optional-add-shared-directories)
+instead (restart manually the VM in VirtualBox for changes to apply).
+
