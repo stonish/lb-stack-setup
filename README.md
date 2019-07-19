@@ -16,13 +16,6 @@ The script will first check that all prerequisites are met. If it fails, check
 Then it will clone this repo inside a new directory `stack/utils` and do the
 initial setup. It will choose a default environment for you.
 
-Install recent (or patched) versions of CMake, Ninja, ccache and distcc.
-It also installs a bunch of useful scripts and should take less than 5 minutes.
-
-```sh
-bash utils/install.sh
-```
-
 Configure your setup (e.g. desired platform) and projects to build
 
 ```sh
@@ -45,6 +38,11 @@ make Moore
 
 For example, building from Gaudi up until Moore takes 40 min on a mobile i5 CPU
 with 2 physical cores.
+
+> __Note:__ the first time you `make`, some recent (or patched) versions of
+> CMake, Ninja, ccache and distcc (plus a bunch of scripts) will be installed.
+> This should take less than 5 minutes. If needed redo this step with
+`rm -rf contrib; make contrib`
 
 ## Run
 

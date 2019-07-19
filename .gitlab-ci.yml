@@ -1,6 +1,7 @@
 stages:
   - setup
   - contrib
+  - make
 
 # image should match what is used for lb-docker-run (see build-env)
 image: gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:v4.57
@@ -12,6 +13,8 @@ image: gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:v4.57
 
 setup:
   stage: setup
+  tags:
+    - cvmfs
   script:
     - python setup.py --repo $CI_REPOSITORY_URL --branch $CI_COMMIT_SHA stack
     # python setup.py --repo . [--branch $CI_COMMIT_SHA] stack
@@ -27,7 +30,7 @@ contrib:
     GIT_STRATEGY: none
   script:
     - cd stack
-    - bash utils/install.sh
+    - make contrib
   artifacts:
     paths:
       - stack/contrib/

@@ -4,6 +4,8 @@ DIR := $(abspath $(dir $(realpath $(lastword $(MAKEFILE_LIST)))))
 _output_path := $(shell "$(DIR)/config.py" outputPath)
 _dummy := $(shell mkdir -p "$(_output_path)" && printenv | sort > "$(_output_path)/host.env")
 
+_contrib_path := $(shell "$(DIR)/config.py" contribPath)
+
 # settings
 include $(DIR)/configuration.mk
 
@@ -34,6 +36,14 @@ CMD = true
 for-each:
 	@for p in $(PROJECTS) ; do if [ -d $$p ] ; then ( cd $$p && pwd && $(CMD) ) ; fi ; done
 
+CONTRIB_DEPS := $(_contrib_path)/bin/cmake $(_contrib_path)/bin/ninja $(_contrib_path)/bin/ccache $(_contrib_path)/bin/distcc
+CONTRIB_DEPS += $(_contrib_path)/bin/ninjatracing $(_contrib_path)/bin/post_build_ninja_summary.py
+contrib: $(CONTRIB_DEPS)
+$(_contrib_path)/bin/%: $(DIR)/install-%.sh
+	@"${DIR}/build-env" --no-kerberos bash "$<"
+$(_contrib_path)/bin/ninjatracing $(_contrib_path)/bin/post_build_ninja_summary.py: $(DIR)/install-tools.sh
+	@"${DIR}/build-env" --no-kerberos bash "$<"
+
 build: $(PROJECTS)
 clean: $(patsubst %,%-clean,$(PROJECTS))
 purge: $(patsubst %,%-purge,$(PROJECTS))
@@ -42,7 +52,7 @@ help:
 	@for t in $(ALL_TARGETS) ; do echo .. $$t ; done
 
 # public targets: main targets
-ALL_TARGETS = all build checkout clean purge use-git-https use-git-ssh use-git-krb5
+ALL_TARGETS = all build checkout clean purge use-git-https use-git-ssh use-git-krb5 contrib
 
 # ----------------------
 # implementation details
@@ -68,7 +78,7 @@ $(1)/run: $(1)-checkout $(DIR)/project-run.sh
 	@grep -Fxq "run" $(1)/.git/info/exclude || echo "run" >> $(1)/.git/info/exclude
 # generic build target
 $(1)/%: $$($(1)_DEPS) fast/$(1)/% ;
-fast/$(1)/%: $(1)-checkout $(1)/run
+fast/$(1)/%: $(1)-checkout $(1)/run $(CONTRIB_DEPS)
 	@$(DIR)/build-env $(DIR)/make.sh $(1) $$*
 # exception for purge and clean: always do fast/Project/purge or clean
 $(1)/purge: fast/$(1)/purge ;
@@ -92,6 +102,9 @@ set-git-remote-url:
 	@$(foreach p,$(PROJECTS),if [ -d $p ] ; then ( cd $p && pwd && git remote set-url origin $(GIT_BASE)/$($p_GITGROUP)/$p.git && git remote -v ) ; fi ;)
 
 .PHONY: $(ALL_TARGETS)
+
+# ignore -j flag and run serially
+.NOTPARALLEL:
 
 # debugging
 # print-%  : ; @echo $* = $($*)
