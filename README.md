@@ -2,10 +2,14 @@
 
 ## Get started
 
-> **Important:** This setup relies on some very recent fixes and improvements
-> in external software (see below).
+First, choose and `cd` into a directory where your stack will reside,
+for example, `$HOME` or `/afs/cern.ch/work/j/jdoe`.
 
-Choose a workspace directory, for example, `stack`, and run the following command
+> **Important:** You need at least **10 GiB** of free space to compile the stack for
+> one `*-opt` platform, and **50 GiB** if you compile with debug symbols
+> (`*-dbg` or `*-opt+g`).
+
+Adjust the following command according to how you want the directory containing your stack to be called and then run it (here we use simply "`stack`"):
 
 ```sh
 curl https://gitlab.cern.ch/rmatev/lb-stack-setup/raw/master/setup.py | python - stack
