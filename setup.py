@@ -92,6 +92,7 @@ host_os = (check_output('/cvmfs/lhcb.cern.ch/lib/bin/host_os')
 use_docker = False
 if host_os == 'x86_64-centos7':
     # test native setup
+    # TODO check if required software is installed: nc, bc, ...?
     pass
 else:
     logging.info('Platform {!s} is not supported natively, '
