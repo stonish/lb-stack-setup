@@ -55,9 +55,8 @@ if [ "$USE_DOCKER" = true ]; then
         ${LB_DOCKER_RUN_FLAGS} \
         "$@"
 else
-    # TODO start a clean LbEnv a la lb-docker-run
-    #      eg /cvmfs/lhcb.cern.ch/lib/LbEnv -c ${BINARY_TAG} ...
-    export BINARY_TAG
-    export CMTCONFIG="${BINARY_TAG}"
-    "$@"
+    # Start a clean LbEnv a la lb-docker-run
+    env -i "HOME=${HOME}" "HOSTNAME=${HOSTNAME}" "USER=${USER}" \
+        "BINARY_TAG=${BINARY_TAG}" \
+        bash "${DIR}/native.sh" "$@"
 fi
