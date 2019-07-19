@@ -40,6 +40,7 @@ fi
 
 if [ "$USE_DOCKER" = true ]; then
     "${DIR}/lb-docker-run" \
+        --docker-tag v4.57 \
         --quiet-env --lbenv -c ${BINARY_TAG} \
         -C "${DIR}/.." --use-absolute-path --kerberos \
         ${LB_DOCKER_RUN_FLAGS} \
