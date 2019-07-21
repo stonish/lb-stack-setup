@@ -11,7 +11,7 @@ import os
 import errno
 import platform
 import warnings
-from os.path import join
+from os.path import join, realpath
 from subprocess import check_call, check_output, CalledProcessError
 from distutils.version import LooseVersion
 
@@ -30,21 +30,45 @@ REPO = URL_BASE + '.git'
 BRANCH = 'master'
 # TODO test that url and branch matches repo in a CI test?
 
+
+def is_stack_dir(path):
+    """Returns if path was setup the way we expect."""
+    path = realpath(path)
+    utils = join(path, 'utils')
+    return (
+        os.path.isdir(join(utils, '.git')) and
+        realpath(join(path, 'Makefile')) == join(utils, 'Makefile'))
+
+
 parser = argparse.ArgumentParser('LHCb stack setup')
 parser.add_argument('path', help='Path to stack directory',
                     **({'nargs': '?'} if FROM_FILE else {}))
 parser.add_argument('--repo', '-u', default=REPO, help='Repository URL')
 parser.add_argument('--branch', '-b', default=BRANCH, help='Branch')
 parser.add_argument('--debug', action='store_true', help='Debugging output')
+# TODO add list of projects?
 args = parser.parse_args()
 
 logging.basicConfig(format='%(levelname)-7s %(message)s',
                     level=(logging.DEBUG if args.debug else logging.INFO))
 
-if not args.path:
-    args.path = os.path.abspath(join(os.path.dirname(__file__), '..'))
-    logging.info('Guessed path to stack: {}'.format(args.path))
 
+stack_dir = args.path or realpath(join(os.path.dirname(__file__), '..'))
+utils_dir = join(stack_dir, 'utils')
+
+new_setup = True
+if os.path.isdir(stack_dir):
+    if is_stack_dir(stack_dir):
+        logging.info('Found existing stack at {}'.format(stack_dir))
+        new_setup = False
+    else:
+        parser.error('directory {} exists but does not look like a stack setup'
+                     .format(stack_dir))
+elif not args.path:
+    parser.error('path was not provided and it could not be guessed')
+
+
+# Check CVMFS
 inaccessible_dirs = False
 for path, mandatory in CVMFS_DIRS:
     try:
@@ -86,36 +110,41 @@ if git_ver < LooseVersion('2.13'):
     logging.warning('Old unspported git version {} detected. Consider using\n'
                     '    alias git={}'.format(git_ver, CVMFS_GIT))
 
-stack_dir = args.path
-utils_dir = join(stack_dir, 'utils')
-config_file = join(utils_dir, 'config')
-update_setup = False
+# TODO check free space and warn? Do it smartly base on selected projects?
 
-try:
+# Do the actual new setup or update
+def git(*args_):
+    quiet = [] if args.debug else ['--quiet']
+    cwd = utils_dir if args_[0] != 'clone' else None
+    cmd = [GIT] + list(args_[:1]) + quiet + list(args_[1:])
+    logging.debug('Executing command (cwd = {}): {}'
+                  .format(cwd, ' '.join(map(repr, cmd))))
+    check_call(cmd, cwd=cwd)
+
+if new_setup:
+    logging.info('Creating new stack setup in {} ...'.format(stack_dir))
     os.mkdir(stack_dir)
-except OSError as e:
-    if e.errno == errno.EEXIST:
-        if os.listdir(stack_dir):
-            update_setup = True
-            logging.info('Updating existing stack setup in {}'
-                         .format(stack_dir))
-    else:
-        sys.exit('Could not create directory {!r}: {!s}'
-                 .format(stack_dir, e.strerror))
+    git('clone', args.repo, utils_dir)
+    git('checkout', args.branch)
+    # the target needs to be relative
+    os.symlink(join('utils', 'Makefile'), join(stack_dir, 'Makefile'))
+else:
+    logging.info('Updating existing stack setup in {} from branch origin/{} ...'
+                 .format(stack_dir, args.branch))
+    # Check if it is okay to update
+    try:
+        git('pull' , '--ff-only', 'origin', args.branch)
+    except CalledProcessError:
+        logging.warning('Could not "git pull" cleanly. Check for uncommited changes.')
 
-if update_setup:
-    sys.exit('Updating not implemented yet. '
-             'Please update manually with git pull in utils.')
+sys.path.insert(0, utils_dir)
+from config import read_config, write_config, CONFIG
 
-check_call([GIT, 'clone', '-q', args.repo, join(stack_dir, 'utils')])
-check_call([GIT, 'checkout', '-q', args.branch], cwd=join(stack_dir, 'utils'))
-check_call([join(utils_dir, 'config.py'), 'useDocker', str(use_docker).lower()])
-# the target needs to be relative
-os.symlink(join('utils', 'Makefile'), join(stack_dir, 'Makefile'))
-
-# TODO check free space and warn?
-
-logging.info("""
+overrides = read_config(True)[2]
+if new_setup:
+    overrides['useDocker'] = use_docker
+    write_config(overrides)
+    logging.info("""
 Now do
 
     cd "{!s}"
@@ -123,5 +152,20 @@ Now do
     $EDITOR utils/configuration.mk
     make
 
-""".format(stack_dir)
-)
+""".format(stack_dir))
+else:
+    # Obtain configuration ignoring config.json
+    new_overrides = read_config(True, config_in=None)[2]
+    new_overrides['useDocker'] = use_docker
+    # Try to merge configuration
+    config_out = CONFIG
+    for key, new_value in new_overrides.items():
+        if overrides.get(key, new_value) != new_value:
+            config_out = join(os.path.dirname(CONFIG), 'config-new.json')
+            logging.warning(
+                'Could not merge new automatic config with your config.json\n'
+                'Please merge config-new.json into config.json manually.')
+            break
+        overrides[key] = new_value
+    write_config(overrides, config_out)
+    logging.info('Stack updated successfully.')

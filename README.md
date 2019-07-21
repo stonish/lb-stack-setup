@@ -99,15 +99,20 @@ or edit the file `utils/config.json` directly.
 
 ### Update the setup
 
-In case there is a fix or an update to the setup, just pull the latest master
-and verify your configuration (to catch issues with new or modified settings).
+In case there is a fix or an update to the setup, just run `setup.py`
 
 ```sh
-cd utils && git pull && cd ..
+utils/setup.py
+```
+
+It attempts to pull the latest master and to update your `config.json`.
+Then, verify your configuration (to catch issues with new or modified settings).
+
+```sh
 utils/config.py
 ```
 
-Then, try to build again and follow any instructions you may get.
+Finally, try to build again and follow any instructions you may get.
 If that is not sufficient (e.g. because the toolchain changed),
 the best is to purge all your projects with
 
