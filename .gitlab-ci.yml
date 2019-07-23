@@ -1,0 +1,48 @@
+stages:
+  - setup
+  - contrib
+  - make
+
+# image should match what is used for lb-docker-run (see build-env)
+image: gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:v4.57
+
+# setup as readme:
+#   stage: setup
+#   script:
+#     - curl https://gitlab.cern.ch/rmatev/lb-stack-setup/raw/master/setup.py | python - -b $CI_COMMIT_SHA stack
+
+setup:
+  stage: setup
+  tags:
+    - cvmfs
+  script:
+    - python setup.py --repo $CI_REPOSITORY_URL --branch $CI_COMMIT_SHA stack
+    # python setup.py --repo . [--branch $CI_COMMIT_SHA] stack
+  artifacts:
+    paths:
+      - stack/
+
+contrib:
+  stage: contrib
+  tags:
+    - cvmfs
+  variables:
+    GIT_STRATEGY: none
+  script:
+    - cd stack
+    - make contrib
+  artifacts:
+    paths:
+      - stack/contrib/
+    expire_in: 1 week
+
+make:
+  stage: make
+  tags:
+    - cvmfs
+  variables:
+    GIT_STRATEGY: none
+  script:
+    - cd stack
+    - make Gaudi
+  allow_failure: true  # fails because of ssh: clone protocol

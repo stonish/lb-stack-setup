@@ -209,6 +209,8 @@ parser.add_option(
     'the target of a symlink')
 parser.add_option(
     '--docker-prefix', help='Docker registry prefix for the images')
+parser.add_option(
+    '--docker-tag', help='Docker image to use')
 
 parser.set_defaults(
     lhcb_env=None,
@@ -221,7 +223,8 @@ parser.set_defaults(
     dns=[],
     level=logging.WARNING,
     directory=os.getcwd(),
-    docker_prefix='gitlab-registry.cern.ch/lhcb-core/lbdocker')
+    docker_prefix='gitlab-registry.cern.ch/lhcb-core/lbdocker',
+    docker_tag=DEFAULT_TAG)
 
 # check if we are called directly or via a symlink
 if os.path.basename(sys.argv[0]) == PROGRAM_NAME:
@@ -355,7 +358,7 @@ if not opts.user and not (opts.no_map_user or sys.platform == 'darwin'):
 concat = itertools.chain.from_iterable
 
 image_name = '{0}/{1}-build:{2}'.format(opts.docker_prefix, opts.os,
-                                        DEFAULT_TAG)
+                                        opts.docker_tag)
 
 docker_opts = [
     (True, ['docker', 'run']),

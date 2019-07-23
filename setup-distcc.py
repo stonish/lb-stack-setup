@@ -27,6 +27,7 @@ log = logging.getLogger(os.path.basename(__file__))
 
 
 def run(command):
+    # TODO capture stdout and stderr and write them to the log as DEBUG
     log.debug('command: ' + repr(command))
     code = subprocess.call(command, shell=True)
     log.debug('retcode: ' + str(code))
@@ -139,3 +140,4 @@ print('export DISTCC_PRINCIPAL="{}"'.format(config['distccPrincipal']))
 print('export DISTCC_SKIP_LOCAL_RETRY=1')
 
 # TODO add cpp conditionally on USE_DISTCC_PUMP? Does non-pump work now?
+# TODO what if you're compiling from one of the distcc hosts?

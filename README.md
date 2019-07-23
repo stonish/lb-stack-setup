@@ -2,10 +2,14 @@
 
 ## Get started
 
-> **Important:** This setup relies on some very recent fixes and improvements
-> in external software (see below).
+First, choose and `cd` into a directory where your stack will reside,
+for example, `$HOME` or `/afs/cern.ch/work/j/jdoe`.
 
-Choose a workspace directory, for example, `stack`, and run the following command
+> **Important:** You need at least **10 GiB** of free space to compile the stack for
+> one `*-opt` platform, and **50 GiB** if you compile with debug symbols
+> (`*-dbg` or `*-opt+g`).
+
+Adjust the following command according to how you want the directory containing your stack to be called and then run it (here we use simply "`stack`"):
 
 ```sh
 curl https://gitlab.cern.ch/rmatev/lb-stack-setup/raw/master/setup.py | python - stack
@@ -15,13 +19,6 @@ The script will first check that all prerequisites are met. If it fails, check
 [doc/prerequisites.md](doc/prerequisites.md) for more information.
 Then it will clone this repo inside a new directory `stack/utils` and do the
 initial setup. It will choose a default environment for you.
-
-Install recent (or patched) versions of CMake, Ninja, ccache and distcc.
-It also installs a bunch of useful scripts and should take less than 5 minutes.
-
-```sh
-bash utils/install.sh
-```
 
 Configure your setup (e.g. desired platform) and projects to build
 
@@ -45,6 +42,11 @@ make Moore
 
 For example, building from Gaudi up until Moore takes 40 min on a mobile i5 CPU
 with 2 physical cores.
+
+> __Note:__ the first time you `make`, some recent (or patched) versions of
+> CMake, Ninja, ccache and distcc (plus a bunch of scripts) will be installed.
+> This should take less than 5 minutes. If needed redo this step with
+`rm -rf contrib; make contrib`
 
 ## Run
 
@@ -97,20 +99,55 @@ or edit the file `utils/config.json` directly.
 
 ### Update the setup
 
-In case there is a fix or an update to the setup, just pull the latest master
-and verify your configuration (to catch issues with new or modified settings).
+In case there is a fix or an update to the setup, just run `setup.py`
 
 ```sh
-cd utils && git pull && cd ..
+utils/setup.py
+```
+
+It attempts to pull the latest `master` and to update your `config.json`.
+Then, verify your configuration (to catch issues with new or modified settings).
+
+```sh
 utils/config.py
 ```
 
-Then, try to build again and follow any instructions you may get.
+Finally, try to build again and follow any instructions you may get.
 If that is not sufficient (e.g. because the toolchain changed),
 the best is to purge all your projects with
 
 ```sh
 make purge
+```
+
+### Use a non-standard branch of lb-stack-setup
+You might want to use a branch other than `master` to try out a new feature
+that is not merged yet.
+
+If you start from scratch, you can normally just tweak the way you run
+`setup.py`. For example, if you want to try out a branch called `vscode`, do
+
+```sh
+curl https://gitlab.cern.ch/rmatev/lb-stack-setup/raw/master/setup.py | \
+    python - stack -b vscode
+```
+
+> __Note:__ In some rare cases, you might need to download `setup.py` not from
+> `master` but from the branch in question.
+
+If you already have a stack set up, first check out the branch you want in utils
+
+```sh
+cd utils
+git fetch
+git checkout vscode
+```
+
+then, rerun `setup.py`, giving the same branch name, so that your existing
+configuration is made consistent with the new branch.
+
+```sh
+./setup.py -b vscode
 ```
 
 ### Migrate from another stack setup

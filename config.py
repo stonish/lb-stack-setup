@@ -41,23 +41,24 @@ def check_type(key, value, default_value):
             stacklevel=2)
 
 
-def write_config(config):
-    with open(CONFIG, 'w') as f:
+def write_config(config, path=CONFIG):
+    with open(path, 'w') as f:
         json.dump(config, f, indent=4)
 
 
-def read_config(original=False):
-    with open(DEFAULT_CONFIG) as f:
+def read_config(original=False, default_config=DEFAULT_CONFIG,
+                config_in=CONFIG, config_out=None):
+    with open(default_config) as f:
         defaults = json.load(f, object_pairs_hook=OrderedDict)
 
-    try:
-        with open(CONFIG) as f:
-            overrides = json.load(f, object_pairs_hook=OrderedDict)
-    except IOError as e:
-        if e.errno == errno.ENOENT:
-            overrides = {}
-        else:
-            raise
+    overrides = {}
+    if config_in:
+        try:
+            with open(config_in) as f:
+                overrides = json.load(f, object_pairs_hook=OrderedDict)
+        except IOError as e:
+            if e.errno != errno.ENOENT:
+                raise
 
     for key, value in overrides.items():
         try:
@@ -66,7 +67,7 @@ def read_config(original=False):
             import warnings
             warnings.warn('Unknown key {} found in {}.\n'
                           'See {} for supported configuration.'
-                          .format(key, CONFIG, DEFAULT_CONFIG), stacklevel=2)
+                          .format(key, config_in, default_config), stacklevel=2)
 
     config = OrderedDict(list(defaults.items()) + list(overrides.items()))
 
@@ -78,8 +79,8 @@ def read_config(original=False):
             config[key] = overrides[key] = AUTOMATIC_DEFAULTS[key]()
 
     # Write automatic defaults to user config
-    if dirty:
-        write_config(overrides)
+    if dirty and config_out:
+        write_config(overrides, config_out)
 
     # Expand non-absolute *Path variables
     for key in config:
@@ -104,17 +105,21 @@ if __name__ == '__main__':
     parser.add_argument('value', nargs='?', help='New value to set')
     args = parser.parse_args()
 
-    config, defaults, overrides = read_config(True)
+    config, defaults, overrides = read_config(True, config_out=CONFIG)
     if not args.key:
+        # print entire config
         print(json.dumps(config, indent=4))
     elif not args.value:
+        # print the value for a key
         x = config[args.key]
         # write json except for strings, which are printed unquoted
         print(x if isinstance(x, basestring) else json.dumps(x))
     else:
+        # set the value for a key
         try:
             value = json.loads(args.value)
         except ValueError:
+            # invalid json is treated as unquoted string
             value = args.value
         overrides[args.key] = value
         check_type(args.key, value, defaults[args.key])

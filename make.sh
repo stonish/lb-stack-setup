@@ -11,17 +11,6 @@ source "$DIR/helpers.sh"
 logname="make.sh"
 printenv | sort > "$OUTPUT/make.sh.env"
 
-# Check for old environment FIXME remove when LbLogin is decommissioned
-if [ -z "$LBENV_SOURCED" -o -n "$LBLOGIN_SOURCED" ] ; then
-    log ERROR "This setup only works with the new LbEnv environment"
-    log ERROR "See https://twiki.cern.ch/twiki/bin/view/LHCb/LHCbGroupLogin for instructions"
-    echo -e "         In most cases the following is sufficient\n" >&2
-    echo -e "             echo \"testing\" > ~/.lbenv_flavour" >&2
-    echo -e "             exit  # and login again" >&2
-    echo -e "             make purge\n" >&2
-    exit 1
-fi
-
 PROJECT="$1"
 TARGET="$2"
 if [ "$#" -ne 2 ]; then
@@ -93,9 +82,19 @@ pump_startup() {
   # kill stray include servers (as pump relies on no changes during build)
   pkill -f 'include_server.py --port' || true
   # start the include server manually (instead of pump --startup) for more control
+  # TODO hardcoded python3
   local PYTHON=/cvmfs/sft.cern.ch/lcg/releases/LCG_95apython3/Python/3.6.5/x86_64-centos7-gcc8-opt/bin/python
   local include_server_install="$CONTRIB/lib/python3.6/site-packages/include_server"
   local pid_file="$OUTPUT/distcc-pump.pid"
+
+  if [ "$DEBUG_DISTCC" = true ]; then
+    # --time = Print elapsed, user, and system time to stderr.
+    # --statistics = Print information to stdout about include analysis.
+    # --debug_pattern : 19 = 1 (warning) + 2 (trace 0) + 16 (data); 31 = everything
+    local debug_args="--time --statistics --debug_pattern=19 --path_observation_re cvmfs"
+  else
+    local debug_args="--debug_pattern=1"  # only warnings
+  fi
 
   # Variable used by "pump --shutdown" (see pump_shutdown)
   export INCLUDE_SERVER_DIR=$(mktemp -d -t distcc-pump-socket-XXXXXX)
@@ -110,10 +109,9 @@ pump_startup() {
   PYTHONPATH="$PYTHONPATH:$include_server_install" \
     $PYTHON $include_server_install/include_server.py \
       --port $INCLUDE_SERVER_PORT --pid_file "$pid_file" \
-      -t -s \
+      $debug_args \
       >"$OUTPUT/distcc-pump.stdout" \
       2>"$OUTPUT/distcc-pump.stderr"
-  # debugging flags can be added above, e.g. "-d19 (-d1) --path_observation_re cvmfs"
 
   # Variable used by "pump --shutdown" (see pump_shutdown)
   export INCLUDE_SERVER_PID=$(cat "$pid_file")

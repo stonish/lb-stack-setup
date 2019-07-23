@@ -29,6 +29,8 @@ setup() {
         fi
     fi
 
+    mkdir -p ${CONTRIB}
+
     if [ "$REMOVE" = true ]; then
         eval "cleanup() { cd \"${OLD_DIR}\"; rm -rf \"${SRC}\"; }"
     else
