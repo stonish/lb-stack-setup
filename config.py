@@ -89,7 +89,7 @@ def read_config(original=False, default_config=DEFAULT_CONFIG,
             p = os.path.expandvars(p)
             p = os.path.expanduser(p)
             if not os.path.isabs(p):
-	        p = os.path.join(DIR, p)
+                p = os.path.join(DIR, p)
             p = os.path.abspath(p)
             config[key] = p
 
