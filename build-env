@@ -57,6 +57,6 @@ if [ "$USE_DOCKER" = true ]; then
 else
     # Start a clean LbEnv a la lb-docker-run
     env -i "HOME=${HOME}" "HOSTNAME=${HOSTNAME}" "USER=${USER}" \
-        "BINARY_TAG=${BINARY_TAG}" \
+        "BINARY_TAG=${BINARY_TAG}" "KRB5CCNAME=$KRB5CCNAME" \
         bash "${DIR}/native.sh" "$@"
 fi
