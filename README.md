@@ -105,7 +105,7 @@ In case there is a fix or an update to the setup, just run `setup.py`
 utils/setup.py
 ```
 
-It attempts to pull the latest master and to update your `config.json`.
+It attempts to pull the latest `master` and to update your `config.json`.
 Then, verify your configuration (to catch issues with new or modified settings).
 
 ```sh
@@ -118,6 +118,36 @@ the best is to purge all your projects with
 
 ```sh
 make purge
+```
+
+### Use a non-standard branch of lb-stack-setup
+You might want to use a branch other than `master` to try out a new feature
+that is not merged yet.
+
+If you start from scratch, you can normally just tweak the way you run
+`setup.py`. For example, if you want to try out a branch called `vscode`, do
+
+```sh
+curl https://gitlab.cern.ch/rmatev/lb-stack-setup/raw/master/setup.py | \
+    python - stack -b vscode
+```
+
+> __Note:__ In some rare cases, you might need to download `setup.py` not from
+> `master` but from the branch in question.
+
+If you already have a stack set up, first check out the branch you want in utils
+
+```sh
+cd utils
+git fetch
+git checkout vscode
+```
+
+then, rerun `setup.py`, giving the same branch name, so that your existing
+configuration is made consistent with the new branch.
+
+```sh
+./setup.py -b vscode
 ```
 
 ### Migrate from another stack setup
