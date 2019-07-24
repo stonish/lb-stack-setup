@@ -53,11 +53,12 @@ DISTCC_PRINCIPAL=distccd DISTCC_HOSTS="127.0.0.1:12345/1,auth=lbquantaperf02.cer
 The whitelist is a file containing CERN usernames, one on each line.
 The file is located at `/etc/distcc/whitelist`.
 
-To add everyone in, e.g. `lhcb-general`, you can do
+To add everyone in, e.g. `lhcb-general` and `z5` (people can have more than one
+accounts), you can do
 
 ```sh
 yum install -y openldap-clients  # for ldapsearch
-ldapsearch -E pr=100/noprompt -x -h xldap.cern.ch -b 'OU=Users,OU=Organic Units,DC=cern,DC=ch' '(&(objectClass=user)(memberof=CN=lhcb-general-dynamic,OU=e-groups,OU=Workgroups,DC=cern,DC=ch))' sAMAccountName | grep '^sAMAccountName:' | cut -d " " -f 2 | sort > /etc/distcc/whitelist
+ldapsearch -E pr=100/noprompt -x -h xldap.cern.ch -b 'OU=Users,OU=Organic Units,DC=cern,DC=ch' '(&(objectClass=user)(|(gidNumber=1470)(memberof=CN=lhcb-general-dynamic,OU=e-groups,OU=Workgroups,DC=cern,DC=ch)))' sAMAccountName | grep '^sAMAccountName:' | cut -d " " -f 2 | sort > /etc/distcc/whitelist
 ```
 
 ## Service configuration
