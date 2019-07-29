@@ -47,6 +47,7 @@ if [ "$USE_KERBEROS" = true ]; then
 fi
 
 if [ "$USE_DOCKER" = true ]; then
+    ( cd "${DIR}"; python -c 'import setup; setup.assert_cvmfs()' )
     args=(
         --docker-tag v4.57
         --quiet-env --lbenv -c ${BINARY_TAG}
