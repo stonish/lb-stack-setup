@@ -133,7 +133,7 @@ endif
 # the XML output from ctest.
 test: $(BUILDDIR)/$(BUILD_CONF_FILE)
 	$(RM) -r $(BUILDDIR)/Testing $(BUILDDIR)/html
-	-cd $(BUILDDIR) && $(CTEST) -T test $(ARGS)
+	-cd $(BUILDDIR) && $(CTEST) -T test $(value ARGS)
 	+$(BUILD_CMD) HTMLSummary
 
 ifeq ($(VERBOSE),)
