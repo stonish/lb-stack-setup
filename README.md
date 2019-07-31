@@ -69,8 +69,8 @@ make Moore
 make fast/Moore/test ARGS='-N'
 # run all tests with 4 parallel jobs
 make fast/Moore/test ARGS='-j 4'  
-# run test(s) matching a regex (escape $ as $$)
-make fast/Moore/test ARGS='-R hlt1_example$$'
+# run test(s) matching a regex
+make fast/Moore/test ARGS='-R hlt1_example$'
 # verbose output showing test (failure) details
 make fast/Moore/test ARGS='-R hlt1_example -V'
 ```
