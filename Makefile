@@ -3,16 +3,14 @@ DIR := $(abspath $(dir $(realpath $(lastword $(MAKEFILE_LIST)))))
 # record the environment we're executed in
 _output_path := $(shell "$(DIR)/config.py" outputPath)
 _dummy := $(shell mkdir -p "$(_output_path)" && printenv | sort > "$(_output_path)/host.env")
-
 _contrib_path := $(shell "$(DIR)/config.py" contribPath)
+GIT_BASE := $(or $(shell "$(DIR)/config.py" gitBase),https://gitlab.cern.ch)
 
 # settings
 include $(DIR)/configuration.mk
 
 # default target
 all:
-
-GIT_BASE := $(or $(GIT_BASE),https://gitlab.cern.ch)
 
 # separate branch (or tag) from project/branch
 project = $(firstword $(subst /, ,$1))

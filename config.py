@@ -22,7 +22,28 @@ def cpu_count():
     return cpu_count()
 
 
+def git_base():
+    choices = [
+        "ssh://git@gitlab.cern.ch:7999",
+        "https://:@gitlab.cern.ch:8443",
+        "https://gitlab.cern.ch",
+    ]
+    for base in choices:
+        code = os.system('git ls-remote {}/gaudi/Gaudi.git HEAD &>/dev/null'
+                         .format(base))
+        if code == 0:
+            # TODO output logging warnings on stderr
+            # if base != choices[0]:
+            #     logging.warning('Using {} git base for cloning as {} is not accessible'
+            #                     .format(base, choices[0]))
+            return base
+    # This really should not happen, but let's not crash
+    # TODO output logging warnings on stderr
+    return ''
+
+
 AUTOMATIC_DEFAULTS = {
+    'gitBase': git_base,
     'localPoolDepth': lambda: 2*cpu_count(),
     'distccLocalslots': cpu_count,
     'distccLocalslotsCpp': lambda: 2*cpu_count(),

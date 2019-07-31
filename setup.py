@@ -5,13 +5,15 @@ import sys
 if sys.version_info < (2, 7):
     sys.exit("Python 2.7 or later is required.")
 
-import argparse
-import logging
-import os
-from os.path import join, realpath
-from subprocess import check_call, check_output, CalledProcessError
-from distutils.version import LooseVersion
+import argparse  # noqa: E402
+import logging  # noqa: E402
+import os  # noqa: E402
+from os.path import join, realpath  # noqa: E402
+from subprocess import (  # noqa: E402
+    check_call, check_output, CalledProcessError)
+from distutils.version import LooseVersion  # noqa: E402
 
+_DEBUG = False
 FROM_FILE = os.path.isfile(__file__)
 CVMFS_DIRS = [
     # (path, mandatory)
@@ -24,8 +26,17 @@ CVMFS_GIT = '/cvmfs/lhcb.cern.ch/lib/contrib/git/2.14.2/bin/git'
 GIT = 'git'
 URL_BASE = 'https://gitlab.cern.ch/rmatev/lb-stack-setup'
 REPO = URL_BASE + '.git'
-BRANCH = 'master'
+BRANCH = None  # Falsy means no explicit checkout
 # TODO test that url and branch matches repo in a CI test?
+NEXT_STEPS_MSG = """
+Now do
+
+    cd "{!s}"
+    $EDITOR utils/config.json
+    $EDITOR utils/configuration.mk
+    make
+
+"""
 
 
 def is_stack_dir(path):
@@ -53,12 +64,12 @@ def assert_cvmfs():
                 inaccessible_dirs = True
     if inaccessible_dirs:
         sys.exit('Some needed directories are not accessible.\n'
-                'Check {}/blob/master/doc/prerequisites.md'.format(URL_BASE))
+                 'Check {}/blob/master/doc/prerequisites.md'.format(URL_BASE))
 
 
 def assert_os_or_docker():
     host_os = (check_output('/cvmfs/lhcb.cern.ch/lib/bin/host_os')
-        .decode('ascii').strip())
+               .decode('ascii').strip())
     use_docker = False
     if host_os == 'x86_64-centos7':
         # test native setup
@@ -66,10 +77,10 @@ def assert_os_or_docker():
         pass
     else:
         logging.info('Platform {!s} is not supported natively, '
-                    'checking for docker...'.format(host_os))
+                     'checking for docker...'.format(host_os))
         try:
             check_output(['docker', 'run', '--rm', 'hello-world'])
-        except CalledProcessError as e:
+        except CalledProcessError:
             sys.exit('Docker not available or not set up correctly.')
         logging.info('...using docker.')
         use_docker = True
@@ -81,17 +92,19 @@ def check_git_version():
     git_ver_str = check_output(['git', '--version']).decode('ascii').strip()
     git_ver = LooseVersion(git_ver_str.split()[2])
     if git_ver < LooseVersion('2.13'):
-        logging.warning('Old unspported git version {} detected. Consider using\n'
-                        '    alias git={}'.format(git_ver, CVMFS_GIT))
+        logging.warning(
+            'Old unspported git version {} detected. Consider using\n'
+            '    alias git={}'.format(git_ver, CVMFS_GIT))
 
 
-def git(*args_):
-    quiet = [] if args.debug else ['--quiet']
-    cwd = utils_dir if args_[0] != 'clone' else None
-    cmd = [GIT] + list(args_[:1]) + quiet + list(args_[1:])
+def git(*args, **kwargs):
+    global _DEBUG
+    quiet = [] if _DEBUG else ['--quiet']
+    cwd = utils_dir if args[0] != 'clone' else None
+    cmd = [GIT] + list(args[:1]) + quiet + list(args[1:])
     logging.debug('Executing command (cwd = {}): {}'
                   .format(cwd, ' '.join(map(repr, cmd))))
-    check_call(cmd, cwd=cwd)
+    check_call(cmd, cwd=cwd, **kwargs)
 
 
 if __name__ == '__main__':
@@ -100,13 +113,14 @@ if __name__ == '__main__':
                         **({'nargs': '?'} if FROM_FILE else {}))
     parser.add_argument('--repo', '-u', default=REPO, help='Repository URL')
     parser.add_argument('--branch', '-b', default=BRANCH, help='Branch')
-    parser.add_argument('--debug', action='store_true', help='Debugging output')
+    parser.add_argument('--debug', action='store_true',
+                        help='Debugging output')
     # TODO add list of projects?
     args = parser.parse_args()
 
     logging.basicConfig(format='%(levelname)-7s %(message)s',
                         level=(logging.DEBUG if args.debug else logging.INFO))
-
+    _DEBUG = args.debug
 
     stack_dir = args.path or realpath(join(os.path.dirname(__file__), '..'))
     utils_dir = join(stack_dir, 'utils')
@@ -117,8 +131,8 @@ if __name__ == '__main__':
             logging.info('Found existing stack at {}'.format(stack_dir))
             new_setup = False
         else:
-            parser.error('directory {} exists but does not look like a stack setup'
-                        .format(stack_dir))
+            parser.error('directory {} exists but is not a stack setup'
+                         .format(stack_dir))
     elif not args.path:
         parser.error('path was not provided and it could not be guessed')
 
@@ -133,16 +147,18 @@ if __name__ == '__main__':
         logging.info('Creating new stack setup in {} ...'.format(stack_dir))
         os.mkdir(stack_dir)
         git('clone', args.repo, utils_dir)
-        git('checkout', args.branch)
+        if args.branch:
+            git('checkout', args.branch)
         # the target needs to be relative
         os.symlink(join('utils', 'Makefile'), join(stack_dir, 'Makefile'))
     else:
+        remote_ref = args.branch or 'HEAD'
         logging.info(
             'Updating existing stack setup in {} from branch origin/{} ...'
-            .format(stack_dir, args.branch))
+            .format(stack_dir, remote_ref))
         # Check if it is okay to update
         try:
-            git('pull' , '--ff-only', 'origin', args.branch)
+            git('pull', '--ff-only', 'origin', remote_ref)
         except CalledProcessError:
             logging.warning(
                 'Could not "git pull" cleanly. Check for uncommited changes.')
@@ -150,19 +166,11 @@ if __name__ == '__main__':
     sys.path.insert(0, utils_dir)
     from config import read_config, write_config, CONFIG
 
-    overrides = read_config(True)[2]
+    config, _, overrides = read_config(True)
     if new_setup:
         overrides['useDocker'] = use_docker
         write_config(overrides)
-        logging.info("""
-    Now do
-
-        cd "{!s}"
-        $EDITOR utils/config.json
-        $EDITOR utils/configuration.mk
-        make
-
-    """.format(stack_dir))
+        logging.info(NEXT_STEPS_MSG.format(stack_dir))
     else:
         # Obtain configuration ignoring config.json
         new_overrides = read_config(True, config_in=None)[2]
@@ -173,7 +181,7 @@ if __name__ == '__main__':
             if overrides.get(key, new_value) != new_value:
                 config_out = join(os.path.dirname(CONFIG), 'config-new.json')
                 logging.warning(
-                    'Could not merge new automatic config with your config.json\n'
+                    'Could not merge new automatic config with config.json\n'
                     'Please merge config-new.json into config.json manually.')
                 break
             overrides[key] = new_value

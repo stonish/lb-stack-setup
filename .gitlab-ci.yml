@@ -16,7 +16,7 @@ setup:
   tags:
     - cvmfs
   script:
-    - python setup.py --repo $CI_REPOSITORY_URL --branch $CI_COMMIT_SHA stack
+    - python setup.py --debug --repo $CI_REPOSITORY_URL --branch $CI_COMMIT_SHA stack
     # python setup.py --repo . [--branch $CI_COMMIT_SHA] stack
   artifacts:
     paths:

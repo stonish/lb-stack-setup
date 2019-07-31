@@ -11,9 +11,6 @@
 #     Default branch to checkout for all projects.
 # - Project_BRANCH:
 #     branch/tag to checkout for Project, overrides DEFAULT_BRANCH
-# - GIT_BASE:
-#     git repository base URL, default is https://gitlab.cern.ch
-#     If you change this, call "make set-git-remote-url" to apply the change
 # - Project_GITGROUP:
 #     GitLab group to use for finding the repository.
 #     The URL is $(GIT_BASE)/$(Project_GITGROUP)/Project.git
@@ -26,7 +23,6 @@
 PROJECTS = Gaudi LHCb Lbcom Rec Brunel Phys Moore
            #Stripping Analysis DaVinci LHCbIntegrationTests
 DEFAULT_BRANCH = master
-GIT_BASE = ssh://git@gitlab.cern.ch:7999
 
 Gaudi_GITGROUP = gaudi
 
