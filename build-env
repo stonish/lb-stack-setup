@@ -7,10 +7,13 @@ logname="build-env"
 
 BINARY_TAG="$( "$DIR/config.py" binaryTag )"
 USE_DOCKER="$( "$DIR/config.py" useDocker )"
+USE_DISTCC="$( "$DIR/config.py" useDistcc )"
 
 USE_KERBEROS=true
 if [ "$1" = "--no-kerberos" ]; then
     shift
+    USE_KERBEROS=false
+elif [ "$USE_DISTCC" != true ]; then
     USE_KERBEROS=false
 fi
 
