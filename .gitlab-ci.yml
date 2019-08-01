@@ -47,4 +47,7 @@ make:
   script:
     - cd stack
     - make Gaudi
-  allow_failure: true  # fails because of ssh: clone protocol
+  cache:
+    key: "$CI_JOB_NAME"
+    paths:
+      - .ccache
