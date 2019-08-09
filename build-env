@@ -7,10 +7,13 @@ logname="build-env"
 
 BINARY_TAG="$( "$DIR/config.py" binaryTag )"
 USE_DOCKER="$( "$DIR/config.py" useDocker )"
+USE_DISTCC="$( "$DIR/config.py" useDistcc )"
 
 USE_KERBEROS=true
 if [ "$1" = "--no-kerberos" ]; then
     shift
+    USE_KERBEROS=false
+elif [ "$USE_DISTCC" != true ]; then
     USE_KERBEROS=false
 fi
 
@@ -44,20 +47,28 @@ if [ "$USE_KERBEROS" = true ]; then
         log ERROR
         exit 1
     fi
-    kerberos_flag="--kerberos"
 fi
 
 if [ "$USE_DOCKER" = true ]; then
-    "${DIR}/lb-docker-run" \
-        --docker-tag v4.57 \
-        --quiet-env --lbenv -c ${BINARY_TAG} \
-        -C "${DIR}/.." --use-absolute-path $kerberos_flag \
-        ${LB_DOCKER_RUN_FLAGS} \
-        "$@"
+    ( cd "${DIR}"; python -c 'import setup; setup.assert_cvmfs()' )
+    args=(
+        --docker-tag v4.57
+        --quiet-env --lbenv -c ${BINARY_TAG}
+        -C "${DIR}/.." --use-absolute-path
+    )
+    test "$USE_KERBEROS" != true || args+=(--kerberos)
+    test -z ${MAKEFLAGS+x} || args+=(-e "MAKEFLAGS=${MAKEFLAGS}")
+    "${DIR}/lb-docker-run" "${args[@]}" ${LB_DOCKER_RUN_FLAGS} "$@"
 else
     # Start a clean LbEnv a la lb-docker-run
-    env -i "HOME=${HOME}" "HOSTNAME=${HOSTNAME}" "USER=${USER}" \
-        "TERM=${TERM}" "KRB5CCNAME=${KRB5CCNAME}" \
-        "BINARY_TAG=${BINARY_TAG}" \
-        bash "${DIR}/native.sh" "$@"
+    args=(
+        "HOSTNAME=${HOSTNAME}"
+        "HOME=${HOME}"
+        "USER=${USER}"
+        "TERM=${TERM}"
+        "BINARY_TAG=${BINARY_TAG}"
+        )
+    test -z ${KRBCC5NAME+x} || args+=("KRB5CCNAME=${KRB5CCNAME}")
+    test -z ${MAKEFLAGS+x} || args+=("MAKEFLAGS=${MAKEFLAGS}")
+    env -i "${args[@]}" bash "${DIR}/native.sh" "$@"
 fi

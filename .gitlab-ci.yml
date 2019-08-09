@@ -16,7 +16,9 @@ setup:
   tags:
     - cvmfs
   script:
-    - python setup.py --repo $CI_REPOSITORY_URL --branch $CI_COMMIT_SHA stack
+    - python setup.py --debug --repo $CI_REPOSITORY_URL --branch $CI_COMMIT_SHA stack
+    - cd stack
+    - utils/config.py useDistcc false
     # python setup.py --repo . [--branch $CI_COMMIT_SHA] stack
   artifacts:
     paths:
@@ -45,4 +47,7 @@ make:
   script:
     - cd stack
     - make Gaudi
-  allow_failure: true  # fails because of ssh: clone protocol
+  cache:
+    key: "$CI_JOB_NAME"
+    paths:
+      - .ccache

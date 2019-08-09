@@ -3,16 +3,14 @@ DIR := $(abspath $(dir $(realpath $(lastword $(MAKEFILE_LIST)))))
 # record the environment we're executed in
 _output_path := $(shell "$(DIR)/config.py" outputPath)
 _dummy := $(shell mkdir -p "$(_output_path)" && printenv | sort > "$(_output_path)/host.env")
-
 _contrib_path := $(shell "$(DIR)/config.py" contribPath)
+GIT_BASE := $(or $(shell "$(DIR)/config.py" gitBase),https://gitlab.cern.ch)
 
 # settings
 include $(DIR)/configuration.mk
 
 # default target
 all:
-
-GIT_BASE := $(or $(GIT_BASE),https://gitlab.cern.ch)
 
 # separate branch (or tag) from project/branch
 project = $(firstword $(subst /, ,$1))
@@ -88,10 +86,10 @@ $(1): $(1)/install
 fast/$(1): fast/$(1)/install
 # clean
 $(1)-clean: $(patsubst %,%-clean,$($(1)_INV_DEPS))
-	$$(MAKE) -C fast/$(1)-clean
+	$$(MAKE) fast/$(1)-clean
 fast/$(1)-clean:
-	@test -d $(1)/build.$$(CMTCONFIG) && $$(MAKE) $(1)/clean || true
-	$(RM) -r $(1)/InstallArea/$$(CMTCONFIG)
+	@test -d $(1)/build.$$(shell "$(DIR)/config.py" binaryTag) && $$(MAKE) $(1)/clean || true
+	$(RM) -r $(1)/InstallArea/$$(shell "$(DIR)/config.py" binaryTag)
 # purge
 $(1)-purge:
 	@test -e $(1) && $$(MAKE) fast/$(1)/purge || true

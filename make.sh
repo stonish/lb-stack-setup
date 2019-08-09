@@ -188,6 +188,9 @@ if [ -f Makefile ]; then
   # FIXME check wont't work when PROJECT is a multi-dir path
   if [ "$PROJECT" = Gaudi ]; then
     # FIXME remove the following once Makefile is removed from Gaudi
+    # update-index is needed as older git diff-index only does a "quick look"
+    # see https://stackoverflow.com/a/34808299
+    gitc "$PROJECT" update-index --refresh
     if gitc "$PROJECT" diff-index --quiet HEAD -- Makefile; then
       rm -f "$PROJECT/Makefile"
       # hide the removed file from status and diffs
@@ -243,6 +246,10 @@ fi
 make -f "$DIR/project.mk" -C "$PROJECT" "$TARGET"
 # TODO catch CTRL-C during make here and do the clean up, see
 #      https://unix.stackexchange.com/questions/163561/control-which-process-gets-cancelled-by-ctrlc
+run_cmd="$PROJECT/build.$BINARY_TAG/run"
+if [ -f $run_cmd ]; then
+  $run_cmd >"$PROJECT/build.$BINARY_TAG/python.env" &2>/dev/null || true
+fi
 
 ###########################################################
 # clean up
