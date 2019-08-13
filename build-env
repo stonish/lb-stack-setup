@@ -68,7 +68,7 @@ else
         "TERM=${TERM}"
         "BINARY_TAG=${BINARY_TAG}"
         )
-    test -z ${KRBCC5NAME+x} || args+=("KRB5CCNAME=${KRB5CCNAME}")
+    test -z ${KRB5CCNAME+x} || args+=("KRB5CCNAME=${KRB5CCNAME}")
     test -z ${MAKEFLAGS+x} || args+=("MAKEFLAGS=${MAKEFLAGS}")
     env -i "${args[@]}" bash "${DIR}/native.sh" "$@"
 fi
