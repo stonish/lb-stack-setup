@@ -37,7 +37,18 @@ ls -l /cvmfs/lhcb.cern.ch /cvmfs/lhcb-condb.cern.ch /cvmfs/lhcbdev.cern.ch /cvmf
 If not, install CVMFS by following the official instructions
 [here](https://cernvm.cern.ch/portal/filesystem/quickstart)
 or [here](https://cvmfs.readthedocs.io/en/stable/cpt-quickstart.html).
-Condensed instructions are below.
+Check [below](#cvmfs-on-macos) for more detailed instructions for macOS.
+
+Configure your client by editing `/etc/cvmfs/default.local` and specifying the
+minimal set of cvmfs repos and the appropriate proxy. For example:
+```
+CVMFS_REPOSITORIES=lhcb.cern.ch,lhcb-condb.cern.ch,lhcbdev.cern.ch,sft.cern.ch
+CVMFS_HTTP_PROXY="DIRECT"
+```
+For a stationary machine it is recommended to use
+`CVMFS_HTTP_PROXY="http://ca-proxy.cern.ch:3128"` at CERN or whatever your
+sysadmin advises for another institute.
+
 
 ## Git
 
