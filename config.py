@@ -141,7 +141,10 @@ if __name__ == '__main__':
             value = json.loads(args.value)
         except ValueError:
             # invalid json is treated as unquoted string
-            value = args.value
+            try:
+                value = unicode(args.value)
+            except NameError:
+                value = args.value  # compatiblity with Python 3
         overrides[args.key] = value
         check_type(args.key, value, defaults[args.key])
         write_config(overrides)
