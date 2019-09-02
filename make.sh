@@ -190,7 +190,7 @@ if [ -f Makefile ]; then
     # FIXME remove the following once Makefile is removed from Gaudi
     # update-index is needed as older git diff-index only does a "quick look"
     # see https://stackoverflow.com/a/34808299
-    gitc "$PROJECT" update-index --refresh
+    gitc "$PROJECT" update-index --refresh 2>/dev/null || true
     if gitc "$PROJECT" diff-index --quiet HEAD -- Makefile; then
       rm -f "$PROJECT/Makefile"
       # hide the removed file from status and diffs
