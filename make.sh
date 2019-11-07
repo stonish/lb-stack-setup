@@ -79,13 +79,14 @@ setup_ccache() {
 
 
 pump_startup() {
-  # kill stray include servers (as pump relies on no changes during build)
-  pkill -f 'include_server.py --port' || true
   # start the include server manually (instead of pump --startup) for more control
   # TODO hardcoded python3
   local PYTHON=/cvmfs/sft.cern.ch/lcg/releases/LCG_95apython3/Python/3.6.5/x86_64-centos7-gcc8-opt/bin/python
   local include_server_install="$CONTRIB/lib/python3.6/site-packages/include_server"
   local pid_file="$OUTPUT/distcc-pump.pid"
+
+  # kill stray include servers (as pump relies on no changes during build)
+  pkill -f "$include_server_install/include_server.py --port" || true
 
   if [ "$DEBUG_DISTCC" = true ]; then
     # --time = Print elapsed, user, and system time to stderr.
