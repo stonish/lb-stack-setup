@@ -92,7 +92,7 @@ The platform set in your shell when running `make` or `run-env` is irrelevant.
 In order to change the platform used to compile and run, do the following
 
 ```sh
-utils/config.py binaryTag x86_64-centos7-gcc8-opt+g
+utils/config.py binaryTag x86_64-centos7-gcc9-opt+g
 ```
 
 or edit the file `utils/config.json` directly.
