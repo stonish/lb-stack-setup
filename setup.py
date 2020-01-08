@@ -8,6 +8,7 @@ if sys.version_info < (2, 7):
 import argparse  # noqa: E402
 import logging  # noqa: E402
 import os  # noqa: E402
+import re  # noqa: E402
 import shutil  # noqa: E402
 from os.path import join, realpath  # noqa: E402
 from subprocess import (  # noqa: E402
@@ -20,6 +21,7 @@ except ImportError:
 
 _DEBUG = False
 FROM_FILE = os.path.isfile(__file__)
+SUPPORTED_HOSTS = ['^x86_64-centos[78]$', '^x86_64-rhel8[0-9]*$']
 CVMFS_DIRS = [
     # (path, mandatory)
     ('/cvmfs/lhcb.cern.ch', True),
@@ -73,7 +75,7 @@ def assert_os_or_docker():
     host_os = (check_output('/cvmfs/lhcb.cern.ch/lib/bin/host_os').decode(
         'ascii').strip())
     use_docker = False
-    if host_os == 'x86_64-centos7':
+    if any(re.match(p, host_os) for p in SUPPORTED_HOSTS):
         # test native setup
         pass
     else:
