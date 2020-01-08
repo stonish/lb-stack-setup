@@ -70,7 +70,7 @@ def assert_os_or_docker():
     host_os = (check_output('/cvmfs/lhcb.cern.ch/lib/bin/host_os')
                .decode('ascii').strip())
     use_docker = False
-    if host_os == 'x86_64-centos7':
+    if host_os in ['x86_64-centos7', 'x86_64-centos8']:
         # test native setup
         # TODO check if required software is installed: nc, bc, ...?
         pass

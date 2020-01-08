@@ -19,8 +19,8 @@ fi
 
 if [ "$USE_DOCKER" != true ]; then
     HOST_OS=$(/cvmfs/lhcb.cern.ch/lib/bin/host_os)
-    if [ "$HOST_OS" != x86_64-centos7 ]; then
-        log ERROR "Host OS $HOST_OS is not supported. Find a CentOS 7 machine"
+    if [ "$HOST_OS" != x86_64-centos7 ] && [ "$HOST_OS" != x86_64-centos8 ]; then
+        log ERROR "Host OS $HOST_OS is not supported. Find a CentOS 7/8 machine"
         log ERROR "or use docker by setting \"useDocker\" to true in ${DIR}/config.json"
         exit 1
     fi
