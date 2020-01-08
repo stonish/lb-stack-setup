@@ -1,16 +1,9 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 from __future__ import print_function
 import errno
 import json
 import os
 from collections import OrderedDict
-
-# Python 3 compatiblity
-try:
-    basestring
-except NameError:
-    basestring = str
-
 
 DIR = os.path.dirname(__file__)
 DEFAULT_CONFIG = os.path.join(DIR, 'default-config.json')
@@ -134,17 +127,14 @@ if __name__ == '__main__':
         # print the value for a key
         x = config[args.key]
         # write json except for strings, which are printed unquoted
-        print(x if isinstance(x, basestring) else json.dumps(x))
+        print(x if isinstance(x, str) else json.dumps(x))
     else:
         # set the value for a key
         try:
             value = json.loads(args.value)
         except ValueError:
             # invalid json is treated as unquoted string
-            try:
-                value = unicode(args.value)
-            except NameError:
-                value = args.value  # compatiblity with Python 3
+            value = args.value
         overrides[args.key] = value
         check_type(args.key, value, defaults[args.key])
         write_config(overrides)
