@@ -34,10 +34,10 @@ CMD = true
 for-each:
 	@for p in $(PROJECTS) ; do if [ -d $$p ] ; then ( cd $$p && pwd && $(CMD) ) ; fi ; done
 
-CONTRIB_DEPS := $(_contrib_path)/bin/cmake $(_contrib_path)/bin/ninja $(_contrib_path)/bin/ccache $(_contrib_path)/bin/distcc
+CONTRIB_DEPS := $(_contrib_path)/bin/.cmake_timestamp $(_contrib_path)/bin/ninja $(_contrib_path)/bin/ccache $(_contrib_path)/bin/distcc
 CONTRIB_DEPS += $(_contrib_path)/bin/ninjatracing $(_contrib_path)/bin/post_build_ninja_summary.py
 contrib: $(CONTRIB_DEPS)
-$(_contrib_path)/bin/%: $(DIR)/install-%.sh
+$(_contrib_path)/bin/% $(_contrib_path)/bin/.%_timestamp: $(DIR)/install-%.sh
 	@"${DIR}/build-env" --no-kerberos bash "$<"
 $(_contrib_path)/bin/ninjatracing $(_contrib_path)/bin/post_build_ninja_summary.py: $(DIR)/install-tools.sh
 	@"${DIR}/build-env" --no-kerberos bash "$<"
