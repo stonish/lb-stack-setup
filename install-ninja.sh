@@ -3,10 +3,7 @@ set -eo pipefail
 
 . $(dirname $0)/install-common.sh
 
-# master on 10 May 2019
-setup 'https://github.com/kitware/ninja.git' 'v1.9.0.g99df1.kitware.dyndep-1.jobserver-1'
-(
-    ./configure.py --bootstrap
-    cp ninja "$CONTRIB/bin"
-)
-cleanup
+curl -Lo "$SRC_BASE/ninja-linux.zip" \
+    https://github.com/ninja-build/ninja/releases/download/v1.10.0/ninja-linux.zip
+unzip -o -DD -d "$CONTRIB/bin" "$SRC_BASE/ninja-linux.zip"
+rm "$SRC_BASE/ninja-linux.zip"

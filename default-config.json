@@ -1,6 +1,6 @@
 {
 	"gitBase": null,
-	"binaryTag": "x86_64-centos7-gcc8-opt",
+	"binaryTag": "x86_64-centos7-gcc9-opt",
 	"useDocker": false,
 	"useCcache": true,
 	"useDistcc": true,
