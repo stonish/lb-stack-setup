@@ -195,15 +195,6 @@ reproduce the problem.
     distcc[2541] (dcc_talk_to_include_server) Warning: include server gave up analyzing
     distcc[2541] (dcc_build_somewhere) Warning: failed to get includes from include server, preprocessing locally
     ```
-- `TMVAImpFactory-MCUpTuneV1.cpp` takes forever to compile.
-    ```log
-    [8>1>1183/1191] Building CXX object Rec/ChargedProtoANNPID/CMakeFiles/ChargedProtoANNPID.dir/src/TMVAImpFactory-MCUpTuneV1.cpp.o
-    distcc[3977] (dcc_select_for_read) ERROR: IO timeout
-    distcc[3977] (dcc_r_token_int) ERROR: read failed while waiting for token "DONE"
-    distcc[3977] (dcc_r_result_header) ERROR: server provided no answer. Is the server configured to allow access from your IP address? Is the server performing authentication and your client isn't? Does the server have the compiler installed? Is the server configured to access the compiler?
-    distcc[3977] Warning: failed to distribute ../Rec/ChargedProtoANNPID/src/TMVAImpFactory-MCUpTuneV1.cpp to lbquantaperf02.cern.ch/40,cpp,lzo,auth, running locally instead
-    ```
-- There are no tests. None whatsoever.
 - Manual initial setup can be improved with e.g. cookiecutter.
 - `lb-docker-run` should be upstreamed and removed from this repo.
 - Logging is not uniform, and worse not documented
