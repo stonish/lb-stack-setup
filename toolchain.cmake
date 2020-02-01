@@ -55,4 +55,7 @@ if(NOT CMAKE_SOURCE_DIR MATCHES "CMakeTmp")
   else()
     include(${_project_path}/Gaudi/cmake/GaudiDefaultToolchain.cmake)
   endif()
+
+  # Workaround some apparent bug in the detection of genconf.exe --no-init support
+  set(GENCONF_WITH_NO_INIT ON)
 endif()
