@@ -33,7 +33,6 @@ Now do
 
     cd "{!s}"
     $EDITOR utils/config.json
-    $EDITOR utils/configuration.mk
     make
 
 """
