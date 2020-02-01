@@ -24,7 +24,6 @@ Configure your setup (e.g. desired platform) and projects to build
 
 ```sh
 $EDITOR utils/config.json
-$EDITOR utils/configuration.mk
 ```
 
 All configuration settings and their defaults are stored in
@@ -206,7 +205,6 @@ reproduce the problem.
     ```
 - There are no tests. None whatsoever.
 - Manual initial setup can be improved with e.g. cookiecutter.
-- Settings are scattered in `configuration.mk` and `default-config.json`.
 - `lb-docker-run` should be upstreamed and removed from this repo.
 - Logging is not uniform, and worse not documented
 - When using docker outside CERN, the port forwarding for distcc is done in

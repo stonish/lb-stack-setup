@@ -1,6 +1,17 @@
 {
-	"gitBase": null,
 	"binaryTag": "x86_64-centos7-gcc9-opt",
+	"projects": [
+		"gaudi/Gaudi",
+		"lhcb/LHCb",
+		"lhcb/Lbcom",
+		"lhcb/Rec",
+		"lhcb/Brunel",
+		"lhcb/Phys",
+		"lhcb/Moore",
+		"lhcb/Alignment"
+	],
+	"defaultBranch": "master",
+	"gitBase": null,
 	"useDocker": false,
 	"useCcache": true,
 	"useDistcc": true,
@@ -24,5 +35,20 @@
 	"distccPrincipal": "distccd",
 	"distccLocalslots": null,
 	"distccLocalslotsCpp": null,
-	"distccRandomize": true
+	"distccRandomize": true,
+	"projectDeps": {
+		"LHCb": "Gaudi",
+		"Lbcom": "LHCb",
+		"Rec": "Lbcom",
+		"Boole": "Lbcom",
+		"Brunel": "Rec",
+		"Phys": "Rec",
+		"Moore": "Phys",
+		"Alignment": "Phys",
+		"Stripping": "Phys",
+		"Analysis": "Phys",
+		"DaVinci": "Stripping Analysis",
+		"LHCbIntegrationTests": "Brunel DaVinci Moore",
+		"MooreAnalysis": "Moore Analysis"
+	}
 }

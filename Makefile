@@ -1,22 +1,10 @@
 DIR := $(abspath $(dir $(realpath $(lastword $(MAKEFILE_LIST)))))
 
-# record the environment we're executed in
-_output_path := $(shell "$(DIR)/config.py" outputPath)
-_dummy := $(shell mkdir -p "$(_output_path)" && printenv | sort > "$(_output_path)/host.env")
-_contrib_path := $(shell "$(DIR)/config.py" contribPath)
-GIT_BASE := $(or $(shell "$(DIR)/config.py" gitBase),https://gitlab.cern.ch)
-
-# settings
-include $(DIR)/configuration.mk
+# project settings
+include $(shell "$(DIR)/setup-make.py")
 
 # default target
 all:
-
-# separate branch (or tag) from project/branch
-project = $(firstword $(subst /, ,$1))
-branch = $(or $(word 2,$(subst /, ,$1)),$(value 2))
-$(foreach p,$(PROJECTS),$(eval $(call project,$(p))_BRANCH := $(call branch,$(p),$($(p)_BRANCH))))
-PROJECTS := $(foreach p,$(PROJECTS),$(call project,$(p)))
 
 # main targets
 all: build
@@ -34,12 +22,12 @@ CMD = true
 for-each:
 	@for p in $(PROJECTS) ; do if [ -d $$p ] ; then ( cd $$p && pwd && $(CMD) ) ; fi ; done
 
-CONTRIB_DEPS := $(_contrib_path)/bin/.cmake_timestamp $(_contrib_path)/bin/ninja $(_contrib_path)/bin/ccache $(_contrib_path)/bin/distcc
-CONTRIB_DEPS += $(_contrib_path)/bin/ninjatracing $(_contrib_path)/bin/post_build_ninja_summary.py
+CONTRIB_DEPS := $(CONTRIB_PATH)/bin/.cmake_timestamp $(CONTRIB_PATH)/bin/ninja $(CONTRIB_PATH)/bin/ccache $(CONTRIB_PATH)/bin/distcc
+CONTRIB_DEPS += $(CONTRIB_PATH)/bin/ninjatracing $(CONTRIB_PATH)/bin/post_build_ninja_summary.py
 contrib: $(CONTRIB_DEPS)
-$(_contrib_path)/bin/% $(_contrib_path)/bin/.%_timestamp: $(DIR)/install-%.sh
+$(CONTRIB_PATH)/bin/% $(CONTRIB_PATH)/bin/.%_timestamp: $(DIR)/install-%.sh
 	@"${DIR}/build-env" --no-kerberos bash "$<"
-$(_contrib_path)/bin/ninjatracing $(_contrib_path)/bin/post_build_ninja_summary.py: $(DIR)/install-tools.sh
+$(CONTRIB_PATH)/bin/ninjatracing $(CONTRIB_PATH)/bin/post_build_ninja_summary.py: $(DIR)/install-tools.sh
 	@"${DIR}/build-env" --no-kerberos bash "$<"
 
 build: $(PROJECTS)
@@ -55,21 +43,18 @@ ALL_TARGETS = all build checkout clean purge use-git-https use-git-ssh use-git-k
 # ----------------------
 # implementation details
 # ----------------------
-# remove unsatisfiable dependencies
-$(foreach p,$(PROJECTS),$(eval $(p)_DEPS := $(filter $($(p)_DEPS), $(PROJECTS))))
-# compute inverse deps for "clean" targets
-$(foreach p,$(PROJECTS),$(foreach d,$($(p)_DEPS),$(eval $(d)_INV_DEPS += $(p))))
 # public targets: project targets
 ALL_TARGETS += $(foreach p,$(PROJECTS),$(p) $(p)-checkout $(p)-clean $(p)-purge fast/$(p) fast/$(p)-clean)
 
 define PROJECT_settings
-# project settings
-$(1)_GITGROUP := $$(or $$($(1)_GITGROUP),lhcb)
-$(1)_URL := $$(or $$($(1)_URL),$(GIT_BASE)/$$($(1)_GITGROUP)/$(1).git)
-$(1)_BRANCH := $$(or $$($(1)_BRANCH),$(DEFAULT_BRANCH))
 # checkout
 $(1)-checkout:
-	@test -e $(1) || git clone --recurse-submodules -b $$($(1)_BRANCH) $$($(1)_URL) $(1)
+	@test -e $(1) || ( \
+		git clone $$($(1)_URL) $(1) && \
+		cd $(1) && \
+		git checkout $$($(1)_BRANCH) && \
+		git submodule update --init --recursive \
+	)
 # TODO the following is executed every time because $(1)-checkout is phony
 $(1)/run: $(1)-checkout $(DIR)/project-run.sh
 	@ln -sf $(DIR)/project-run.sh $(1)/run
