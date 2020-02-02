@@ -26,7 +26,9 @@ If not, install docker for your platform.
 Follow official instructions at [https://docs.docker.com/install/](https://docs.docker.com/install/)
 Condensed instructions are below.
 
-## CVMFS
+## Software
+
+### CVMFS
 
 Check that you have the following CVMFS directories accessible:
 
@@ -50,7 +52,7 @@ For a stationary machine it is recommended to use
 sysadmin advises for another institute.
 
 
-## Git
+### Git
 
 Check that you have at least `git 1.8`
 
@@ -62,6 +64,19 @@ If not, the simplest solution (on Linux) is to define the alias
 
 ```sh
 alias git=/cvmfs/lhcb.cern.ch/lib/contrib/git/2.14.2/bin/git
+```
+
+### Libraries and headers
+
+To build distcc you will need `gssapi.h`, which might not be installed on your system.
+
+```sh
+sudo yum install -y krb5-devel
+```
+
+Gaudi dependencies:
+```sh
+sudo yum install -y libuuid-devel
 ```
 
 ## Using macOS
