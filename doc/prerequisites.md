@@ -52,7 +52,7 @@ sysadmin advises for another institute.
 
 ## Git
 
-Check that you have at least `git 2.13`
+Check that you have at least `git 1.8`
 
 ```sh
 git --version
@@ -64,7 +64,7 @@ If not, the simplest solution (on Linux) is to define the alias
 alias git=/cvmfs/lhcb.cern.ch/lib/contrib/git/2.14.2/bin/git
 ```
 
-## Using macOS 
+## Using macOS
 
 ### Docker on macOS
 

@@ -3,7 +3,6 @@ set -eo pipefail
 CONTRIB=${CONTRIB:-$(pwd)/contrib}
 KEEP_SRC=${KEEP_SRC:-false}
 SRC_BASE=${SRC_BASE:-$(mktemp --tmpdir -d lb-stack-setup-install.XXXXX)}
-PATH="/cvmfs/lhcb.cern.ch/lib/contrib/git/2.14.2/bin${PATH:+:${PATH}}"
 
 setup() {
     local REPO="$1"
@@ -11,12 +10,12 @@ setup() {
     local SRC="$SRC_BASE/$(basename $REPO .git)"
     local OLD_DIR=$(pwd)
     local REMOVE=false
-    
+
     if [ ! -d "$SRC" ] ; then
         # if the source directory does not exist, clone and remove it afterwards
         [ "$KEEP_SRC" = true ] || REMOVE=true
         mkdir -p "$SRC"
-        
+
         cd "$SRC"
         git init
         git remote add origin "$REPO"

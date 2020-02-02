@@ -90,7 +90,7 @@ def check_git_version():
     """Check git version and suggest alias if too old."""
     git_ver_str = check_output(['git', '--version']).decode('ascii').strip()
     git_ver = LooseVersion(git_ver_str.split()[2])
-    if git_ver < LooseVersion('2.13'):
+    if git_ver < LooseVersion('1.8'):
         logging.warning(
             'Old unspported git version {} detected. Consider using\n'
             '    alias git={}'.format(git_ver, CVMFS_GIT))
