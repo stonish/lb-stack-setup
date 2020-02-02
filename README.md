@@ -9,6 +9,10 @@ for example, `$HOME` or `/afs/cern.ch/work/j/jdoe`.
 > one `*-opt` platform, and **50 GiB** if you compile with debug symbols
 > (`*-dbg` or `*-opt+g`).
 
+> **Note:** Working on network file systems such as AFS or on network-backed
+> volumes (e.g. on CERN OpenStack) is typically slower than on a local disk,
+> especially if the latter is an SSD.
+
 Adjust the following command according to how you want the directory containing your stack to be called and then run it (here we use simply "`stack`"):
 
 ```sh
@@ -18,7 +22,8 @@ curl https://gitlab.cern.ch/rmatev/lb-stack-setup/raw/master/setup.py | python -
 The script will first check that all prerequisites are met. If it fails, check
 [doc/prerequisites.md](doc/prerequisites.md) for more information.
 Then it will clone this repo inside a new directory `stack/utils` and do the
-initial setup. It will choose a default environment for you.
+initial setup. It will choose a default environment for you ("native" build on
+CentOS 7 and docker on other OSes).
 
 Configure your setup (e.g. desired platform) and projects to build
 
@@ -26,9 +31,10 @@ Configure your setup (e.g. desired platform) and projects to build
 $EDITOR utils/config.json
 ```
 
-All configuration settings and their defaults are stored in
+All possible configuration settings and their defaults are stored in
 [default-config.json](default-config.json).
-Any settings you specify `config.json` file will override the defaults.
+Any settings you specify in the `config.json` file will override the defaults.
+See [below](#configuration-settings) for some of the available settings and their use.
 
 ## Compile
 
@@ -82,6 +88,22 @@ Experimental VS Code support exists in the [vscode](/../tree/vscode) branch.
 Currently, only intellisense for C++ and Python are supported and there are no
 other integrations such as building and testing from within VS Code.
 See [doc/vscode.md](/../tree/vscode/doc/vscode.md) for more information.
+
+## Configuration settings
+
+You can set the following options in `config.json` to configure your build setup.
+Depending on where you build there are different recommendations.
+
+- `useDocker (true/false)`: Allows running with docker, check
+  [doc/prerequisites.md](doc/prerequisites.md) for instructions.
+  Defaults to false on CentOS7, otherwise is true.
+- `distcc ([true]/false)`: distcc allows to compile remotely on machines located at CERN.
+   Currently 80 virtual cores are available for parallel compilation.
+   You need a valid kerberos token and connectivity to lxplus (or to be inside the CERN network).
+   Be aware that these are shared resources, set it to `false` if your local cluster is powerful.
+
+All possible configuration settings and their defaults are stored in
+[default-config.json](default-config.json).
 
 ## HOWTOs
 
