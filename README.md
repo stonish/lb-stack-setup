@@ -120,6 +120,7 @@ make purge
 ```
 
 ### Use a non-standard branch of lb-stack-setup
+
 You might want to use a branch other than `master` to try out a new feature
 that is not merged yet.
 
@@ -148,6 +149,18 @@ configuration is made consistent with the new branch.
 ```sh
 ./setup.py -b vscode
 ```
+
+### Develop lb-stack-setup
+
+Once you have a clone of this repo (e.g. the `stack/utils` directory), you can run
+
+```sh
+python setup.py --repo . path/to/new/stack
+```
+
+which will use the `HEAD` (i.e. the currently checked out branch) of your local
+repo to create a new stack setup at the given path.
+Note that uncommitted changes will not be in the new clone.
 
 ### Migrate from another stack setup
 
