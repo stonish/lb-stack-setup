@@ -1,7 +1,7 @@
 {
 	"binaryTag": "x86_64-centos7-gcc9-opt",
 	"projects": [
-		"gaudi/Gaudi",
+		"gaudi/Gaudi:v33r0",
 		"lhcb/LHCb",
 		"lhcb/Lbcom",
 		"lhcb/Rec",
