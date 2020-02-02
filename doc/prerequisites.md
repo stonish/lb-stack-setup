@@ -11,6 +11,18 @@ grep PRETTY_NAME /etc/os-release
 # PRETTY_NAME="CentOS Linux 7 (Core)"
 ```
 
+### CentOS 8 (experimental)
+
+Install our own LbEnv
+
+```sh
+sudo yum install -y python3-virtualenv
+cd utils
+curl -O https://gitlab.cern.ch/lhcb-core/lbenv-deployment/raw/master/basic_install.sh
+bash <(sed 's/python /python3 /' basic_install.sh) LbEnv
+cd ..
+```
+
 ### Other than CentOS 7 (e.g. a laptop)
 
 You need docker to run a CentOS 7 container.
