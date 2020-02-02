@@ -5,6 +5,9 @@ import os
 import re
 from config import read_config
 
+config = read_config()
+
+
 try:
     import pathlib
 
@@ -21,7 +24,21 @@ except ImportError:
             else:
                 raise
 
-config = read_config()
+
+def parse_src_spec(spec):
+    """Return name, url and branch from "group/project[:branch]"."""
+    m = re.match(
+        r'^(?P<fullname>([^/:]+/)+(?P<name>[^:]+))(:(?P<branch>[^:]+))?$',
+        spec)
+    if not m:
+        raise ValueError("malformed source spec '{}'".format(spec))
+    g = m.groupdict()
+    return (
+        g['name'],
+        '{}/{}.git'.format(config['gitBase'], g['fullname']),
+        g["branch"] or config["defaultBranch"]
+        )
+
 
 # save the host environment where we're executed
 output_path = config['outputPath']
@@ -34,16 +51,10 @@ projects = []
 urls = {}
 branches = {}
 for spec in config["projects"]:
-    m = re.match(
-        r'^(?P<nsp>([^/:]+/)+(?P<project>[^:]+))(:(?P<branch>[^:]+))?$',
-        spec)
-    if not m:
-        raise ValueError("malformed project spec '{}'".format(spec))
-    g = m.groupdict()
-    project = g['project']
-    projects.append(project)
-    urls[project] = '{}/{}.git'.format(config['gitBase'], g['nsp'])
-    branches[project] = g["branch"] or config["defaultBranch"]
+    p, url, branch = parse_src_spec(spec)
+    projects.append(p)
+    urls[p] = url
+    branches[p] = branch
 
 # Second pass once all projects are known to determine dependencies
 dependencies = {
@@ -55,6 +66,13 @@ inv_dependencies = {
     for d in projects
 }
 
+data_packages = []
+for spec in config["dataPackages"]:
+    p, url, branch = parse_src_spec(spec)
+    data_packages.append(p)
+    urls[p] = url
+    branches[p] = branch
+
 config_path = os.path.join(output_path, "configuration.mk")
 with open(config_path, "w") as f:
     print("CONTRIB_PATH := " + config["contribPath"], file=f)
@@ -65,5 +83,9 @@ with open(config_path, "w") as f:
         print("{}_DEPS := {}".format(p, ' '.join(dependencies[p])), file=f)
         print("{}_INV_DEPS := {}".format(p, ' '.join(inv_dependencies[p])),
               file=f)
+    print("DATA_PACKAGES := " + " ".join(data_packages), file=f)
+    for p in data_packages:
+        print("{}_URL := {}".format(p, urls[p]), file=f)
+        print("{}_BRANCH := {}".format(p, branches[p]), file=f)
 
 print(config_path)

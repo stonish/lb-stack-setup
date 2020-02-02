@@ -109,7 +109,9 @@ def git(*args, **kwargs):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser('LHCb stack setup')
+    parser = argparse.ArgumentParser(
+        'LHCb stack setup',
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('path', help='Path to stack directory',
                         **({'nargs': '?'} if FROM_FILE else {}))
     parser.add_argument('--repo', '-u', default=REPO, help='Repository URL')
@@ -162,7 +164,7 @@ if __name__ == '__main__':
             git('pull', '--ff-only', 'origin', remote_ref)
         except CalledProcessError:
             logging.error(
-                'Could not "git pull" cleanly. Check for uncommited changes.')
+                'Could not "git pull" cleanly. Check for uncommitted changes.')
             sys.exit(1)
 
     sys.path.insert(0, utils_dir)

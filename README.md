@@ -96,6 +96,18 @@ utils/config.py binaryTag x86_64-centos7-gcc9-opt+g
 
 or edit the file `utils/config.json` directly.
 
+### Add a data package
+
+By default only [PRConfig](https://gitlab.cern.ch/lhcb-datapkg/PRConfig) and
+[AppConfig](https://gitlab.cern.ch/lhcb-datapkg/AppConfig) are cloned.
+You can add a new package to be checked out in the json configuration.
+
+> __Note:__ After adding a new data package, do a purge in the projects where you
+> need it (e.g. `make Project/purge`) in order for CMake to pick it up.
+
+> __Note:__ All data packages are put under `DBASE`, even those that nominally
+> belong to `PARAM`. This does not affect the builds in any way.
+
 ### Update the setup
 
 In case there is a fix or an update to the setup, just run `setup.py`

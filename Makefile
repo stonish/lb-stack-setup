@@ -43,6 +43,22 @@ ALL_TARGETS = all build checkout clean purge use-git-https use-git-ssh use-git-k
 # ----------------------
 # implementation details
 # ----------------------
+
+# public targets: data package targets
+ALL_TARGETS += $(foreach p,$(DATA_PACKAGES),$(p) $(p)-checkout)
+
+define PACKAGE_settings
+$(1)-checkout:
+# put all packages in DBASE, even those in "PARAM"
+	@test -e DBASE/$(1) || ( \
+		mkdir -p DBASE && cd DBASE && \
+		/cvmfs/lhcb.cern.ch/lib/var/lib/LbEnv/644/stable/x86_64-centos7/bin/git-lb-clone-pkg $(1) \
+	)
+$(1): $(1)-checkout
+endef
+$(foreach p,$(DATA_PACKAGES),$(eval $(call PACKAGE_settings,$(p))))
+
+
 # public targets: project targets
 ALL_TARGETS += $(foreach p,$(PROJECTS),$(p) $(p)-checkout $(p)-clean $(p)-purge fast/$(p) fast/$(p)-clean)
 
@@ -60,7 +76,7 @@ $(1)/run: $(1)-checkout $(DIR)/project-run.sh
 	@ln -sf $(DIR)/project-run.sh $(1)/run
 	@grep -Fxq "run" $(1)/.git/info/exclude || echo "run" >> $(1)/.git/info/exclude
 # generic build target
-$(1)/%: $$($(1)_DEPS) fast/$(1)/% ;
+$(1)/%: $(DATA_PACKAGES) $$($(1)_DEPS) fast/$(1)/% ;
 fast/$(1)/%: $(1)-checkout $(1)/run $(CONTRIB_DEPS)
 	@$(DIR)/build-env $(DIR)/make.sh $(1) $$*
 # exception for purge and clean: always do fast/Project/purge or clean
