@@ -58,4 +58,7 @@ if(NOT CMAKE_SOURCE_DIR MATCHES "CMakeTmp")
 
   # Workaround some apparent bug in the detection of genconf.exe --no-init support
   set(GENCONF_WITH_NO_INIT ON)
+
+  # Do not build Gaudi OpenCL examples as distcc servers may not have it installed
+  set(CMAKE_DISABLE_FIND_PACKAGE_OpenCL ON)
 endif()
