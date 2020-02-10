@@ -11,12 +11,12 @@ source "$DIR/helpers.sh"
 logname="make.sh"
 printenv | sort > "$OUTPUT/make.sh.env"
 
-PROJECT="$1"
-TARGET="$2"
-if [ "$#" -ne 2 ]; then
-    echo "usage: $(basename $0) project target" >&2
+if [ "$#" -lt 2 ]; then
+    echo "usage: $(basename $0) project targets" >&2
     exit 2
 fi
+PROJECT="$1"
+shift
 
 # steering options
 CONTRIB="$(config contribPath)"
@@ -208,11 +208,14 @@ if [ -f Makefile ]; then
   fi
 fi
 
-# Disable distcc for targets that do not cause compilation
+# Disable distcc if all targets do not cause compilation
 if [ "$USE_DISTCC" = true ]; then
-  if [[ "purge clean configure test" =~ (^|[[:space:]])"$TARGET"($|[[:space:]]) ]]; then
-    USE_DISTCC=false
-  fi
+  USE_DISTCC=false
+  for TARGET in "$@"; do
+    if [[ ! "purge clean configure test" =~ (^|[[:space:]])"$TARGET"($|[[:space:]]) ]]; then
+      USE_DISTCC=true
+    fi
+  done
 fi
 
 # Disable distcc when there are few cxx to build.
@@ -244,7 +247,7 @@ elif [ "$USE_DISTCC" = true ]; then
   export COMPILER_PREFIX="$DIR/../contrib/bin/distcc"
 fi
 
-make -f "$DIR/project.mk" -C "$PROJECT" "$TARGET"
+make -f "$DIR/project.mk" -C "$PROJECT" "$@"
 # TODO catch CTRL-C during make here and do the clean up, see
 #      https://unix.stackexchange.com/questions/163561/control-which-process-gets-cancelled-by-ctrlc
 run_cmd="$PROJECT/build.$BINARY_TAG/run"
