@@ -8,7 +8,8 @@
 		"lhcb/Brunel",
 		"lhcb/Phys",
 		"lhcb/Moore",
-		"lhcb/Alignment"
+		"lhcb/Alignment",
+                "lhcb/Online"
 	],
 	"dataPackages": [
 		"lhcb-datapkg/AppConfig",
@@ -53,6 +54,7 @@
 		"Analysis": "Phys",
 		"DaVinci": "Stripping Analysis",
 		"LHCbIntegrationTests": "Brunel DaVinci Moore",
-		"MooreAnalysis": "Moore Analysis"
+		"MooreAnalysis": "Moore Analysis",
+                "Online": "LHCb"
 	}
 }
