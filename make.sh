@@ -27,9 +27,13 @@ USE_DISTCC_PUMP=true
 # DEBUG_DISTCC=true; USE_CCACHE=false
 # DEBUG_CCACHE=true
 
-# explicitly define a fast TMPDIR
-# FIXME this may result in /tmp/<username>/<id> which is a bit redundant
-export TMPDIR="${XDG_RUNTIME_DIR:-$(dirname $(mktemp -u))/$(id -u)}"
+# explicitly define a fast TMPDIR, unless debugging
+if [ "$DEBUG_CCACHE" = true -o "$DEBUG_DISTCC" = true ]; then
+  export TMPDIR="$OUTPUT/tmp"
+else
+  # FIXME this may result in /tmp/<username>/<id> which is a bit redundant
+  export TMPDIR="${XDG_RUNTIME_DIR:-$(dirname $(mktemp -u))/$(id -u)}"
+fi
 mkdir -p $TMPDIR
 # use our CMake and set the toolchain
 export PATH=$CONTRIB/bin:$PATH
@@ -92,7 +96,8 @@ pump_startup() {
     # --time = Print elapsed, user, and system time to stderr.
     # --statistics = Print information to stdout about include analysis.
     # --debug_pattern : 19 = 1 (warning) + 2 (trace 0) + 16 (data); 31 = everything
-    local debug_args="--time --statistics --debug_pattern=19 --path_observation_re cvmfs"
+    local debug_args="--time --statistics --debug_pattern=19"
+    # debug_args="$debug_args --path_observation_re=/cvmfs"
   else
     local debug_args="--debug_pattern=1"  # only warnings
   fi
@@ -107,12 +112,14 @@ pump_startup() {
   # TODO add a separator line to the stdout/stderr or rotate logs
   # Start the include server directly, avoiding the `pump` wrapper.
   # This allows more control, e.g. to chose the version of python
-  PYTHONPATH="$PYTHONPATH:$include_server_install" \
-    $PYTHON $include_server_install/include_server.py \
-      --port $INCLUDE_SERVER_PORT --pid_file "$pid_file" \
-      $debug_args \
-      >"$OUTPUT/distcc-pump.stdout" \
-      2>"$OUTPUT/distcc-pump.stderr"
+  local cmd="PYTHONPATH='$PYTHONPATH:$include_server_install' \
+    $PYTHON '$include_server_install/include_server.py' \
+      --port '$INCLUDE_SERVER_PORT' --pid_file '$pid_file' \
+      $debug_args"
+  if [ "$DEBUG_DISTCC" != true ]; then
+    cmd="$cmd >'$OUTPUT/distcc-pump.stdout' 2>'$OUTPUT/distcc-pump.stderr'"
+  fi
+  eval $cmd
 
   # Variable used by "pump --shutdown" (see pump_shutdown)
   export INCLUDE_SERVER_PID=$(cat "$pid_file")
@@ -160,12 +167,12 @@ setup_distcc() {
       # rm -f ${DISTCC_LOG}
 
       export DISTCC_SAVE_TEMPS=1
-      # distcc uses TMPDIR for temporary files, so set that
-      export COMPILER_PREFIX="TMPDIR='$OUTPUT/distcc-tmp' $COMPILER_PREFIX"
-      mkdir -p "$OUTPUT/distcc-tmp"
+      # distcc uses TMPDIR for temporary files, which is set above
 
       export DISTCC_FALLBACK=0  # disable fallbacks and fail
       export DISTCC_BACKOFF_PERIOD=0  # disable backoff
+      # stop on include server failure rather than preprocess locally
+      # export DISTCC_TESTING_INCLUDE_SERVER=1  # undocumented variable
       export NINJAFLAGS="$NINJAFLAGS -j1"  # one job at a time
     fi
   else
@@ -248,6 +255,7 @@ elif [ "$USE_DISTCC" = true ]; then
 fi
 
 make -f "$DIR/project.mk" -C "$PROJECT" "$@"
+# cd "$PROJECT/build.$BINARY_TAG" && ninja $NINJAFLAGS "$@" && cd -
 # TODO catch CTRL-C during make here and do the clean up, see
 #      https://unix.stackexchange.com/questions/163561/control-which-process-gets-cancelled-by-ctrlc
 run_cmd="$PROJECT/build.$BINARY_TAG/run"

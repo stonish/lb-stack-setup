@@ -2,7 +2,11 @@ set -eo pipefail
 
 CONTRIB=${CONTRIB:-$(pwd)/contrib}
 KEEP_SRC=${KEEP_SRC:-false}
-SRC_BASE=${SRC_BASE:-$(mktemp --tmpdir -d lb-stack-setup-install.XXXXX)}
+if [ "$KEEP_SRC" = true ]; then
+    SRC_BASE=${SRC_BASE:-$CONTRIB/src}
+else
+    SRC_BASE=${SRC_BASE:-$(mktemp --tmpdir -d lb-stack-setup-install.XXXXX)}
+fi
 
 setup() {
     local REPO="$1"
