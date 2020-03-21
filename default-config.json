@@ -1,22 +1,19 @@
 {
 	"binaryTag": "x86_64-centos7-gcc9-opt",
-	"projects": [
-		"gaudi/Gaudi:v33r0",
-		"lhcb/LHCb",
-		"lhcb/Lbcom",
-		"lhcb/Rec",
-		"lhcb/Brunel",
-		"lhcb/Phys",
-		"lhcb/Moore",
-		"lhcb/Alignment",
-                "lhcb/Online"
-	],
-	"dataPackages": [
-		"lhcb-datapkg/AppConfig",
-		"lhcb-datapkg/PRConfig"
-	],
-	"defaultBranch": "master",
+	"defaultProject": "Moore",
+	"gitBranch": {
+		"Gaudi": "v33r0",
+		"default": "master"
+	},
+	"gitGroup": {
+		"Gaudi": "gaudi",
+		"default": "lhcb"
+	},
 	"gitBase": null,
+	"dataPackages": [
+		"AppConfig",
+		"PRConfig"
+	],
 	"useDocker": false,
 	"useCcache": true,
 	"useDistcc": true,
@@ -40,21 +37,5 @@
 	"distccPrincipal": "distccd",
 	"distccLocalslots": null,
 	"distccLocalslotsCpp": null,
-	"distccRandomize": true,
-	"projectDeps": {
-		"LHCb": "Gaudi",
-		"Lbcom": "LHCb",
-		"Rec": "Lbcom",
-		"Boole": "Lbcom",
-		"Brunel": "Rec",
-		"Phys": "Rec",
-		"Moore": "Phys",
-		"Alignment": "Phys",
-		"Stripping": "Phys",
-		"Analysis": "Phys",
-		"DaVinci": "Stripping Analysis",
-		"LHCbIntegrationTests": "Brunel DaVinci Moore",
-		"MooreAnalysis": "Moore Analysis",
-                "Online": "LHCb"
-	}
+	"distccRandomize": true
 }
