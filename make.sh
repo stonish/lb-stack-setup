@@ -19,10 +19,11 @@ PROJECT="$1"
 shift
 
 # steering options
-CONTRIB="$(config contribPath)"
-OUTPUT="$(config outputPath)"
-USE_CCACHE=$(config useCcache)
-USE_DISTCC=$(config useDistcc)
+eval $(config --sh outputPath contribPath ccachePath useCcache useDistcc)
+OUTPUT=$outputPath
+CONTRIB=$contribPath
+USE_CCACHE=$useCcache
+USE_DISTCC=$useDistcc
 USE_DISTCC_PUMP=true
 # DEBUG_DISTCC=true; USE_CCACHE=false
 # DEBUG_CCACHE=true
@@ -43,7 +44,7 @@ export NINJA_STATUS="[%u>%r>%f/%t] "
 
 
 setup_ccache() {
-  export CCACHE_DIR="$(config ccachePath)"
+  export CCACHE_DIR="$ccachePath"
 
   # Setup ccache limits only if not setup
   [ ! -d "$CCACHE_DIR" ] && ccache -F 20000 -M 0
