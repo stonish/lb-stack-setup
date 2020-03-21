@@ -94,7 +94,7 @@ def clone_package(name, path):
         from subprocess import check_output
         # TODO fix hardcoded LbEnv version
         check_output([
-            '/cvmfs/lhcb.cern.ch/lib/var/lib/LbEnv/stable/x86_64-centos7/bin/git-lb-clone-pkg',
+            os.path.join(config['lbenvPath'], 'bin/git-lb-clone-pkg'),
             name
         ],
                      cwd=path)
