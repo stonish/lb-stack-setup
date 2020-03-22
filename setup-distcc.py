@@ -52,9 +52,12 @@ def write_spec(spec):
     return s if not spec['options'] else (s + ',' + ','.join(spec['options']))
 
 
-def reachable(host, port):
-    code = run('nc --send-only --wait 0.2 {} {} </dev/null 2>/dev/null'
-                     .format(host, port))
+def reachable(host, port=None):
+    if port is not None:
+        code = run('nc --send-only --wait 0.2 {} {} </dev/null 2>/dev/null'
+                   .format(host, port))
+    else:
+        code = run('timeout 0.2 ping -c1 -q {} > /dev/null'.format(host))
     return code == 0
 
 
@@ -76,7 +79,7 @@ for host in config['distccHosts']:
             log.warning('No valid kerberos ticket, disabling distcc host ' +
                         host['spec'])
             continue
-    if reachable(spec['hostid'], spec['port']):
+    if reachable(spec['hostid']):
         # The host is directly reachable
         found_hosts.append(host['spec'])
     else:
@@ -119,6 +122,7 @@ for gateway, hosts in proxied_hosts.items():
         log.error('Failed to forward ports. Make sure passwordless login to '
                   '{} works'.format(gateway))
 
+found_hosts.sort()
 if not found_hosts:
     log.error("No distcc hosts found!")
     exit(1)
