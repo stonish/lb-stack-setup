@@ -9,13 +9,6 @@ all:
 # main targets
 all: build
 
-use-git-https:
-	@$(MAKE) set-git-remote-url GIT_BASE=https://gitlab.cern.ch
-use-git-ssh:
-	@$(MAKE) set-git-remote-url GIT_BASE=ssh://git@gitlab.cern.ch:7999
-use-git-krb5:
-	@$(MAKE) set-git-remote-url GIT_BASE=https://:@gitlab.cern.ch:8443
-
 CMD = true
 for-each:
 	@for p in $(PROJECTS) ; do if [ -d $$p ] ; then ( cd $$p && pwd && $(CMD) ) ; fi ; done
@@ -36,7 +29,7 @@ help:
 	@for t in $(ALL_TARGETS) ; do echo .. $$t ; done
 
 # public targets: main targets
-ALL_TARGETS = all build clean purge use-git-https use-git-ssh use-git-krb5 contrib
+ALL_TARGETS = all build clean purge contrib
 
 # ----------------------
 # implementation details
@@ -71,9 +64,6 @@ $(1)-purge:
 	@test -e $(1) && $$(MAKE) fast/$(1)/purge || true
 endef
 $(foreach proj,$(PROJECTS),$(eval $(call PROJECT_settings,$(proj))))
-
-set-git-remote-url:
-	@$(foreach p,$(PROJECTS),if [ -d $p ] ; then ( cd $p && pwd && git remote set-url origin $(GIT_BASE)/$($p_GITGROUP)/$p.git && git remote -v ) ; fi ;)
 
 .PHONY: $(ALL_TARGETS)
 
