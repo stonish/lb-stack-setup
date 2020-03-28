@@ -1,6 +1,10 @@
 {
 	"binaryTag": "x86_64-centos7-gcc9-opt",
-	"defaultProject": "Moore",
+	"defaultProjects": [
+		"Alignment",
+		"Brunel",
+		"Moore"
+	],
 	"gitBranch": {
 		"Gaudi": "v33r0",
 		"default": "master"

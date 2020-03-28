@@ -80,6 +80,24 @@ make fast/Moore/test ARGS='-R hlt1_example$'
 make fast/Moore/test ARGS='-R hlt1_example -V'
 ```
 
+## Makefile instructions
+
+The `Makefile` provided features the following targets.
+
+* Global targets
+  * `all` (or `build`): builds the default projects (this is the default target),
+  * `clean`: remove build products for all cloned projects (keeping the sources and CMake cache),
+  * `purge`: similar to `clean`, but also remove the CMake temporary files,
+  * `help`: print a list of available targets,
+  * `for-each CMD="do-something"`: run a command in each git repository (projects, data packages or other).
+* Project targets
+  * `<Project>`: build the required project (with dependencies),
+  * `<Project>/<target>`: build the specified target in the given project,
+    for example, to get the list of targets available in Gaudi you can call `make Gaudi/help`,
+  * `<Project>-clean`: clean `<Project>` and the projects that depend on it
+  * `fast/<Project>[/<target>]`: same as the target `<Project>[/<target>]`
+    but do not try to build the dependencies.
+
 ## Integrations
 
 ### Visual Studio Code
@@ -92,15 +110,17 @@ See [doc/vscode.md](/../tree/vscode/doc/vscode.md) for more information.
 ## Configuration settings
 
 You can set the following options in `config.json` to configure your build setup.
-Depending on where you build there are different recommendations.
+Depending on what and where you build there are different recommendations.
 
+- `defaultProjects`: Defines which projects are built when `make` is invoked without giving any
+  project-specific target (i.e. `make`, `make all` or `make build`).
 - `useDocker (true/false)`: Allows running with docker, check
   [doc/prerequisites.md](doc/prerequisites.md) for instructions.
   Defaults to false on CentOS7, otherwise is true.
 - `distcc ([true]/false)`: distcc allows to compile remotely on machines located at CERN.
-   Currently 80 virtual cores are available for parallel compilation.
-   You need a valid kerberos token and connectivity to lxplus (or to be inside the CERN network).
-   Be aware that these are shared resources, set it to `false` if your local cluster is powerful.
+  Currently 80 virtual cores are available for parallel compilation.
+  You need a valid kerberos token and connectivity to lxplus (or to be inside the CERN network).
+  Be aware that these are shared resources, set it to `false` if your local cluster is powerful.
 
 All possible configuration settings and their defaults are stored in
 [default-config.json](default-config.json).

@@ -1,17 +1,18 @@
 DIR := $(abspath $(dir $(realpath $(lastword $(MAKEFILE_LIST)))))
 
-# clone projects, write project settings .mk file and source it
-include $(shell "$(DIR)/setup-make.py" $(MAKECMDGOALS))
-
 # default target
 all:
+
+# clone projects, write project settings .mk file and source it
+# also defines build target
+include $(shell "$(DIR)/setup-make.py" $(MAKECMDGOALS))
 
 # main targets
 all: build
 
 CMD = true
 for-each:
-	@for p in $(PROJECTS) ; do if [ -d $$p ] ; then ( cd $$p && pwd && $(CMD) ) ; fi ; done
+	@for p in $(REPOS) ; do if [ -d $$p ] ; then ( cd $$p && pwd && $(CMD) ) ; fi ; done
 
 CONTRIB_DEPS := $(CONTRIB_PATH)/bin/.cmake_timestamp $(CONTRIB_PATH)/bin/ninja $(CONTRIB_PATH)/bin/ccache $(CONTRIB_PATH)/bin/distcc
 CONTRIB_DEPS += $(CONTRIB_PATH)/bin/ninjatracing $(CONTRIB_PATH)/bin/post_build_ninja_summary.py
@@ -21,9 +22,8 @@ $(CONTRIB_PATH)/bin/% $(CONTRIB_PATH)/bin/.%_timestamp: $(DIR)/install-%.sh
 $(CONTRIB_PATH)/bin/ninjatracing $(CONTRIB_PATH)/bin/post_build_ninja_summary.py: $(DIR)/install-tools.sh
 	@"${DIR}/build-env" --no-kerberos bash "$<"
 
-build: $(PROJECTS)
 clean: $(patsubst %,%-clean,$(PROJECTS))
-purge: $(patsubst %,%-purge,$(PROJECTS))
+purge: $(patsubst %,%/purge,$(PROJECTS))
 
 help:
 	@for t in $(ALL_TARGETS) ; do echo .. $$t ; done
@@ -36,7 +36,7 @@ ALL_TARGETS = all build clean purge contrib
 # ----------------------
 
 # public targets: project targets
-ALL_TARGETS += $(foreach p,$(PROJECTS),$(p) $(p)-clean $(p)-purge fast/$(p) fast/$(p)-clean)
+ALL_TARGETS += $(foreach p,$(PROJECTS),$(p) $(p)-clean fast/$(p) fast/$(p)-clean)
 
 define PROJECT_settings
 $(1)/run: $(DIR)/project-run.sh
@@ -59,9 +59,6 @@ $(1)-clean: $(patsubst %,%-clean,$($(1)_INV_DEPS))
 fast/$(1)-clean:
 	@test -d $(1)/build.$$(shell "$(DIR)/config.py" binaryTag) && $$(MAKE) $(1)/clean || true
 	$(RM) -r $(1)/InstallArea/$$(shell "$(DIR)/config.py" binaryTag)
-# purge
-$(1)-purge:
-	@test -e $(1) && $$(MAKE) fast/$(1)/purge || true
 endef
 $(foreach proj,$(PROJECTS),$(eval $(call PROJECT_settings,$(proj))))
 
