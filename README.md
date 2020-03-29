@@ -9,6 +9,10 @@ for example, `$HOME` or `/afs/cern.ch/work/j/jdoe`.
 > one `*-opt` platform, and **50 GiB** if you compile with debug symbols
 > (`*-dbg` or `*-opt+g`).
 
+> **Note:** Working on network file systems such as AFS or on network-backed
+> volumes (e.g. on CERN OpenStack) is typically slower than on a local disk,
+> especially if the latter is an SSD.
+
 Adjust the following command according to how you want the directory containing your stack to be called and then run it (here we use simply "`stack`"):
 
 ```sh
@@ -18,18 +22,19 @@ curl https://gitlab.cern.ch/rmatev/lb-stack-setup/raw/master/setup.py | python -
 The script will first check that all prerequisites are met. If it fails, check
 [doc/prerequisites.md](doc/prerequisites.md) for more information.
 Then it will clone this repo inside a new directory `stack/utils` and do the
-initial setup. It will choose a default environment for you.
+initial setup. It will choose a default environment for you ("native" build on
+CentOS 7 and docker on other OSes).
 
 Configure your setup (e.g. desired platform) and projects to build
 
 ```sh
 $EDITOR utils/config.json
-$EDITOR utils/configuration.mk
 ```
 
-All configuration settings and their defaults are stored in
+All possible configuration settings and their defaults are stored in
 [default-config.json](default-config.json).
-Any settings you specify `config.json` file will override the defaults.
+Any settings you specify in the `config.json` file will override the defaults.
+See [below](#configuration-settings) for some of the available settings and their use.
 
 ## Compile
 
@@ -68,12 +73,30 @@ make Moore
 # list available tests
 make fast/Moore/test ARGS='-N'
 # run all tests with 4 parallel jobs
-make fast/Moore/test ARGS='-j 4'  
+make fast/Moore/test ARGS='-j 4'
 # run test(s) matching a regex
 make fast/Moore/test ARGS='-R hlt1_example$'
 # verbose output showing test (failure) details
 make fast/Moore/test ARGS='-R hlt1_example -V'
 ```
+
+## Makefile instructions
+
+The `Makefile` provided features the following targets.
+
+* Global targets
+  * `all` (or `build`): builds the default projects (this is the default target),
+  * `clean`: remove build products for all cloned projects (keeping the sources and CMake cache),
+  * `purge`: similar to `clean`, but also remove the CMake temporary files,
+  * `help`: print a list of available targets,
+  * `for-each CMD="do-something"`: run a command in each git repository (projects, data packages or other).
+* Project targets
+  * `<Project>`: build the required project (with dependencies),
+  * `<Project>/<target>`: build the specified target in the given project,
+    for example, to get the list of targets available in Gaudi you can call `make Gaudi/help`,
+  * `<Project>-clean`: clean `<Project>` and the projects that depend on it
+  * `fast/<Project>[/<target>]`: same as the target `<Project>[/<target>]`
+    but do not try to build the dependencies.
 
 ## Integrations
 
@@ -83,6 +106,24 @@ Experimental VS Code support exists in the [vscode](/../tree/vscode) branch.
 Currently, only intellisense for C++ and Python are supported and there are no
 other integrations such as building and testing from within VS Code.
 See [doc/vscode.md](/../tree/vscode/doc/vscode.md) for more information.
+
+## Configuration settings
+
+You can set the following options in `config.json` to configure your build setup.
+Depending on what and where you build there are different recommendations.
+
+- `defaultProjects`: Defines which projects are built when `make` is invoked without giving any
+  project-specific target (i.e. `make`, `make all` or `make build`).
+- `useDocker (true/false)`: Allows running with docker, check
+  [doc/prerequisites.md](doc/prerequisites.md) for instructions.
+  Defaults to false on CentOS7, otherwise is true.
+- `distcc ([true]/false)`: distcc allows to compile remotely on machines located at CERN.
+  Currently 80 virtual cores are available for parallel compilation.
+  You need a valid kerberos token and connectivity to lxplus (or to be inside the CERN network).
+  Be aware that these are shared resources, set it to `false` if your local cluster is powerful.
+
+All possible configuration settings and their defaults are stored in
+[default-config.json](default-config.json).
 
 ## HOWTOs
 
@@ -97,12 +138,24 @@ utils/config.py binaryTag x86_64-centos7-gcc9-opt+g
 
 or edit the file `utils/config.json` directly.
 
+### Add a data package
+
+By default only [PRConfig](https://gitlab.cern.ch/lhcb-datapkg/PRConfig) and
+[AppConfig](https://gitlab.cern.ch/lhcb-datapkg/AppConfig) are cloned.
+You can add a new package to be checked out in the json configuration.
+
+> __Note:__ After adding a new data package, do a purge in the projects where you
+> need it (e.g. `make Project/purge`) in order for CMake to pick it up.
+
+> __Note:__ All data packages are put under `DBASE`, even those that nominally
+> belong to `PARAM`. This does not affect the builds in any way.
+
 ### Update the setup
 
 In case there is a fix or an update to the setup, just run `setup.py`
 
 ```sh
-utils/setup.py
+python utils/setup.py
 ```
 
 It attempts to pull the latest `master` and to update your `config.json`.
@@ -121,6 +174,7 @@ make purge
 ```
 
 ### Use a non-standard branch of lb-stack-setup
+
 You might want to use a branch other than `master` to try out a new feature
 that is not merged yet.
 
@@ -149,6 +203,18 @@ configuration is made consistent with the new branch.
 ```sh
 ./setup.py -b vscode
 ```
+
+### Develop lb-stack-setup
+
+Once you have a clone of this repo (e.g. the `stack/utils` directory), you can run
+
+```sh
+python setup.py --repo . path/to/new/stack
+```
+
+which will use the `HEAD` (i.e. the currently checked out branch) of your local
+repo to create a new stack setup at the given path.
+Note that uncommitted changes will not be in the new clone.
 
 ### Migrate from another stack setup
 
@@ -196,17 +262,7 @@ reproduce the problem.
     distcc[2541] (dcc_talk_to_include_server) Warning: include server gave up analyzing
     distcc[2541] (dcc_build_somewhere) Warning: failed to get includes from include server, preprocessing locally
     ```
-- `TMVAImpFactory-MCUpTuneV1.cpp` takes forever to compile.
-    ```log
-    [8>1>1183/1191] Building CXX object Rec/ChargedProtoANNPID/CMakeFiles/ChargedProtoANNPID.dir/src/TMVAImpFactory-MCUpTuneV1.cpp.o
-    distcc[3977] (dcc_select_for_read) ERROR: IO timeout
-    distcc[3977] (dcc_r_token_int) ERROR: read failed while waiting for token "DONE"
-    distcc[3977] (dcc_r_result_header) ERROR: server provided no answer. Is the server configured to allow access from your IP address? Is the server performing authentication and your client isn't? Does the server have the compiler installed? Is the server configured to access the compiler?
-    distcc[3977] Warning: failed to distribute ../Rec/ChargedProtoANNPID/src/TMVAImpFactory-MCUpTuneV1.cpp to lbquantaperf02.cern.ch/40,cpp,lzo,auth, running locally instead
-    ```
-- There are no tests. None whatsoever.
 - Manual initial setup can be improved with e.g. cookiecutter.
-- Settings are scattered in `configuration.mk` and `default-config.json`.
 - `lb-docker-run` should be upstreamed and removed from this repo.
 - Logging is not uniform, and worse not documented
 - When using docker outside CERN, the port forwarding for distcc is done in

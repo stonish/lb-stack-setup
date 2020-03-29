@@ -1,9 +1,27 @@
 {
-	"gitBase": null,
 	"binaryTag": "x86_64-centos7-gcc9-opt",
+	"defaultProjects": [
+		"Alignment",
+		"Brunel",
+		"Moore"
+	],
+	"gitBranch": {
+		"Gaudi": "v33r1",
+		"default": "master"
+	},
+	"gitGroup": {
+		"Gaudi": "gaudi",
+		"default": "lhcb"
+	},
+	"gitBase": null,
+	"dataPackages": [
+		"AppConfig",
+		"PRConfig"
+	],
 	"useDocker": false,
 	"useCcache": true,
 	"useDistcc": true,
+	"lbenvPath": "/cvmfs/lhcb.cern.ch/lib/var/lib/LbEnv/644/stable/x86_64-centos7",
 	"projectPath": "..",
 	"contribPath": "../contrib",
 	"ccachePath": "../.ccache",

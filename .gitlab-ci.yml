@@ -16,6 +16,7 @@ setup:
   tags:
     - cvmfs
   script:
+    - git --version
     - python setup.py --debug --repo $CI_REPOSITORY_URL --branch $CI_COMMIT_SHA stack
     - cd stack
     - utils/config.py useDistcc false
@@ -50,4 +51,4 @@ make:
   cache:
     key: "$CI_JOB_NAME"
     paths:
-      - .ccache
+      - stack/.ccache/

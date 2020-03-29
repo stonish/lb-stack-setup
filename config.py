@@ -118,23 +118,34 @@ def read_config(original=False, default_config=DEFAULT_CONFIG,
     # TODO think if we need nested updates and in any case document behaviour
 
 
+def format_value(x):
+    """Return json except for strings, which are printed unquoted."""
+    return x if isinstance(x, basestring) else json.dumps(x)
+
+
 if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser()
     parser.add_argument('key', nargs='?', help='Configuration key')
     parser.add_argument('value', nargs='?', help='New value to set')
+    parser.add_argument('--sh', nargs='+',
+                        help='Print values as shell commands')
     args = parser.parse_args()
 
+    if args.key and args.sh:
+        parser.error('All keys must be right of -sh')
+
     config, defaults, overrides = read_config(True, config_out=CONFIG)
-    if not args.key:
+    if args.sh:
+        for key in args.sh:
+            print('{}="{}"'.format(key, format_value(config[key])))
+    elif not args.key:
         # print entire config
         print(json.dumps(config, indent=4))
     elif not args.value:
         # print the value for a key
-        x = config[args.key]
-        # write json except for strings, which are printed unquoted
-        print(x if isinstance(x, basestring) else json.dumps(x))
+        print(format_value(config[args.key]))
     else:
         # set the value for a key
         try:

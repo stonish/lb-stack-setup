@@ -8,9 +8,11 @@ if sys.version_info < (2, 7):
 import argparse  # noqa: E402
 import logging  # noqa: E402
 import os  # noqa: E402
+import shutil  # noqa: E402
 from os.path import join, realpath  # noqa: E402
 from subprocess import (  # noqa: E402
     check_call, check_output, CalledProcessError)
+from datetime import datetime  # noqa: E402
 from distutils.version import LooseVersion  # noqa: E402
 
 _DEBUG = False
@@ -33,7 +35,6 @@ Now do
 
     cd "{!s}"
     $EDITOR utils/config.json
-    $EDITOR utils/configuration.mk
     make
 
 """
@@ -91,7 +92,7 @@ def check_git_version():
     """Check git version and suggest alias if too old."""
     git_ver_str = check_output(['git', '--version']).decode('ascii').strip()
     git_ver = LooseVersion(git_ver_str.split()[2])
-    if git_ver < LooseVersion('2.13'):
+    if git_ver < LooseVersion('1.8'):
         logging.warning(
             'Old unspported git version {} detected. Consider using\n'
             '    alias git={}'.format(git_ver, CVMFS_GIT))
@@ -108,7 +109,9 @@ def git(*args, **kwargs):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser('LHCb stack setup')
+    parser = argparse.ArgumentParser(
+        'LHCb stack setup',
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('path', help='Path to stack directory',
                         **({'nargs': '?'} if FROM_FILE else {}))
     parser.add_argument('--repo', '-u', default=REPO, help='Repository URL')
@@ -160,8 +163,9 @@ if __name__ == '__main__':
         try:
             git('pull', '--ff-only', 'origin', remote_ref)
         except CalledProcessError:
-            logging.warning(
-                'Could not "git pull" cleanly. Check for uncommited changes.')
+            logging.error(
+                'Could not "git pull" cleanly. Check for uncommitted changes.')
+            sys.exit(1)
 
     sys.path.insert(0, utils_dir)
     from config import read_config, write_config, CONFIG
@@ -175,15 +179,24 @@ if __name__ == '__main__':
         # Obtain configuration ignoring config.json
         new_overrides = read_config(True, config_in=None)[2]
         new_overrides['useDocker'] = use_docker
-        # Try to merge configuration
-        config_out = CONFIG
+        # Backup configuration
+        config_backup = CONFIG + '.' + datetime.now().isoformat() + '.bak'
+        shutil.copy2(CONFIG, config_backup)
+        logging.info('Backed up `{}` to `{}`.'.format(CONFIG, config_backup))
+        # Merge new and existing configuration
+        logging.info('Updating existing configuration...')
+        conflicts = False
         for key, new_value in new_overrides.items():
             if overrides.get(key, new_value) != new_value:
-                config_out = join(os.path.dirname(CONFIG), 'config-new.json')
-                logging.warning(
-                    'Could not merge new automatic config with config.json\n'
-                    'Please merge config-new.json into config.json manually.')
-                break
+                logging.warning('Setting "{}" to "{}" (was "{}")'
+                                .format(key, new_value, overrides.get(key)))
+                conflicts = True
             overrides[key] = new_value
-        write_config(overrides, config_out)
+        if conflicts:
+            logging.warning(
+                'Could not merge existing `{0}` with new automatic'
+                'configuration.\nPlease merge `{1}` into `{0}` manually.'
+                .format(CONFIG, config_backup))
+        # Write new configuration
+        write_config(overrides, CONFIG)
         logging.info('Stack updated successfully.')
