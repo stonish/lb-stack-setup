@@ -44,9 +44,8 @@ def is_stack_dir(path):
     """Returns if path was setup the way we expect."""
     path = realpath(path)
     utils = join(path, 'utils')
-    return (
-        os.path.isdir(join(utils, '.git')) and
-        realpath(join(path, 'Makefile')) == join(utils, 'Makefile'))
+    return (os.path.isdir(join(utils, '.git'))
+            and realpath(join(path, 'Makefile')) == join(utils, 'Makefile'))
 
 
 def assert_cvmfs():
@@ -69,8 +68,8 @@ def assert_cvmfs():
 
 
 def assert_os_or_docker():
-    host_os = (check_output('/cvmfs/lhcb.cern.ch/lib/bin/host_os')
-               .decode('ascii').strip())
+    host_os = (check_output('/cvmfs/lhcb.cern.ch/lib/bin/host_os').decode(
+        'ascii').strip())
     use_docker = False
     if host_os == 'x86_64-centos7':
         # test native setup
@@ -103,8 +102,8 @@ def git(*args, **kwargs):
     quiet = [] if _DEBUG else ['--quiet']
     cwd = utils_dir if args[0] != 'clone' else None
     cmd = [GIT] + list(args[:1]) + quiet + list(args[1:])
-    logging.debug('Executing command (cwd = {}): {}'
-                  .format(cwd, ' '.join(map(repr, cmd))))
+    logging.debug('Executing command (cwd = {}): {}'.format(
+        cwd, ' '.join(map(repr, cmd))))
     check_call(cmd, cwd=cwd, **kwargs)
 
 
@@ -112,17 +111,22 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         'LHCb stack setup',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('path', help='Path to stack directory',
-                        **({'nargs': '?'} if FROM_FILE else {}))
+    parser.add_argument(
+        'path',
+        help='Path to stack directory',
+        **({
+            'nargs': '?'
+        } if FROM_FILE else {}))
     parser.add_argument('--repo', '-u', default=REPO, help='Repository URL')
     parser.add_argument('--branch', '-b', default=BRANCH, help='Branch')
-    parser.add_argument('--debug', action='store_true',
-                        help='Debugging output')
+    parser.add_argument(
+        '--debug', action='store_true', help='Debugging output')
     # TODO add list of projects?
     args = parser.parse_args()
 
-    logging.basicConfig(format='%(levelname)-7s %(message)s',
-                        level=(logging.DEBUG if args.debug else logging.INFO))
+    logging.basicConfig(
+        format='%(levelname)-7s %(message)s',
+        level=(logging.DEBUG if args.debug else logging.INFO))
     _DEBUG = args.debug
 
     stack_dir = args.path or realpath(join(os.path.dirname(__file__), '..'))
@@ -134,8 +138,8 @@ if __name__ == '__main__':
             logging.info('Found existing stack at {}'.format(stack_dir))
             new_setup = False
         else:
-            parser.error('directory {} exists but is not a stack setup'
-                         .format(stack_dir))
+            parser.error('directory {} exists but is not a stack setup'.format(
+                stack_dir))
     elif not args.path:
         parser.error('path was not provided and it could not be guessed')
 
@@ -157,8 +161,8 @@ if __name__ == '__main__':
     else:
         remote_ref = args.branch or 'HEAD'
         logging.info(
-            'Updating existing stack setup in {} from branch origin/{} ...'
-            .format(stack_dir, remote_ref))
+            'Updating existing stack setup in {} from branch origin/{} ...'.
+            format(stack_dir, remote_ref))
         # Check if it is okay to update
         try:
             git('pull', '--ff-only', 'origin', remote_ref)
@@ -188,15 +192,15 @@ if __name__ == '__main__':
         conflicts = False
         for key, new_value in new_overrides.items():
             if overrides.get(key, new_value) != new_value:
-                logging.warning('Setting "{}" to "{}" (was "{}")'
-                                .format(key, new_value, overrides.get(key)))
+                logging.warning('Setting "{}" to "{}" (was "{}")'.format(
+                    key, new_value, overrides.get(key)))
                 conflicts = True
             overrides[key] = new_value
         if conflicts:
             logging.warning(
                 'Could not merge existing `{0}` with new automatic'
-                'configuration.\nPlease merge `{1}` into `{0}` manually.'
-                .format(CONFIG, config_backup))
+                'configuration.\nPlease merge `{1}` into `{0}` manually.'.
+                format(CONFIG, config_backup))
         # Write new configuration
         write_config(overrides, CONFIG)
         logging.info('Stack updated successfully.')

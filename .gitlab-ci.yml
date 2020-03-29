@@ -52,3 +52,14 @@ make:
     key: "$CI_JOB_NAME"
     paths:
       - stack/.ccache/
+
+check-formatting:
+  image: gitlab-registry.cern.ch/lhcb-docker/style-checker
+  script:
+    - curl -o lb-format "https://gitlab.cern.ch/lhcb-core/LbDevTools/raw/master/LbDevTools/SourceTools.py?inline=false"
+    - python lb-format --format-patch apply-formatting.patch origin/master
+  artifacts:
+    paths:
+      - apply-formatting.patch
+    when: on_failure
+    expire_in: 1 week

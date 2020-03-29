@@ -81,9 +81,8 @@ def clone(project):
         from subprocess import check_output
         check_output(['git', 'clone', url])
         check_output(['git', 'checkout', branch], cwd=project)
-        check_output(
-            ['git', 'submodule', 'update', '--init', '--recursive'],
-            cwd=project)
+        check_output(['git', 'submodule', 'update', '--init', '--recursive'],
+                     cwd=project)
         # TODO send output to stderr or log
     else:
         project = m[0]
@@ -94,8 +93,8 @@ def clone(project):
             project = canonical_name
         else:
             raise RuntimeError('Project {} already cloned under '
-                                'non-canonical name {}'.format(
-                                    canonical_name, project))
+                               'non-canonical name {}'.format(
+                                   canonical_name, project))
     return project
 
 
@@ -103,11 +102,9 @@ def clone_package(name, path):
     if not os.path.isdir(os.path.join(path, name)):
         from subprocess import check_output
         # TODO fix hardcoded LbEnv version
-        check_output([
-            os.path.join(config['lbenvPath'], 'bin/git-lb-clone-pkg'),
-            name
-        ],
-                     cwd=path)
+        check_output(
+            [os.path.join(config['lbenvPath'], 'bin/git-lb-clone-pkg'), name],
+            cwd=path)
         # TODO send output to stderr or log
 
 
@@ -188,7 +185,8 @@ def main(targets):
         makefile_config = checkout(projects, config['dataPackages'])
         makefile_config += [
             "CONTRIB_PATH := " + config["contribPath"],
-            "REPOS := " + " ".join(list_repos() + list_repos(DATA_PACKAGE_DIR)),
+            "REPOS := " +
+            " ".join(list_repos() + list_repos(DATA_PACKAGE_DIR)),
             "build: " + " ".join(config['defaultProjects']),
         ]
     except Exception as e:

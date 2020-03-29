@@ -10,7 +10,6 @@ from config import read_config
 SSH_CONFIG = os.path.join(os.path.dirname(__file__), 'ssh_config')
 config = read_config()
 
-
 # set up logging
 logging.basicConfig(
     level=logging.DEBUG,
@@ -20,8 +19,7 @@ logging.basicConfig(
     filemode='a')
 console = logging.StreamHandler()
 console.setLevel(logging.INFO)
-console.setFormatter(
-    logging.Formatter('%(levelname)-8s %(message)s'))
+console.setFormatter(logging.Formatter('%(levelname)-8s %(message)s'))
 logging.getLogger('').addHandler(console)
 log = logging.getLogger(os.path.basename(__file__))
 
@@ -35,9 +33,9 @@ def run(command):
 
 
 def parse_spec(spec):
-    m = re.match(r'^(?P<hostid>[a-zA-Z0-9-.]+)(:(?P<port>[0-9]+))?'
-                 r'(/(?P<limit>[0-9]+))?(,(?P<options>[^ ]+))?$',
-                 spec)
+    m = re.match(
+        r'^(?P<hostid>[a-zA-Z0-9-.]+)(:(?P<port>[0-9]+))?'
+        r'(/(?P<limit>[0-9]+))?(,(?P<options>[^ ]+))?$', spec)
     if not m:
         raise ValueError('Cannot parse HOSTSPEC {!r}'.format(spec))
     spec = m.groupdict()
@@ -54,8 +52,9 @@ def write_spec(spec):
 
 def reachable(host, port=None):
     if port is not None:
-        code = run('nc --send-only --wait 0.2 {} {} </dev/null 2>/dev/null'
-                   .format(host, port))
+        code = run(
+            'nc --send-only --wait 0.2 {} {} </dev/null 2>/dev/null'.format(
+                host, port))
     else:
         code = run('timeout 0.2 ping -c1 -q {} > /dev/null'.format(host))
     return code == 0
@@ -86,9 +85,12 @@ for host in config['distccHosts']:
         # The host needs to be proxied
         new_spec = {
             # "localhost" has a special meaning for distcc -> use "127.0.0.1"
-            'hostid': '127.0.0.1',
-            'port': host['localPort'],
-            'limit': spec['limit'],
+            'hostid':
+            '127.0.0.1',
+            'port':
+            host['localPort'],
+            'limit':
+            spec['limit'],
             'options': [
                 opt if opt != 'auth' else ('auth=' + spec['hostid'])
                 for opt in spec['options']
@@ -99,22 +101,22 @@ for host in config['distccHosts']:
         else:
             # collect hosts to proxy
             proxied_hosts[host['gateway']].append(
-                (write_spec(new_spec), host['spec'], host['localPort'], spec['hostid'],
-                 spec['port'])
-            )
+                (write_spec(new_spec), host['spec'], host['localPort'],
+                 spec['hostid'], spec['port']))
 
 for gateway, hosts in proxied_hosts.items():
-    log.info('Starting ssh port forwarding for distcc hosts ' +
-             ' '.join(h[1] for h in hosts))
-    forwards = ' '.join(['-L {}:{}:{}'.format(local, host, port)
-                        for _, _, local, host, port in hosts])
+    log.info('Starting ssh port forwarding for distcc hosts ' + ' '.join(
+        h[1] for h in hosts))
+    forwards = ' '.join([
+        '-L {}:{}:{}'.format(local, host, port)
+        for _, _, local, host, port in hosts
+    ])
     cmd = ('ssh -f -N -F "{}" '
            '-o BatchMode=yes '
            '-o ExitOnForwardFailure=yes '
            '-o UserKnownHostsFile=.known_hosts '
            '-o LogLevel=ERROR '
-           '{} {} >/dev/null'
-           .format(SSH_CONFIG, forwards, gateway))
+           '{} {} >/dev/null'.format(SSH_CONFIG, forwards, gateway))
     code = run(cmd)
     if code == 0:
         found_hosts.extend(h[0] for h in hosts)

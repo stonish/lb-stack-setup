@@ -11,7 +11,6 @@ try:
 except NameError:
     basestring = str
 
-
 DIR = os.path.dirname(__file__)
 DEFAULT_CONFIG = os.path.join(DIR, 'default-config.json')
 CONFIG = os.path.join(DIR, 'config.json')
@@ -29,8 +28,8 @@ def git_base():
         "https://gitlab.cern.ch",
     ]
     for base in choices:
-        code = os.system('git ls-remote {}/gaudi/Gaudi.git HEAD &>/dev/null'
-                         .format(base))
+        code = os.system(
+            'git ls-remote {}/gaudi/Gaudi.git HEAD &>/dev/null'.format(base))
         if code == 0:
             # TODO output logging warnings on stderr
             # if base != choices[0]:
@@ -44,9 +43,9 @@ def git_base():
 
 AUTOMATIC_DEFAULTS = {
     'gitBase': git_base,
-    'localPoolDepth': lambda: 2*cpu_count(),
+    'localPoolDepth': lambda: 2 * cpu_count(),
     'distccLocalslots': cpu_count,
-    'distccLocalslotsCpp': lambda: 2*cpu_count(),
+    'distccLocalslotsCpp': lambda: 2 * cpu_count(),
 }
 
 
@@ -56,9 +55,10 @@ def check_type(key, value, default_value):
         import warnings
         warnings.warn(
             'Got {!r} ({}) for key {!r}, expected {} type.\n'
-            'See {} for supported configuration.'
-            .format(value, type(value).__name__, key,
-                    expected_type.__name__, DEFAULT_CONFIG),
+            'See {} for supported configuration.'.format(
+                value,
+                type(value).__name__, key, expected_type.__name__,
+                DEFAULT_CONFIG),
             stacklevel=2)
 
 
@@ -67,8 +67,10 @@ def write_config(config, path=CONFIG):
         json.dump(config, f, indent=4)
 
 
-def read_config(original=False, default_config=DEFAULT_CONFIG,
-                config_in=CONFIG, config_out=None):
+def read_config(original=False,
+                default_config=DEFAULT_CONFIG,
+                config_in=CONFIG,
+                config_out=None):
     with open(default_config) as f:
         defaults = json.load(f, object_pairs_hook=OrderedDict)
 
@@ -86,9 +88,11 @@ def read_config(original=False, default_config=DEFAULT_CONFIG,
             check_type(key, value, defaults[key])
         except KeyError:
             import warnings
-            warnings.warn('Unknown key {} found in {}.\n'
-                          'See {} for supported configuration.'
-                          .format(key, config_in, default_config), stacklevel=2)
+            warnings.warn(
+                'Unknown key {} found in {}.\n'
+                'See {} for supported configuration.'.format(
+                    key, config_in, default_config),
+                stacklevel=2)
 
     config = OrderedDict(list(defaults.items()) + list(overrides.items()))
 
@@ -129,8 +133,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('key', nargs='?', help='Configuration key')
     parser.add_argument('value', nargs='?', help='New value to set')
-    parser.add_argument('--sh', nargs='+',
-                        help='Print values as shell commands')
+    parser.add_argument(
+        '--sh', nargs='+', help='Print values as shell commands')
     args = parser.parse_args()
 
     if args.key and args.sh:
