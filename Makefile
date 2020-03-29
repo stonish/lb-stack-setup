@@ -40,7 +40,6 @@ ALL_TARGETS += $(foreach p,$(PROJECTS),$(p) $(p)-clean fast/$(p) fast/$(p)-clean
 
 define PROJECT_settings
 $(1)/run: $(DIR)/project-run.sh
-	@echo $(1)/run
 	@ln -sf $(DIR)/project-run.sh $(1)/run
 	@grep -Fxq "run" $(1)/.git/info/exclude || echo "run" >> $(1)/.git/info/exclude
 # generic build target

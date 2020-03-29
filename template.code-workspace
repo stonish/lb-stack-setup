@@ -1,0 +1,64 @@
+{
+    "extensions": {
+        "recommendations": [
+            "eamodio.gitlens",
+            "ms-python.python",
+            "ms-vscode.cpptools",
+            "ms-vsliveshare.vsliveshare",
+            "twxs.cmake",
+            "lextudio.restructuredtext",
+            "streetsidesoftware.code-spell-checker"
+        ]
+    },
+    "folders": [
+        {
+            "path": "utils"
+        }
+    ],
+    "settings": {
+        "C_Cpp.default.cStandard": "c11",
+        "C_Cpp.default.compileCommands": "${workspaceFolder}/build.{binaryTag}/compile_commands.json",
+        "C_Cpp.default.compilerPath": "<placeholder: build at least gaudi for intellisense to work>",
+        "C_Cpp.default.cppStandard": "c++17",
+        "C_Cpp.default.defines": [],
+        "C_Cpp.default.includePath": [
+            "${workspaceFolder}/**"
+        ],
+        "C_Cpp.default.intelliSenseMode": "clang-x64",
+        "cSpell.dictionaryDefinitions": [
+            {
+                "name": "lhcb",
+                "path": "../utils/dictionary.txt"
+            }
+        ],
+        // List of dictionaries to use when checking files.
+        "cSpell.dictionaries": [
+            "lhcb"
+        ],
+        "cSpell.includeRegExpList": [
+            "string",
+            "(\"\"\"|''')[^\\1]*\\1",
+            "CStyleComment",
+            "#.*"
+        ],
+        "cSpell.language": "en,en-GB",
+        "files.associations": {
+            "*.C": "cpp",
+            "*.icpp": "cpp"
+        },
+        "files.trimTrailingWhitespace": true,
+        "python.envFile": "${workspaceFolder}/build.{binaryTag}/python.env",
+        "python.formatting.provider": "yapf",
+        // https://github.com/microsoft/vscode-python/issues/5567
+        "python.formatting.yapfPath": "${workspaceFolder}/../utils/yapf",
+        "python.jediEnabled": false,
+        "python.linting.enabled": true,
+        "python.linting.flake8Args": [
+            "--select=F"
+        ],
+        "python.linting.flake8Enabled": true,
+        "python.linting.flake8Path": "${workspaceFolder}/../utils/flake8",
+        "python.linting.pylintEnabled": false,
+        "python.pythonPath": "<placeholder: build at least gaudi for intellisense to work>"
+    }
+}
