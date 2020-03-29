@@ -54,6 +54,7 @@ make:
       - stack/.ccache/
 
 check-formatting:
+  stage: setup
   image: gitlab-registry.cern.ch/lhcb-docker/style-checker
   script:
     - curl -o lb-format "https://gitlab.cern.ch/lhcb-core/LbDevTools/raw/master/LbDevTools/SourceTools.py?inline=false"
