@@ -68,7 +68,7 @@ make Moore
 # list available tests
 make fast/Moore/test ARGS='-N'
 # run all tests with 4 parallel jobs
-make fast/Moore/test ARGS='-j 4'  
+make fast/Moore/test ARGS='-j 4'
 # run test(s) matching a regex
 make fast/Moore/test ARGS='-R hlt1_example$'
 # verbose output showing test (failure) details
@@ -102,7 +102,7 @@ or edit the file `utils/config.json` directly.
 In case there is a fix or an update to the setup, just run `setup.py`
 
 ```sh
-utils/setup.py
+python utils/setup.py
 ```
 
 It attempts to pull the latest `master` and to update your `config.json`.
