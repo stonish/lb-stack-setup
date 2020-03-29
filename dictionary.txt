@@ -1,0 +1,9 @@
+lhcb
+gaudi
+gaudirun
+numa
+numactl
+configurable
+configurables
+velo
+selreports

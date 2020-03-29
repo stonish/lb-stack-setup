@@ -1,14 +1,16 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 """Write project configuration in a makefile."""
 from __future__ import print_function
 import glob
 import itertools
 import os
+import pathlib
 import re
 import traceback
 import sys
 from config import read_config, DIR
 from utils import setup_logging, run
+from vscode import write_workspace_json
 
 DATA_PACKAGE_DIR = "DBASE"
 
@@ -20,23 +22,8 @@ class NotGaudiProjectError(RuntimeError):
     pass
 
 
-try:
-    # Python >= 3.5
-    import pathlib
-
-    def mkdir_p(path):
-        pathlib.Path(path).mkdir(parents=True, exist_ok=True)
-except ImportError:
-
-    def mkdir_p(path):
-        try:
-            os.makedirs(path)
-        except OSError as exc:
-            import errno
-            if exc.errno == errno.EEXIST and os.path.isdir(path):
-                pass
-            else:
-                raise
+def mkdir_p(path):
+    pathlib.Path(path).mkdir(parents=True, exist_ok=True)
 
 
 def git_url_branch(project):
@@ -186,15 +173,19 @@ def main(targets):
     if 'build' in targets or 'all' in targets or not targets:
         projects += config['defaultProjects']
 
+    repos = list_repos() + list_repos(DATA_PACKAGE_DIR)
+
+    # cloned default projects
+    default_projects = [p for p in config['defaultProjects'] if p in repos]
+
     try:
         makefile_config = checkout(projects, config['dataPackages'])
         makefile_config += [
             "CONTRIB_PATH := " + config["contribPath"],
-            "REPOS := " +
-            " ".join(list_repos() + list_repos(DATA_PACKAGE_DIR)),
-            "build: " + " ".join(config['defaultProjects']),
+            "REPOS := " + " ".join(repos),
+            "build: " + " ".join(default_projects),
         ]
-    except Exception as e:
+    except Exception:
         traceback.print_exc()
         makefile_config = ['$(error Error occurred in checkout)']
 
@@ -203,6 +194,9 @@ def main(targets):
         f.write('\n'.join(makefile_config) + '\n')
     # Print path so that the generated file can be included in one go
     print(config_path)
+
+    # default projects should come first in the workspace file
+    write_workspace_json(default_projects + repos, config)
 
 
 if __name__ == '__main__':
