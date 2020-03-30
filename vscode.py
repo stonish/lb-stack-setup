@@ -45,6 +45,17 @@ def read_env(filename):
         return dict(tuple(line.rstrip('\n').split('=', 1)) for line in f)
 
 
+def create_clang_format(config, path='.clang-format'):
+    from subprocess import check_call
+    if not os.path.isfile(path):
+        check_call([
+            os.path.join(DIR, 'build-env'),
+            os.path.join(config['lbenvPath'], 'bin/python'), '-c',
+            'from LbDevTools import createClangFormat\n'
+            'createClangFormat({!r})'.format(path)
+        ])
+
+
 def write_workspace_json(repos,
                          config,
                          template_path=TEMPLATE,
@@ -94,3 +105,5 @@ def write_workspace_json(repos,
     output = '\n'.join(line.rstrip() for line in output.splitlines())
     with open(output_path, 'w') as f:
         f.write(output)
+
+    create_clang_format(config)

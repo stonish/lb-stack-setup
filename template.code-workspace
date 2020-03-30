@@ -16,6 +16,9 @@
         }
     ],
     "settings": {
+        "C_Cpp.clang_format_fallbackStyle": "none",
+        "C_Cpp.clang_format_path": "/cvmfs/lhcb.cern.ch/lib/bin/x86_64-centos7/lcg-clang-format-8.0.0",
+        "C_Cpp.clang_format_style": "file",
         "C_Cpp.default.cStandard": "c11",
         "C_Cpp.default.compileCommands": "${workspaceFolder}/build.{binaryTag}/compile_commands.json",
         "C_Cpp.default.compilerPath": "<placeholder: build at least gaudi for intellisense to work>",
