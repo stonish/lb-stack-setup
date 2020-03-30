@@ -4,6 +4,7 @@ import json
 import os
 import re
 import shutil
+import sys
 from collections import OrderedDict
 from itertools import chain
 
@@ -74,7 +75,9 @@ def write_workspace_json(repos,
         gcc_cmd = shutil.which('g++', path=env['PATH'])
         clang_cmd = shutil.which('clang', path=env['PATH'])
         if gcc_cmd and clang_cmd:
-            print('WARNING both g++ and clang in path, using g++')
+            print(
+                'WARNING both g++ and clang in path, using g++',
+                file=sys.stderr)
         if gcc_cmd:
             settings['settings']['C_Cpp.default.compilerPath'] = gcc_cmd
         elif clang_cmd:
@@ -82,8 +85,9 @@ def write_workspace_json(repos,
         else:
             raise OSError()
     except OSError:
-        print(
-            'WARNING build at least Gaudi for cpp/python intellisense to work')
+        print('WARNING build at least Gaudi for cpp/python'
+              'intellisense to work',
+              file=sys.stderr)
 
     output = json.dumps(settings, indent=4, sort_keys=True)
     # strip trailing whitespace
