@@ -4,7 +4,7 @@ stages:
   - make
 
 # image should match what is used for lb-docker-run (see build-env)
-image: gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:v4.57
+image: gitlab-registry.cern.ch/rmatev/lb-stack-setup/centos7-build-py3:latest
 
 # setup as readme:
 #   stage: setup
