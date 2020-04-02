@@ -48,6 +48,15 @@ if(NOT CMAKE_SOURCE_DIR MATCHES "CMakeTmp")
     set(GENREFLEX_JOB_POOL local_pool)
   endif()
 
+  # Force version of LCG
+  # - set HEPTOOLS_VERSION env variable to override the default in Gaudi's toolchain
+  # - set heptools_version variable so that downstream projects do not try to guess
+  execute_process(
+    COMMAND ${CMAKE_CURRENT_LIST_DIR}/config.py lcgVersion
+    OUTPUT_VARIABLE heptools_version
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
+  set(ENV{HEPTOOLS_VERSION} ${heptools_version})
+
   # Delegate to a toolchain.cmake in the project or the default
   if(EXISTS ${CMAKE_SOURCE_DIR}/toolchain.cmake)
     # in this case the project toolchain should delegate to the default
