@@ -66,7 +66,7 @@ def write_workspace_json(repos,
         s = f.read()
     s = re.sub(r'^\s*//.*$', '', s, flags=re.MULTILINE)
     template = json.loads(s)
-    settings = rinterp(template, config)
+    settings = rinterp(template, dict(config, utilsPath=DIR))
 
     folder_paths = OrderedDict()  # use that as an "ordered set"
     # first collect stack projects
