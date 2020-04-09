@@ -104,7 +104,10 @@ The `Makefile` provided features the following targets.
 
 ### Visual Studio Code
 
-Experimental VS Code support exists in the [vscode](/../tree/vscode) branch.
+There is experimental VS Code support via an auto-generated
+configuration file (`stack.code-workspace`) for a
+[multi-root workspace](https://code.visualstudio.com/docs/editor/multi-root-workspaces).
+The file is updated every time you run `make`.
 Currently, only intellisense for C++ and Python are supported and there are no
 other integrations such as building and testing from within VS Code.
 See [doc/vscode.md](/../tree/vscode/doc/vscode.md) for more information.

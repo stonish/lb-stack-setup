@@ -122,3 +122,10 @@ code --folder-uri "vscode-remote://ssh-remote+vm/home/jdoe/some/folder"
 ```
 
 Now go ahead and make an alias for your favourite workspace :sunglasses:.
+
+### Local test dashboard
+1. Install the [Live Server](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer) extension.
+2. Start the server: `Ctrl+Shift+P` -> `Live Server: Open with Live Server`, select a workspace when prompted. The port is `5500` by default.
+3. If using Remote, forward the port: `Ctrl+Shift+P` -> `Forward a Port` (use the port from above).
+4. Open the local port, e.g. [http://localhost:5500]() and navigate to the test results, e.g. [http://localhost:5500/build.x86_64-centos7-gcc9-opt/html/]().
+5. To change project, use the `Live Server: Change Live Server workspace` command.
