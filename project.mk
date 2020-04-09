@@ -72,6 +72,9 @@ ifeq ($(BINARY_TAG)$(BUILDDIR),)
 $(error one of BINARY_TAG, CMTCONFIG or BUILDDIR must be defined)
 endif
 BUILDDIR := $(CURDIR)/build.$(BINARY_TAG)
+# Added by RM
+INSTALLDIR := $(CURDIR)/InstallArea/$(BINARY_TAG)
+PROJECT := $(notdir $(CURDIR))
 
 ifneq ($(wildcard $(BUILDDIR)/Makefile),)
   # force the use of GNU Make if the build was using it
@@ -141,6 +144,8 @@ ifeq ($(VERBOSE),)
 # (emulate the default CMake install target)
 install: all
 	cd $(BUILDDIR) && $(CMAKE) -P cmake_install.cmake | grep -v "^-- Up-to-date:"
+  # added by RM
+	cp $(BUILDDIR)/config/$(PROJECT)-build.xenv $(INSTALLDIR)/$(PROJECT).xenv
 endif
 
 # ensure that the target are always passed to the CMake Makefile
