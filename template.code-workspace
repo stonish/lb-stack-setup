@@ -55,7 +55,7 @@
         // https://github.com/microsoft/vscode-python/issues/5567
         // yapfPath should ideally be "${workspaceFolder:utils}/yapf"
         "python.formatting.yapfPath": "{utilsPath}/yapf",
-        "python.jediEnabled": false,
+        "python.jediEnabled": true,
         "python.linting.enabled": true,
         "python.linting.flake8Args": [
             "--select=F"
