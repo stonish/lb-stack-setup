@@ -11,6 +11,15 @@ grep PRETTY_NAME /etc/os-release
 # PRETTY_NAME="CentOS Linux 7 (Core)"
 ```
 
+LCG depends on the [HEP_OSlibs](https://gitlab.cern.ch/linuxsupport/rpms/HEP_OSlibs)
+meta package and the build of our stack relies on some of the packages installed with it.
+See [here](https://gitlab.cern.ch/linuxsupport/rpms/HEP_OSlibs/blob/el7/README-el7.md)
+for specifis, but in short you need to run
+
+```sh
+sudo yum install HEP_OSlibs
+```
+
 ### Other than CentOS 7 (e.g. a laptop)
 
 You need docker to run a CentOS 7 container.
@@ -72,11 +81,6 @@ To build distcc you will need `gssapi.h`, which might not be installed on your s
 
 ```sh
 sudo yum install -y krb5-devel
-```
-
-Gaudi dependencies:
-```sh
-sudo yum install -y libuuid-devel
 ```
 
 ## Using macOS
