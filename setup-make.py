@@ -54,8 +54,9 @@ def cmake_name(project):
 
 
 def cmake_deps(project):
+    cmake_path = os.path.join(project, 'CMakeLists.txt')
     try:
-        with open(os.path.join(project, 'CMakeLists.txt')) as f:
+        with open(cmake_path) as f:
             cmake = f.read()
     except IOError:
         raise NotGaudiProjectError('{} is not a Gaudi project'.format(project))
@@ -67,8 +68,13 @@ def cmake_deps(project):
         args = args[args.index('USE') + 1:]
     except ValueError:  # USE not in list (Gaudi)
         return []
-    deps = list(itertools.takewhile(lambda x: not x.isupper(), args))
-    assert len(deps) % 2 == 0
+
+    # take (name, version) pairs until the next keyword
+    # (see gaudi_project in GaudiProjectConfig.cmake)
+    KEYWORDS = ['USE', 'DATA', 'TOOLS', 'FORTRAN']
+    deps = list(itertools.takewhile(lambda x: not x in KEYWORDS, args))
+    if not len(deps) % 2 == 0:
+        raise RuntimeError('Bad gaudi_project() call in {}'.format(cmake_path))
     return deps[::2]
 
 
