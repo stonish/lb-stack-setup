@@ -41,7 +41,8 @@
 ################################################################################
 
 # record the environment we're executed in (added by RM)
-_output_path := $(shell "$(dir $(lastword $(MAKEFILE_LIST)))/config.py" outputPath)
+DIR := $(dir $(lastword $(MAKEFILE_LIST)))
+_output_path := $(shell "$(DIR)/config.py" outputPath)
 _dummy := $(shell mkdir -p "$(_output_path)" && printenv | sort > "$(_output_path)/project.mk.env")
 
 # settings
@@ -110,7 +111,17 @@ endif
 BUILD_CMD := $(CMAKE) --build $(BUILDDIR) --target
 
 # default target
-all:
+patch-python-ns:
+
+patch-python-ns: all
+	# Patching python namespaced packages for intellisense support...
+	@find $(BUILDDIR) -path '$(BUILDDIR)/python/*/__init__.py' -exec bash -c "\
+	  set -euo pipefail; \
+	  grep '^fname =' {} \
+	  | cat '$(DIR)/python_ns_init_pkgutil.py' - '$(DIR)/python_ns_init_gaudi.py' > '{}.new' \
+	  && mv --backup=simple '{}.new' '{}'" \;
+	@find $(BUILDDIR) -path '$(BUILDDIR)/*/genConf/*/__init__.py' -exec bash -c \
+	  "cp --backup=simple '$(DIR)/python_ns_init_pkgutil.py' '{}'" \;
 
 # deep clean
 purge:
@@ -124,7 +135,7 @@ ifneq ($(MAKECMDGOALS),purge)
 endif
 
 # aliases
-.PHONY: configure test FORCE  # fixed by RM (tests -> test)
+.PHONY: configure test FORCE patch-python-ns  # fixed by RM (tests -> test)
 ifneq ($(wildcard $(BUILDDIR)/$(BUILD_CONF_FILE)),)
 configure: rebuild_cache
 else
@@ -142,7 +153,7 @@ test: $(BUILDDIR)/$(BUILD_CONF_FILE)
 ifeq ($(VERBOSE),)
 # less verbose install (see GAUDI-1018)
 # (emulate the default CMake install target)
-install: all
+install: patch-python-ns
 	cd $(BUILDDIR) && $(CMAKE) -P cmake_install.cmake | grep -v "^-- Up-to-date:"
   # added by RM
 	cp $(BUILDDIR)/config/$(PROJECT)-build.xenv $(INSTALLDIR)/$(PROJECT).xenv
