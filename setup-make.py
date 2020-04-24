@@ -106,11 +106,12 @@ def clone(project):
 
 def clone_package(name, path):
     if not os.path.isdir(os.path.join(path, name)):
-        from subprocess import check_output
-        # TODO fix hardcoded LbEnv version
-        check_output(
-            [os.path.join(config['lbenvPath'], 'bin/git-lb-clone-pkg'), name],
-            cwd=path)
+        from subprocess import check_call
+        check_call([
+            os.path.join(DIR, 'build-env'),
+            os.path.join(config['lbenvPath'], 'bin/git-lb-clone-pkg'), name
+        ],
+                   cwd=path)
         # TODO send output to stderr or log
 
 
