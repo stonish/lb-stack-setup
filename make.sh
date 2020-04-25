@@ -261,7 +261,7 @@ make -f "$DIR/project.mk" -C "$PROJECT" "$@"
 #      https://unix.stackexchange.com/questions/163561/control-which-process-gets-cancelled-by-ctrlc
 run_cmd="$PROJECT/build.$BINARY_TAG/run"
 if [ -f $run_cmd ]; then
-  $run_cmd >"$PROJECT/build.$BINARY_TAG/python.env" &2>/dev/null || true
+  $run_cmd >"$PROJECT/build.$BINARY_TAG/python.env" 2>/dev/null || true
 fi
 
 ###########################################################
