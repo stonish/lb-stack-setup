@@ -8,6 +8,7 @@ from collections import defaultdict
 from config import read_config
 
 SSH_CONFIG = os.path.join(os.path.dirname(__file__), 'ssh_config')
+KNOWN_HOSTS = os.path.join(os.path.dirname(__file__), '.known_hosts')
 config = read_config()
 
 # set up logging
@@ -104,9 +105,14 @@ for host in config['distccHosts']:
                 (write_spec(new_spec), host['spec'], host['localPort'],
                  spec['hostid'], spec['port']))
 
+if proxied_hosts:
+    kerberos_user = subprocess.check_output(
+        "klist | grep -oP 'Default principal: \K.+(?=@)'", shell=True).strip()
+
+
 for gateway, hosts in proxied_hosts.items():
-    log.info('Starting ssh port forwarding for distcc hosts ' + ' '.join(
-        h[1] for h in hosts))
+    log.info('Starting ssh port forwarding for distcc hosts {}...'.format(' '.join(
+        h[1] for h in hosts)))
     forwards = ' '.join([
         '-L {}:{}:{}'.format(local, host, port)
         for _, _, local, host, port in hosts
@@ -114,12 +120,16 @@ for gateway, hosts in proxied_hosts.items():
     cmd = ('ssh -f -N -F "{}" '
            '-o BatchMode=yes '
            '-o ExitOnForwardFailure=yes '
-           '-o UserKnownHostsFile=.known_hosts '
+           '-o UserKnownHostsFile={} '
            '-o LogLevel=ERROR '
-           '{} {} >/dev/null'.format(SSH_CONFIG, forwards, gateway))
+           '{} {}@{} '
+           '>/dev/null'  # decouple stdout so that this script can finish
+           .format(SSH_CONFIG, KNOWN_HOSTS, forwards, kerberos_user, gateway))
+
     code = run(cmd)
     if code == 0:
         found_hosts.extend(h[0] for h in hosts)
+        log.info('...done.')
     else:
         log.error('Failed to forward ports. Make sure passwordless login to '
                   '{} works'.format(gateway))

@@ -4,4 +4,4 @@ Host lxplus.cern.ch
 Host *
     AddressFamily inet
     GSSAPIAuthentication yes
-    StrictHostKeyChecking no
+    StrictHostKeyChecking yes
