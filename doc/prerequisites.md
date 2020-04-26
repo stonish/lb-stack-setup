@@ -99,26 +99,28 @@ but it is highly recommended you upgrade as support is lacking.
 
 
 ### CVMFS on macOS
-> __Note:__ tested on 10.10 Yosemite and 10.14 Mojave: FUSE 3.9.2 and CVMFS 2.6.0
+> __Note:__ tested on 10.10 Yosemite and 10.14 Mojave: FUSE 3.10.4 and CVMFS 2.7.2
 
 
 Download and install the latest FUSE for macOS release from
 [github](https://github.com/osxfuse/osxfuse/releases):
 
 ```sh
-wget https://github.com/osxfuse/osxfuse/releases/download/osxfuse-3.9.2/osxfuse-3.9.2.dmg
-sudo hdiutil attach osxfuse-3.9.2.dmg
+oxfuse_ver=3.10.4
+curl -Lo ~/Downloads/osxfuse-$oxfuse_ver.dmg https://github.com/osxfuse/osxfuse/releases/download/osxfuse-$oxfuse_ver/osxfuse-$oxfuse_ver.dmg
+sudo hdiutil attach ~/Downloads/osxfuse-$oxfuse_ver.dmg
 sudo installer -pkg "/Volumes/FUSE for macOS/FUSE for macOS.pkg" -target /
 sudo hdiutil detach "/Volumes/FUSE for macOS"
-rm osxfuse-3.9.2.dmg
+rm ~/Downloads/osxfuse-$oxfuse_ver.dmg
 ```
 
 Download and install the latest CVMFS from [here](https://cernvm.cern.ch/portal/filesystem/downloads):
 
 ```sh
-wget https://ecsft.cern.ch/dist/cvmfs/cvmfs-2.6.0/cvmfs-2.6.0.pkg
-sudo installer -pkg cvmfs-2.6.0.pkg -target /
-rm cvmfs-2.6.0.pkg
+cvmfs_ver=2.7.2
+curl -Lo ~/Downloads/cvmfs-$cvmfs_ver.pkg https://ecsft.cern.ch/dist/cvmfs/cvmfs-$cvmfs_ver/cvmfs-$cvmfs_ver.pkg
+sudo installer -pkg ~/Downloads/cvmfs-$cvmfs_ver.pkg -target /
+rm ~/Downloads/cvmfs-$cvmfs_ver.pkg
 ```
 
 Configure the repositories and proxy. Use `http://ca-proxy.cern.ch:3128`
