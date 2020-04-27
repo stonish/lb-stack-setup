@@ -12,5 +12,5 @@ for iproject in $(seq 1 $#); do
 done
 
 PROJECT="${!iproject}"
-export LB_DOCKER_RUN_FLAGS="--ptrace ${@:1:$iproject-1}"
+export LB_DOCKER_RUN_FLAGS="${@:1:$iproject-1}"
 "${DIR}/build-env" ${PROJECT}/build.${BINARY_TAG}/run "${@:$iproject+1}"

@@ -46,6 +46,8 @@ AUTOMATIC_DEFAULTS = {
     'localPoolDepth': lambda: 2 * cpu_count(),
     'distccLocalslots': cpu_count,
     'distccLocalslotsCpp': lambda: 2 * cpu_count(),
+    # TODO these are determined on the host, but docker might have less
+    #      resources (e.g. docker desktop on macOS runs in a VM).
 }
 
 

@@ -52,16 +52,32 @@ fi
 
 if [ "$USE_DOCKER" = true ]; then
     ( cd "${DIR}"; python -c 'import setup; setup.assert_cvmfs()' )
-    args=(
-        --docker-tag v4.57
-        --quiet-env --lbenv -c ${BINARY_TAG}
-        -C "${DIR}/.." --use-absolute-path
-        --workdir "$PWD"
-    )
-    test "$USE_KERBEROS" != true || args+=(--kerberos)
-    test -z ${MAKEFLAGS+x} || args+=(-e "MAKEFLAGS=${MAKEFLAGS}")
-    "${DIR}/lb-docker-run" "${args[@]}" ${LB_DOCKER_RUN_FLAGS} "$@"
-    # TODO lbenvPath is not respected in the docker case
+    name=lalala
+    exists=false
+    if status=$(docker inspect -f 'running={{.State.Running}} created={{.Created}}' $name 2>/dev/null); then
+        exists=true
+        eval $status
+        # TODO kill container if older than X / latest utils commit?
+    fi
+    if [ "$exists" != true ]; then
+        args=(
+            --name $name
+            --docker-tag v4.57
+            --quiet-env --lbenv -c ${BINARY_TAG}
+            -C "${DIR}/.." --use-absolute-path
+            --workdir "$PWD"
+            --ptrace
+            --no-remove
+            --debug
+        )
+        test "$USE_KERBEROS" != true || args+=(--kerberos)
+        test -z ${MAKEFLAGS+x} || args+=(-e "MAKEFLAGS=${MAKEFLAGS}")
+        "${DIR}/lb-docker-run" "${args[@]}" "${DIR}/loop.py"
+        # TODO lbenvPath is not respected in the docker case
+    elif [ "$running" != true ]; then
+        docker start $name >/dev/null
+    fi
+    docker exec -it $name ${LB_DOCKER_RUN_FLAGS} "$@"
 else
     # Start a clean LbEnv a la lb-docker-run
     cache="${OUTPUT}/lbenv-cache.sh"

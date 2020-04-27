@@ -365,6 +365,7 @@ image_name = '{0}/{1}-build:{2}'.format(opts.docker_prefix, opts.os,
 
 docker_opts = [
     (True, ['docker', 'run']),
+    (True, ['--detach']),
     (opts.remove, ['--rm']),
     (opts.interactive, ['-i']),
     (opts.interactive and opts.tty, ['-t']),
