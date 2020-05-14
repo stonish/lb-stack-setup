@@ -18,7 +18,8 @@
 	"gitBase": null,
 	"dataPackages": [
 		"AppConfig",
-		"PRConfig"
+		"PRConfig",
+		"ParamFiles"
 	],
 	"useDocker": false,
 	"useCcache": true,
