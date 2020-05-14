@@ -6,7 +6,7 @@
 		"Moore"
 	],
 	"gitBranch": {
-		"Gaudi": "v33r1",
+		"Gaudi": "master",
 		"Detector": "v0r4",
 		"default": "master"
 	},
