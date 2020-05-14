@@ -1,5 +1,9 @@
 DIR := $(abspath $(dir $(realpath $(lastword $(MAKEFILE_LIST)))))
 
+ifeq (${DIR}, ${CURDIR})
+  $(error do not run make inside ${DIR})
+endif
+
 # default target
 all:
 
