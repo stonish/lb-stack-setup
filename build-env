@@ -33,7 +33,7 @@ elif [ "$USE_KERBEROS" = true ]; then
         log ERROR "No kerberos ticket cache of the form 'FILE:path/to/file' was found."
         log ERROR "Please do this to forward a kerberos ticket to the conainer:"
         log ERROR
-        log ERROR "    export KRB5CCNAME='FILE:/tmp/krb5cc_$(id -u)'; kinit <username>@CERN.CH"
+        log ERROR "    export KRB5CCNAME='FILE:/tmp/krb5cc_$(id -u)'; kinit -r 7d <username>@CERN.CH"
         log ERROR
         exit 1
     fi
@@ -44,9 +44,14 @@ if [ "$USE_KERBEROS" = true ]; then
     if ! klist -s; then
         log ERROR "No valid ticket found. Please get a new one with"
         log ERROR
-        log ERROR "    kinit <username>@CERN.CH"
+        log ERROR "    kinit -r 7d <username>@CERN.CH"
         log ERROR
         exit 1
+    fi
+    # Try to renew ticket every 30 min
+    if [ -z "$(find "$OUTPUT/krb_renewal.timestamp" -mmin -30 2>/dev/null)" ]; then
+        touch "$OUTPUT/krb_renewal.timestamp"
+        kinit -R 2>/dev/null || true  # if this fails, the ticket is not renewable
     fi
 fi
 
