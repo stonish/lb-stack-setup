@@ -3,34 +3,15 @@ from __future__ import print_function
 import logging
 import os
 import re
-import subprocess
 from collections import defaultdict
 from config import read_config
+from utils import setup_logging, run, DEVNULL
 
 SSH_CONFIG = os.path.join(os.path.dirname(__file__), 'ssh_config')
 KNOWN_HOSTS = os.path.join(os.path.dirname(__file__), '.known_hosts')
 config = read_config()
 
-# set up logging
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s.%(msecs)03d %(name)-15s %(levelname)-8s %(message)s',
-    datefmt='%Y-%m-%dT%H:%M:%S',
-    filename=os.path.join(config['outputPath'], 'log'),
-    filemode='a')
-console = logging.StreamHandler()
-console.setLevel(logging.INFO)
-console.setFormatter(logging.Formatter('%(levelname)-8s %(message)s'))
-logging.getLogger('').addHandler(console)
-log = logging.getLogger(os.path.basename(__file__))
-
-
-def run(command):
-    # TODO capture stdout and stderr and write them to the log as DEBUG
-    log.debug('command: ' + repr(command))
-    code = subprocess.call(command, shell=True)
-    log.debug('retcode: ' + str(code))
-    return code
+log = setup_logging(config['outputPath'])
 
 
 def parse_spec(spec):
@@ -53,11 +34,12 @@ def write_spec(spec):
 
 def reachable(host, port=None):
     if port is not None:
-        code = run(
-            'nc --send-only --wait 0.2 {} {} </dev/null 2>/dev/null'.format(
-                host, port))
+        code = run(['nc', '--send-only', '--wait', '0.2', host,
+                    str(port)],
+                   check=False).returncode
     else:
-        code = run('timeout 0.2 ping -c1 -q {} > /dev/null'.format(host))
+        code = run(['timeout', '0.2', 'ping', '-c1', '-q', host],
+                   check=False).returncode
     return code == 0
 
 
@@ -65,7 +47,7 @@ def have_valid_ticket():
     try:
         return have_valid_ticket.cache
     except AttributeError:
-        code = run('klist -s')
+        code = run(['klist', '-s'], check=False).returncode
         have_valid_ticket.cache = code == 0
         return have_valid_ticket.cache
 
@@ -106,33 +88,34 @@ for host in config['distccHosts']:
                  spec['hostid'], spec['port']))
 
 if proxied_hosts:
-    kerberos_user = subprocess.check_output(
-        "klist | grep -oP 'Default principal: \K.+(?=@)'", shell=True).strip()
-
+    kerberos_user = run(
+        "klist | grep -oP 'Default principal: \K.+(?=@)'",
+        shell=True).stdout.strip()
 
 for gateway, hosts in proxied_hosts.items():
-    log.info('Starting ssh port forwarding for distcc hosts {}...'.format(' '.join(
-        h[1] for h in hosts)))
-    forwards = ' '.join([
-        '-L {}:{}:{}'.format(local, host, port)
-        for _, _, local, host, port in hosts
-    ])
-    cmd = ('ssh -f -N -F "{}" '
-           '-o BatchMode=yes '
-           '-o ExitOnForwardFailure=yes '
-           '-o UserKnownHostsFile={} '
-           '-o LogLevel=ERROR '
-           '{} {}@{} '
-           '>/dev/null'  # decouple stdout so that this script can finish
-           .format(SSH_CONFIG, KNOWN_HOSTS, forwards, kerberos_user, gateway))
-
-    code = run(cmd)
+    log.info('Starting ssh port forwarding for distcc hosts {}...'.format(
+        ' '.join(h[1] for h in hosts)))
+    forwards = sum((['-L', '{}:{}:{}'.format(local, host, port)]
+                    for _, _, local, host, port in hosts), [])
+    cmd = [
+        'ssh', '-f', '-N', '-F', SSH_CONFIG, '-o', 'BatchMode=yes', '-o',
+        'ExitOnForwardFailure=yes', '-o', 'UserKnownHostsFile=' + KNOWN_HOSTS,
+        '-o', 'LogLevel=ERROR'
+    ] + forwards + ['{}@{}'.format(kerberos_user, gateway)]
+    code = run(
+        cmd,
+        # decouple stdout so that bash (the command substitution) does
+        # not wait forever for the stdout of this process
+        stdout=DEVNULL,
+        # do not try to capture stderr (for the log) as .communicate()
+        # seems hang in that case
+        capture_stderr=False,
+        check=False).returncode
     if code == 0:
         found_hosts.extend(h[0] for h in hosts)
         log.info('...done.')
     else:
-        log.error('Failed to forward ports. Make sure passwordless login to '
-                  '{} works'.format(gateway))
+        log.error('Failed to forward ports.'.format(gateway))
 
 found_hosts.sort()
 if not found_hosts:

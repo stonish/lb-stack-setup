@@ -8,10 +8,12 @@ import re
 import traceback
 import sys
 from config import read_config, DIR
+from utils import setup_logging, run
 
 DATA_PACKAGE_DIR = "DBASE"
 
 config = read_config()
+log = setup_logging(config['outputPath'])
 
 
 class NotGaudiProjectError(RuntimeError):
@@ -84,12 +86,10 @@ def clone(project):
     assert len(m) <= 1, 'Multiple directories for project: ' + str(m)
     if not m:
         url, branch = git_url_branch(project)
-        from subprocess import check_output
-        check_output(['git', 'clone', url])
-        check_output(['git', 'checkout', branch], cwd=project)
-        check_output(['git', 'submodule', 'update', '--init', '--recursive'],
-                     cwd=project)
-        # TODO send output to stderr or log
+        run(['git', 'clone', url])
+        run(['git', 'checkout', branch], cwd=project)
+        run(['git', 'submodule', 'update', '--init', '--recursive'],
+            cwd=project)
     else:
         project = m[0]
     canonical_name = cmake_name(project)
@@ -106,13 +106,11 @@ def clone(project):
 
 def clone_package(name, path):
     if not os.path.isdir(os.path.join(path, name)):
-        from subprocess import check_call
-        check_call([
+        run([
             os.path.join(DIR, 'build-env'),
             os.path.join(config['lbenvPath'], 'bin/git-lb-clone-pkg'), name
         ],
-                   cwd=path)
-        # TODO send output to stderr or log
+            cwd=path)
 
 
 def list_repos(path=''):
