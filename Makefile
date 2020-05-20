@@ -68,7 +68,12 @@ fast/$(1)-clean:
 endef
 $(foreach proj,$(PROJECTS),$(eval $(call PROJECT_settings,$(proj))))
 
-.PHONY: $(ALL_TARGETS)
+# stack.code-workspace is always remade by setup-make.py, so this is just
+# to avoid the message "Nothing to be done for `stack.code-workspace'"
+stack.code-workspace:
+	@ # noop command
+
+.PHONY: $(ALL_TARGETS) stack.code-workspace
 
 # ignore -j flag and run serially
 .NOTPARALLEL:
