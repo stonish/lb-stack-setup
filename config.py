@@ -10,6 +10,7 @@ try:
     basestring
 except NameError:
     basestring = str
+    unicode = str
 
 DIR = os.path.dirname(__file__)
 DEFAULT_CONFIG = os.path.join(DIR, 'default-config.json')
@@ -109,7 +110,7 @@ def read_config(original=False,
 
     # Expand non-absolute *Path variables
     for key in config:
-        if key.endswith('Path'):
+        if key.endswith('Path') and isinstance(config[key], basestring):
             p = config[key]
             p = os.path.expandvars(p)
             p = os.path.expanduser(p)
@@ -138,7 +139,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.key and args.sh:
-        parser.error('All keys must be right of -sh')
+        parser.error('All keys must be right of --sh')
 
     config, defaults, overrides = read_config(True, config_out=CONFIG)
     if args.sh:
@@ -152,14 +153,14 @@ if __name__ == '__main__':
         print(format_value(config[args.key]))
     else:
         # set the value for a key
-        try:
-            value = json.loads(args.value)
-        except ValueError:
-            # invalid json is treated as unquoted string
+        if isinstance(defaults[args.key], basestring):
+            value = unicode(args.value)
+        else:
             try:
+                value = json.loads(args.value)
+            except ValueError:
+                # invalid json is treated as unquoted string
                 value = unicode(args.value)
-            except NameError:
-                value = args.value  # compatiblity with Python 3
         overrides[args.key] = value
         check_type(args.key, value, defaults[args.key])
         write_config(overrides)
