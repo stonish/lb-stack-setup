@@ -150,6 +150,24 @@ You can add a new package to be checked out in the json configuration.
 > __Note:__ All data packages are put under `DBASE`, even those that nominally
 > belong to `PARAM`. This does not affect the builds in any way.
 
+### Use special LCG versions
+
+The EP-SFT groups provides cvmfs installations of
+[special LCG flavours or nightly builds](http://lcginfo.cern.ch/).
+For example, in order to use the `dev4` nightly build from Tuesday, it is enough to do
+
+```sh
+utils/config.py lcgVersion dev4  # or any placeholder value
+utils/config.py cmakePrefixPath /cvmfs/sft-nightlies.cern.ch/lcg/nightlies/dev4/Tue
+```
+
+or to use a released version not installed under `/cvmfs/lhcb.cern.ch/` do
+
+```sh
+utils/config.py lcgVersion LCG_97python3  # or any placeholder value
+utils/config.py cmakePrefixPath /cvmfs/sft.cern.ch/lcg/releases/LCG_97python3
+```
+
 ### Update the setup
 
 In case there is a fix or an update to the setup, just run `setup.py`

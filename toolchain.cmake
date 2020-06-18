@@ -18,7 +18,16 @@ if(NOT CMAKE_SOURCE_DIR MATCHES "CMakeTmp")
     OUTPUT_VARIABLE _project_path
     OUTPUT_STRIP_TRAILING_WHITESPACE)
 
-  set(CMAKE_PREFIX_PATH ${_project_path} ${CMAKE_PREFIX_PATH})
+  execute_process(
+    COMMAND ${CMAKE_CURRENT_LIST_DIR}/config.py cmakePrefixPath
+    OUTPUT_VARIABLE _cmake_prefix_path_colons
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+  file(TO_CMAKE_PATH "${_cmake_prefix_path_colons}" _extra_cmake_pp)
+
+  # Confusingly, Gaudi uses the environment variable CMAKE_PREFIX_PATH
+  # to populate the cmake variable CMAKE_PREFIX_PATH.
+  set(ENV{CMAKE_PREFIX_PATH} "${_project_path}:${_cmake_prefix_path_colons}:$ENV{CMAKE_PREFIX_PATH}")
 
   # Make sure cmake will use the local install of ninja
   execute_process(
@@ -63,6 +72,14 @@ if(NOT CMAKE_SOURCE_DIR MATCHES "CMakeTmp")
     include(${CMAKE_SOURCE_DIR}/toolchain.cmake)
   else()
     include(${_project_path}/Gaudi/cmake/GaudiDefaultToolchain.cmake)
+  endif()
+
+  # make sure we do not pick up unwanted/problematic projects from LCG
+  if(CMAKE_PREFIX_PATH)
+    # - ninja (it requires LD_LIBRARY_PATH set to run)
+    # - Gaudi (we do not want to use it from LCG)
+    # - xenv (conflicts with the version in the build environment)
+    list(FILTER CMAKE_PREFIX_PATH EXCLUDE REGEX "(LCG_|lcg/nightlies).*(ninja|Gaudi|xenv)")
   endif()
 
   # Workaround some apparent bug in the detection of genconf.exe --no-init support
