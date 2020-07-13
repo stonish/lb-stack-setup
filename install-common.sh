@@ -9,7 +9,6 @@ else
 fi
 
 setup() {
-    set -x
     local REPO="$1"
     local SHA="$2"
     local SRC="$SRC_BASE/$(basename $REPO .git)"

@@ -23,7 +23,7 @@
 		"ParamFiles"
 	],
 	"useDocker": false,
-	"useCcache": false,
+	"useCcache": true,
 	"useDistcc": true,
 	"lbenvPath": "/cvmfs/lhcb.cern.ch/lib/var/lib/LbEnv/796/stable/x86_64-centos7",
 	"projectPath": "..",
