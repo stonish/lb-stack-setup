@@ -9,6 +9,7 @@ else
 fi
 
 setup() {
+    set -x
     local REPO="$1"
     local SHA="$2"
     local SRC="$SRC_BASE/$(basename $REPO .git)"
@@ -22,7 +23,7 @@ setup() {
 
         cd "$SRC"
         git init
-        git remote add origin "$REPO"
+        git remote add origin "$REPO" || git remote set-url origin "$REPO"
         # try fetching only the commit, if remote does not allow, do full fetch
         if git fetch --depth 1 origin "$SHA" 2>/dev/null; then
             git -c advice.detachedHead=false checkout FETCH_HEAD
