@@ -23,7 +23,7 @@
 		"ParamFiles"
 	],
 	"useDocker": false,
-	"useCcache": true,
+	"useCcache": false,
 	"useDistcc": true,
 	"lbenvPath": "/cvmfs/lhcb.cern.ch/lib/var/lib/LbEnv/796/stable/x86_64-centos7",
 	"projectPath": "..",
@@ -33,12 +33,12 @@
 	"localPoolDepth": null,
 	"distccHosts": [
 		{
-			"spec": "lbquantaperf01.cern.ch/40,cpp,lzo,auth",
+			"spec": "lbquantaperf01.cern.ch/30,cpp,lzo,auth",
 			"gateway": "lxplus.cern.ch",
 			"localPort": 36321
 		},
 		{
-			"spec": "lbquantaperf02.cern.ch/40,cpp,lzo,auth",
+			"spec": "lbquantaperf02.cern.ch/30,cpp,lzo,auth",
 			"gateway": "lxplus.cern.ch",
 			"localPort": 36322
 		}
