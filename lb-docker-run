@@ -323,7 +323,7 @@ workspace_target = workspace_source if opts.absolutePath else '/workspace'
 opts.workdir = opts.workdir or workspace_target
 logging.debug('mounting host %s as container %s', workspace_source,
               workspace_target)
-opts.volume.append('{0}:{1}'.format(workspace_source, workspace_target))
+opts.volume.append('{0}:{1}:Z'.format(workspace_source, workspace_target))
 
 if opts.home:
     homedir = os.getenv('HOME') + '/.local/docker/' + opts.os + '-build-home/'
