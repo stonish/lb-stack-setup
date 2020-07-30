@@ -94,9 +94,12 @@ def clone(project):
 def clone_package(name, path):
     if not os.path.isdir(os.path.join(path, name)):
         run([
-            os.path.join(DIR, 'build-env'),
+            os.path.join(DIR, 'build-env'), '--no-kerberos',
             os.path.join(config['lbenvPath'], 'bin/git-lb-clone-pkg'), name
         ],
+            stdout=None,
+            stderr=None,
+            stdin=None,
             cwd=path)
 
 
