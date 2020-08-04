@@ -15,6 +15,8 @@ except NameError:
 DIR = os.path.dirname(__file__)
 DEFAULT_CONFIG = os.path.join(DIR, 'default-config.json')
 CONFIG = os.path.join(DIR, 'config.json')
+# Special variables where paths are expanded
+EXPAND_PATH_VARS = ["projectPath", "contribPath", "ccachePath", "outputPath"]
 
 
 def cpu_count():
@@ -68,6 +70,15 @@ def write_config(config, path=CONFIG):
         json.dump(config, f, indent=4)
 
 
+def expand_path(p):
+    """Expand and normalise a non-absolute path."""
+    p = os.path.expandvars(p)
+    p = os.path.expanduser(p)
+    if not os.path.isabs(p):
+        p = os.path.join(DIR, p)
+    return os.path.abspath(p)
+
+
 def read_config(original=False,
                 default_config=DEFAULT_CONFIG,
                 config_in=CONFIG,
@@ -108,16 +119,10 @@ def read_config(original=False,
     if dirty and config_out:
         write_config(overrides, config_out)
 
-    # Expand non-absolute *Path variables
+    # Expand variables
     for key in config:
-        if key.endswith('Path') and isinstance(config[key], basestring):
-            p = config[key]
-            p = os.path.expandvars(p)
-            p = os.path.expanduser(p)
-            if not os.path.isabs(p):
-                p = os.path.join(DIR, p)
-            p = os.path.abspath(p)
-            config[key] = p
+        if key in EXPAND_PATH_VARS:
+            config[key] = expand_path(config[key])
 
     return (config, defaults, overrides) if original else config
     # TODO think if we need nested updates and in any case document behaviour
