@@ -179,6 +179,14 @@ In order to pass variables to CMake, you can pass `CMAKEFLAGS='-DVARIABLE=VALUE'
 when calling `make Project/configure`. This will pass the flags to `Project` but
 also to any other dependent project that happens to need reconfiguring.
 
+Alternatively, if you like to persist the flags you pass per project, set the appropriate
+configuration setting, e.g.
+
+```sh
+utils/config.py cmakeFlags.Allen '-DSTANDALONE=OFF -DSEQUENCE=velo'
+```
+
+or use `cmakeFlags.default` to affect all projects.
 
 ### Update the setup
 
