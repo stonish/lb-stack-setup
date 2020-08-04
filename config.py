@@ -4,6 +4,7 @@ import errno
 import json
 import os
 from collections import OrderedDict
+from copy import copy, deepcopy
 
 # Python 3 compatiblity
 try:
@@ -79,6 +80,14 @@ def expand_path(p):
     return os.path.abspath(p)
 
 
+def recursive_update(obj, updates):
+    for key, update in updates.items():
+        if key in obj and isinstance(obj[key], dict):
+            recursive_update(obj[key], update)
+        else:
+            obj[key] = update
+
+
 def read_config(original=False,
                 default_config=DEFAULT_CONFIG,
                 config_in=CONFIG,
@@ -106,7 +115,8 @@ def read_config(original=False,
                     key, config_in, default_config),
                 stacklevel=2)
 
-    config = OrderedDict(list(defaults.items()) + list(overrides.items()))
+    config = deepcopy(defaults)
+    recursive_update(config, overrides)
 
     # Assign automatic defaults
     dirty = False
@@ -129,7 +139,27 @@ def read_config(original=False,
         config[key] = value
 
     return (config, defaults, overrides) if original else config
-    # TODO think if we need nested updates and in any case document behaviour
+
+
+def query(config, path):
+    index = path[0]
+    index = int(index) if isinstance(config, list) else str(index)
+    subconfig = config[index]
+    if len(path) > 1:
+        return query(subconfig, path[1:])
+    else:
+        return subconfig
+
+
+def query_update(config, path, value):
+    index = path[0]
+    index = int(index) if isinstance(config, list) else str(index)
+    config = copy(config)
+    if len(path) > 1:
+        config[index] = query_update(config[index], path[1:], value)
+    else:
+        config[index] = value
+    return config
 
 
 def format_value(x):
@@ -143,26 +173,46 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('key', nargs='?', help='Configuration key')
     parser.add_argument('value', nargs='?', help='New value to set')
+    parser.add_argument('--default', help='Value to return if key not found')
     parser.add_argument(
         '--sh', nargs='+', help='Print values as shell commands')
     args = parser.parse_args()
 
+    if args.default and (args.value or args.sh):
+        parser.error('Cannot use --default with --sh or when setting a new '
+                     'value')
+
     if args.key and args.sh:
         parser.error('All keys must be right of --sh')
+
+    if args.key:
+        key_parts = args.key.split('.')
 
     config, defaults, overrides = read_config(True, config_out=CONFIG)
     if args.sh:
         for key in args.sh:
-            print('{}="{}"'.format(key, format_value(config[key])))
+            value = query(config, key.split('.'))
+            print('{}="{}"'.format(key, format_value(value)))
     elif not args.key:
         # print entire config
         print(json.dumps(config, indent=4))
     elif not args.value:
         # print the value for a key
-        print(format_value(config[args.key]))
+        try:
+            value = query(config, key_parts)
+        except (IndexError, KeyError):
+            if args.default is None:
+                raise
+            value = args.default
+        print(format_value(value))
     else:
         # set the value for a key
-        if isinstance(defaults[args.key], basestring):
+        try:
+            default_value = query(defaults, key_parts)
+        except (IndexError, KeyError):
+            # Guess the type as we don't have a schema...
+            default_value = unicode('')
+        if isinstance(default_value, basestring):
             value = unicode(args.value)
         else:
             try:
@@ -170,6 +220,10 @@ if __name__ == '__main__':
             except ValueError:
                 # invalid json is treated as unquoted string
                 value = unicode(args.value)
-        overrides[args.key] = value
-        check_type(args.key, value, defaults[args.key])
+
+        top_key = key_parts[0]
+        if top_key not in overrides and isinstance(config[top_key], dict):
+            overrides[top_key] = {}
+        overrides[top_key] = query_update(overrides, key_parts, value)[top_key]
+        check_type(args.key, value, default_value)
         write_config(overrides)

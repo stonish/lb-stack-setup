@@ -34,6 +34,8 @@ $EDITOR utils/config.json
 All possible configuration settings and their defaults are stored in
 [default-config.json](default-config.json).
 Any settings you specify in the `config.json` file will override the defaults.
+When you override dictionary values (e.g. `cmakeFlags`), the dictionary in
+`config.json` will be merged with the one in `default-config.json`.
 See [below](#configuration-settings) for some of the available settings and their use.
 
 ## Compile
