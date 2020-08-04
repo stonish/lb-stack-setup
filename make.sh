@@ -37,9 +37,8 @@ else
   export TMPDIR="${XDG_RUNTIME_DIR:-$(dirname $(mktemp -u))/$(id -u)}"
 fi
 mkdir -p $TMPDIR
-# use our CMake and set the toolchain
+# use our CMake
 export PATH=$CONTRIB/bin:$PATH
-export CMAKEFLAGS="$CMAKEFLAGS '-DCMAKE_TOOLCHAIN_FILE=$DIR/toolchain.cmake'"
 # more informative build progress [notstarted>running>finished/total]
 export NINJA_STATUS="[%u>%r>%f/%t] "
 

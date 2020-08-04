@@ -171,6 +171,13 @@ build explicitly, but it is sufficient to set the platform in the following way
 utils/config.py binaryTag x86_64-centos7-gcc9+py3-opt
 ```
 
+### Pass flags to CMake
+
+In order to pass variables to CMake, you can pass `CMAKEFLAGS='-DVARIABLE=VALUE'`
+when calling `make Project/configure`. This will pass the flags to `Project` but
+also to any other dependent project that happens to need reconfiguring.
+
+
 ### Update the setup
 
 In case there is a fix or an update to the setup, just run `setup.py`
