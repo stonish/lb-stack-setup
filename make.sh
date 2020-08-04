@@ -25,6 +25,7 @@ CONTRIB=$contribPath
 USE_CCACHE=$useCcache
 USE_DISTCC=$useDistcc
 USE_DISTCC_PUMP=true
+# export VERBOSE=1
 # DEBUG_DISTCC=true; USE_CCACHE=false
 # DEBUG_CCACHE=true
 
