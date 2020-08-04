@@ -10,7 +10,7 @@
 		"Detector": "v0r4",
 		"default": "master"
 	},
-	"lcgVersion": "96b",
+	"lcgVersion": "97a",
 	"cmakePrefixPath": "$CMAKE_PREFIX_PATH:/cvmfs/sft.cern.ch/lcg/releases",
 	"gitGroup": {
 		"Gaudi": "gaudi",
