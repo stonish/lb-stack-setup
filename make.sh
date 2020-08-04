@@ -131,7 +131,8 @@ pump_startup() {
 pump_shutdown() {
   # TODO add a separator line to the stdout/stderr or rotate logs
   pump --shutdown | grep -v '___Shutting down' || true
-  # $INCLUDE_SERVER_PORT and $INCLUDE_SERVER_DIR are removed by pump
+  # The $INCLUDE_SERVER_PORT socket and $INCLUDE_SERVER_DIR directory are removed by pump
+  unset INCLUDE_SERVER_DIR INCLUDE_SERVER_PORT INCLUDE_SERVER_PID
 }
 
 
