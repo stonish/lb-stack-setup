@@ -120,9 +120,13 @@ def read_config(original=False,
         write_config(overrides, config_out)
 
     # Expand variables
-    for key in config:
+    for key, value in config.items():
+        # TODO expand recursively?
+        if isinstance(value, basestring):
+            value = os.path.expandvars(value)
         if key in EXPAND_PATH_VARS:
-            config[key] = expand_path(config[key])
+            value = expand_path(value)
+        config[key] = value
 
     return (config, defaults, overrides) if original else config
     # TODO think if we need nested updates and in any case document behaviour

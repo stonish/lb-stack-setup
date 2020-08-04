@@ -152,20 +152,23 @@ You can add a new package to be checked out in the json configuration.
 
 ### Use special LCG versions
 
+LCG releases that are not installed under `/cvmfs/lhcb.cern.ch/` are picked up from
+`/cvmfs/sft.cern.ch/` (see the `cmakePrefixPath` setting).
+
 The EP-SFT groups provides cvmfs installations of
 [special LCG flavours or nightly builds](http://lcginfo.cern.ch/).
 For example, in order to use the `dev4` nightly build from Tuesday, it is enough to do
 
 ```sh
-utils/config.py lcgVersion dev4  # or any placeholder value
-utils/config.py cmakePrefixPath /cvmfs/sft-nightlies.cern.ch/lcg/nightlies/dev4/Tue
+utils/config.py lcgVersion dev4
+utils/config.py cmakePrefixPath '$CMAKE_PREFIX_PATH:/cvmfs/sft-nightlies.cern.ch/lcg/nightlies/dev4/Tue'
 ```
 
-or to use a released version not installed under `/cvmfs/lhcb.cern.ch/` do
+In order to use a Python 3 build of LCG, there is no need to select a Python 3 LCG
+build explicitly, but it is sufficient to set the platform in the following way
 
 ```sh
-utils/config.py lcgVersion LCG_97python3  # or any placeholder value
-utils/config.py cmakePrefixPath /cvmfs/sft.cern.ch/lcg/releases/LCG_97python3
+utils/config.py binaryTag x86_64-centos7-gcc9+py3-opt
 ```
 
 ### Update the setup

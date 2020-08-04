@@ -11,7 +11,7 @@
 		"default": "master"
 	},
 	"lcgVersion": "96b",
-	"cmakePrefixPath": "",
+	"cmakePrefixPath": "$CMAKE_PREFIX_PATH:/cvmfs/sft.cern.ch/lcg/releases",
 	"gitGroup": {
 		"Gaudi": "gaudi",
 		"default": "lhcb"

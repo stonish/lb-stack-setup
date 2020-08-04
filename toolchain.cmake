@@ -23,11 +23,9 @@ if(NOT CMAKE_SOURCE_DIR MATCHES "CMakeTmp")
     OUTPUT_VARIABLE _cmake_prefix_path_colons
     OUTPUT_STRIP_TRAILING_WHITESPACE)
 
-  file(TO_CMAKE_PATH "${_cmake_prefix_path_colons}" _extra_cmake_pp)
-
   # Confusingly, Gaudi uses the environment variable CMAKE_PREFIX_PATH
   # to populate the cmake variable CMAKE_PREFIX_PATH.
-  set(ENV{CMAKE_PREFIX_PATH} "${_project_path}:${_cmake_prefix_path_colons}:$ENV{CMAKE_PREFIX_PATH}")
+  set(ENV{CMAKE_PREFIX_PATH} "${_project_path}:${_cmake_prefix_path_colons}")
 
   # Make sure cmake will use the local install of ninja
   execute_process(
