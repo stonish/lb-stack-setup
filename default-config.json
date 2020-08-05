@@ -7,7 +7,7 @@
 	],
 	"gitBranch": {
 		"Gaudi": "master",
-		"Detector": "v0r4",
+		"Detector": "v0-patches",
 		"default": "master"
 	},
 	"lcgVersion": "97a",
