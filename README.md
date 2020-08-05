@@ -34,6 +34,8 @@ $EDITOR utils/config.json
 All possible configuration settings and their defaults are stored in
 [default-config.json](default-config.json).
 Any settings you specify in the `config.json` file will override the defaults.
+When you override dictionary values (e.g. `cmakeFlags`), the dictionary in
+`config.json` will be merged with the one in `default-config.json`.
 See [below](#configuration-settings) for some of the available settings and their use.
 
 ## Compile
@@ -152,21 +154,39 @@ You can add a new package to be checked out in the json configuration.
 
 ### Use special LCG versions
 
+LCG releases that are not installed under `/cvmfs/lhcb.cern.ch/` are picked up from
+`/cvmfs/sft.cern.ch/` (see the `cmakePrefixPath` setting).
+
 The EP-SFT groups provides cvmfs installations of
 [special LCG flavours or nightly builds](http://lcginfo.cern.ch/).
 For example, in order to use the `dev4` nightly build from Tuesday, it is enough to do
 
 ```sh
-utils/config.py lcgVersion dev4  # or any placeholder value
-utils/config.py cmakePrefixPath /cvmfs/sft-nightlies.cern.ch/lcg/nightlies/dev4/Tue
+utils/config.py lcgVersion dev4
+utils/config.py cmakePrefixPath '$CMAKE_PREFIX_PATH:/cvmfs/sft-nightlies.cern.ch/lcg/nightlies/dev4/Tue'
 ```
 
-or to use a released version not installed under `/cvmfs/lhcb.cern.ch/` do
+In order to use a Python 3 build of LCG, there is no need to select a Python 3 LCG
+build explicitly, but it is sufficient to set the platform in the following way
 
 ```sh
-utils/config.py lcgVersion LCG_97python3  # or any placeholder value
-utils/config.py cmakePrefixPath /cvmfs/sft.cern.ch/lcg/releases/LCG_97python3
+utils/config.py binaryTag x86_64-centos7-gcc9+py3-opt
 ```
+
+### Pass flags to CMake
+
+In order to pass variables to CMake, you can pass `CMAKEFLAGS='-DVARIABLE=VALUE'`
+when calling `make Project/configure`. This will pass the flags to `Project` but
+also to any other dependent project that happens to need reconfiguring.
+
+Alternatively, if you like to persist the flags you pass per project, set the appropriate
+configuration setting, e.g.
+
+```sh
+utils/config.py cmakeFlags.Allen '-DSTANDALONE=OFF -DSEQUENCE=velo'
+```
+
+or use `cmakeFlags.default` to affect all projects.
 
 ### Update the setup
 

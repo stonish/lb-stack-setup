@@ -25,6 +25,7 @@ CONTRIB=$contribPath
 USE_CCACHE=$useCcache
 USE_DISTCC=$useDistcc
 USE_DISTCC_PUMP=true
+# export VERBOSE=1
 # DEBUG_DISTCC=true; USE_CCACHE=false
 # DEBUG_CCACHE=true
 
@@ -36,9 +37,8 @@ else
   export TMPDIR="${XDG_RUNTIME_DIR:-$(dirname $(mktemp -u))/$(id -u)}"
 fi
 mkdir -p $TMPDIR
-# use our CMake and set the toolchain
+# use our CMake
 export PATH=$CONTRIB/bin:$PATH
-export CMAKEFLAGS="$CMAKEFLAGS '-DCMAKE_TOOLCHAIN_FILE=$DIR/toolchain.cmake'"
 # more informative build progress [notstarted>running>finished/total]
 export NINJA_STATUS="[%u>%r>%f/%t] "
 
@@ -130,7 +130,8 @@ pump_startup() {
 pump_shutdown() {
   # TODO add a separator line to the stdout/stderr or rotate logs
   pump --shutdown | grep -v '___Shutting down' || true
-  # $INCLUDE_SERVER_PORT and $INCLUDE_SERVER_DIR are removed by pump
+  # The $INCLUDE_SERVER_PORT socket and $INCLUDE_SERVER_DIR directory are removed by pump
+  unset INCLUDE_SERVER_DIR INCLUDE_SERVER_PORT INCLUDE_SERVER_PID
 }
 
 

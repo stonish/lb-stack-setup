@@ -41,7 +41,10 @@
 ################################################################################
 
 # record the environment we're executed in (added by RM)
-_output_path := $(shell "$(dir $(lastword $(MAKEFILE_LIST)))/config.py" outputPath)
+# note that DIR will end with a /
+DIR := $(dir $(lastword $(MAKEFILE_LIST)))
+PROJECT := $(notdir $(CURDIR))
+_output_path := $(shell "$(DIR)config.py" outputPath)
 _dummy := $(shell mkdir -p "$(_output_path)" && printenv | sort > "$(_output_path)/project.mk.env")
 
 # settings
@@ -49,11 +52,10 @@ CMAKE := cmake
 CTEST := ctest
 NINJA := $(shell which ninja 2> /dev/null)
 
-ifeq ($(findstring CMAKE_TOOLCHAIN_FILE,$(CMAKEFLAGS)),)  # added by RM
-ifneq ($(wildcard $(CURDIR)/toolchain.cmake),)
-  override CMAKEFLAGS += -DCMAKE_TOOLCHAIN_FILE=$(CURDIR)/toolchain.cmake
+# modified by RM
+ifeq ($(findstring CMAKE_TOOLCHAIN_FILE,$(CMAKEFLAGS)),)
+  override CMAKEFLAGS += -DCMAKE_TOOLCHAIN_FILE=$(DIR)toolchain.cmake
 endif
-endif  # added by RM
 ifneq ($(wildcard $(CURDIR)/cache_preload.cmake),)
   override CMAKEFLAGS += -C$(CURDIR)/cache_preload.cmake
 endif
@@ -153,6 +155,7 @@ $(MAKEFILE_LIST):
 	@ # do not delegate further
 
 # trigger CMake configuration
+# note that we only fully build the CMAKEFLAGS here in order not to slow down other targets
 $(BUILDDIR)/$(BUILD_CONF_FILE):
 	mkdir -p $(BUILDDIR)
-	cd $(BUILDDIR) && $(CMAKE) $(CMAKEFLAGS) $(CURDIR)
+	cd $(BUILDDIR) && $(CMAKE) $(CMAKEFLAGS) $(shell "$(DIR)config.py" cmakeFlags.default --default '') $(shell "$(DIR)config.py" cmakeFlags.$(PROJECT) --default '') $(CURDIR)
