@@ -278,6 +278,7 @@ Note that uncommitted changes will not be in the new clone.
      `.output/make.sh.env`
    - the compilation environment (in which `project.mk` is invoked):
      `.output/project.mk.env`
+3. To see in detail what ninja executes, use `make Project VERBOSE=1`.
 
 If you fixed it, great! If you think it's possible that someone else hits the
 same problem, plese [open an issue](/../issues/new) or submit a merge request.

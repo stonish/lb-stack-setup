@@ -102,9 +102,7 @@ ifneq ($(USE_NINJA),)
   override CMAKEFLAGS += -GNinja
   BUILD_CONF_FILE := build.ninja
   BUILDFLAGS := $(NINJAFLAGS)
-  ifneq ($(VERBOSE),)
-    BUILDFLAGS := -v $(BUILDFLAGS)
-  endif
+  # no need to pass -v as cmake --build does it when VERBOSE is set
 else
   BUILD_CONF_FILE := Makefile
 endif
