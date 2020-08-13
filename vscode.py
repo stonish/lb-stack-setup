@@ -78,13 +78,14 @@ def write_workspace_json(repos,
     # Runtime settings
     try:
         env = read_env('Gaudi/build.{}/python.env'.format(config['binaryTag']))
-        python_cmd = shutil.which('python', path=env['PATH'])
+        path = env['PATH']
+        python_cmd = shutil.which('python', path=path)
         if not python_cmd:
             raise OSError()
         settings['settings']['python.pythonPath'] = python_cmd
 
-        gcc_cmd = shutil.which('g++', path=env['PATH'])
-        clang_cmd = shutil.which('clang', path=env['PATH'])
+        gcc_cmd = shutil.which('g++', path=path)
+        clang_cmd = shutil.which('clang', path=path)
         if gcc_cmd and clang_cmd:
             print(
                 'WARNING both g++ and clang in path, using g++',
@@ -95,7 +96,7 @@ def write_workspace_json(repos,
             settings['settings']['C_Cpp.default.compilerPath'] = clang_cmd
         else:
             raise OSError()
-    except OSError:
+    except (KeyError, OSError):
         print('WARNING build at least Gaudi for cpp/python'
               'intellisense to work',
               file=sys.stderr)
