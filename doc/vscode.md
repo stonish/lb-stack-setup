@@ -34,12 +34,21 @@ features.
 
 ### Supported features
 
-- C++ intellisense
-  - support accross projects from the stack
-  - __WARNING__: following public headers leads you to `InstallArea/...`. Any modifications in installed files will be overwritten on the next `make`.
-- Python intellisense
-  - support accross projects from the stack
-  - following imports always leads to sources (execpt for generated modules)
+The following features are supported for both C++ and Python.
+
+- [Intellisense](https://code.visualstudio.com/docs/editor/intellisense)
+  support, e.g. code completion, parameter info, quick info, member lists.
+- [Code navigation](https://code.visualstudio.com/docs/editor/editingevolved),
+  e.g. "Go to Definition" across projects from the stack.
+  - __WARNING__: Following public headers leads you to `InstallArea/...`.
+    Any modifications in installed files will be overwritten on the next `make`.
+  - Following Python imports always leads to sources (except for generated modules).
+- Formatting with the LHCb styles with `Ctrl(Cmd)+Shift+I` (Format Document).
+  - Automatic formatting can be enabled with the `editor.formatOnSave` setting.
+
+> __Note:__ these features have only been tested in a setup where
+> VSCode is installed on a Linux desktop and the stack workspace resides
+> on a CentOS 7 machine, which is access with the Remote - SSH extension.
 
 ### Desired features
 
