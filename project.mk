@@ -111,6 +111,8 @@ BUILD_CMD := $(CMAKE) --build $(BUILDDIR) --target
 # default target
 patch-python-ns:
 
+# with the following patching, python modules are imported from the sources
+# of dependent projects and not the InstallArea (i.e. no need to rebuild)
 patch-python-ns: all
 	# Patching python namespaced packages for intellisense support...
 	@find $(BUILDDIR) -path '$(BUILDDIR)/python/*/__init__.py' -exec bash -c "\
