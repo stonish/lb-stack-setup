@@ -48,8 +48,8 @@ def run(args,
     stdout, stderr = p.communicate()
     level = logging.ERROR if check and p.returncode else logging.DEBUG
     log.log(level, 'retcode: ' + str(p.returncode))
-    log.log(level, 'stderr: ' + str(stderr))
-    log.log(level, 'stdout: ' + str(stdout))
+    log.log(level, 'stderr: ' + stderr.decode())
+    log.log(level, 'stdout: ' + stdout.decode())
     if check and p.returncode != 0:
         raise CalledProcessError(p.returncode, args)
     return namedtuple('CompletedProcess', ['returncode', 'stdout', 'stderr'])(

@@ -16,7 +16,7 @@ for example, `$HOME` or `/afs/cern.ch/work/j/jdoe`.
 Adjust the following command according to how you want the directory containing your stack to be called and then run it (here we use simply "`stack`"):
 
 ```sh
-curl https://gitlab.cern.ch/rmatev/lb-stack-setup/raw/master/setup.py | python - stack
+curl https://gitlab.cern.ch/rmatev/lb-stack-setup/raw/master/setup.py | python3 - stack
 ```
 
 The script will first check that all prerequisites are met. If it fails, check
@@ -196,7 +196,7 @@ or use `cmakeFlags.default` to affect all projects.
 In case there is a fix or an update to the setup, just run `setup.py`
 
 ```sh
-python utils/setup.py
+python3 utils/setup.py
 ```
 
 It attempts to pull the latest `master` and to update your `config.json`.
@@ -224,7 +224,7 @@ If you start from scratch, you can normally just tweak the way you run
 
 ```sh
 curl https://gitlab.cern.ch/rmatev/lb-stack-setup/raw/master/setup.py | \
-    python - stack -b vscode
+    python3 - stack -b vscode
 ```
 
 > __Note:__ In some rare cases, you might need to download `setup.py` not from
@@ -250,7 +250,7 @@ configuration is made consistent with the new branch.
 Once you have a clone of this repo (e.g. the `stack/utils` directory), you can run
 
 ```sh
-python setup.py --repo . path/to/new/stack
+python3 setup.py --repo . path/to/new/stack
 ```
 
 which will use the `HEAD` (i.e. the currently checked out branch) of your local

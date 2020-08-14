@@ -139,7 +139,7 @@ setup_distcc_hosts() {
   # Consider doing port forwarding it a distcc wrapper.
 
   local distcc_env
-  if ! distcc_env=$(python "$DIR/setup-distcc.py"); then
+  if ! distcc_env=$("$DIR/setup-distcc.py"); then
     return 1
   fi
   eval $distcc_env

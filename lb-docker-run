@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import os
 import sys
 import pwd
@@ -209,8 +209,7 @@ parser.add_option(
     'the target of a symlink')
 parser.add_option(
     '--docker-prefix', help='Docker registry prefix for the images')
-parser.add_option(
-    '--docker-tag', help='Docker image to use')
+parser.add_option('--docker-tag', help='Docker image to use')
 
 parser.set_defaults(
     lhcb_env=None,
