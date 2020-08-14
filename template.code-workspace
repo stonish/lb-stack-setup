@@ -1,0 +1,71 @@
+{
+    "extensions": {
+        "recommendations": [
+            "eamodio.gitlens",
+            "ms-python.python",
+            "ms-pyright.pyright",
+            "ms-vscode.cpptools",
+            "ms-vsliveshare.vsliveshare",
+            "twxs.cmake",
+            "lextudio.restructuredtext",
+            "davidanson.vscode-markdownlint",
+            "streetsidesoftware.code-spell-checker"
+        ]
+    },
+    "folders": [
+        {
+            "path": "utils"
+        }
+    ],
+    "settings": {
+        "C_Cpp.clang_format_fallbackStyle": "none",
+        "C_Cpp.clang_format_path": "/cvmfs/lhcb.cern.ch/lib/bin/x86_64-centos7/lcg-clang-format-8.0.0",
+        "C_Cpp.clang_format_style": "file",
+        "C_Cpp.configurationWarnings": "Disabled",
+        "C_Cpp.default.cStandard": "c11",
+        "C_Cpp.default.compileCommands": "{outputPath}/compile_commands-${workspaceFolderBasename}.json",
+        "C_Cpp.default.compilerPath": "<placeholder: build at least gaudi for intellisense to work>",
+        "C_Cpp.default.cppStandard": "c++17",
+        "C_Cpp.default.defines": [],
+        "C_Cpp.default.includePath": [
+            "${workspaceFolder}/**"
+        ],
+        "C_Cpp.default.intelliSenseMode": "clang-x64",
+        "cSpell.dictionaryDefinitions": [
+            {
+                "name": "lhcb",
+                "path": "{utilsPath}/dictionary.txt"
+            }
+        ],
+        // List of dictionaries to use when checking files.
+        "cSpell.dictionaries": [
+            "lhcb"
+        ],
+        "cSpell.includeRegExpList": [
+            "string",
+            "(\"\"\"|''')[^\\1]*\\1",
+            "CStyleComment",
+            "#.*"
+        ],
+        "cSpell.language": "en,en-GB",
+        "files.associations": {
+            "*.C": "cpp",
+            "*.icpp": "cpp"
+        },
+        "files.trimTrailingWhitespace": true,
+        "python.envFile": "{outputPath}/runtime-${workspaceFolderBasename}.env",
+        "python.formatting.provider": "yapf",
+        // https://github.com/microsoft/vscode-python/issues/5567
+        // yapfPath should ideally be "${workspaceFolder:utils}/yapf"
+        "python.formatting.yapfPath": "{utilsPath}/yapf",
+        "python.languageServer": "None",
+        "python.linting.enabled": true,
+        "python.linting.flake8Args": [
+            "--select=F"
+        ],
+        "python.linting.flake8Enabled": true,
+        "python.linting.flake8Path": "{utilsPath}/flake8",
+        "python.linting.pylintEnabled": false,
+        "python.pythonPath": "<placeholder: build at least gaudi for intellisense to work>"
+    }
+}

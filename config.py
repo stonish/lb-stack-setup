@@ -1,17 +1,10 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 from __future__ import print_function
 import errno
 import json
 import os
 from collections import OrderedDict
 from copy import copy, deepcopy
-
-# Python 3 compatiblity
-try:
-    basestring
-except NameError:
-    basestring = str
-    unicode = str
 
 DIR = os.path.dirname(__file__)
 DEFAULT_CONFIG = os.path.join(DIR, 'default-config.json')
@@ -132,7 +125,7 @@ def read_config(original=False,
     # Expand variables
     for key, value in config.items():
         # TODO expand recursively?
-        if isinstance(value, basestring):
+        if isinstance(value, str):
             value = os.path.expandvars(value)
         if key in EXPAND_PATH_VARS:
             value = expand_path(value)
@@ -164,7 +157,7 @@ def query_update(config, path, value):
 
 def format_value(x):
     """Return json except for strings, which are printed unquoted."""
-    return x if isinstance(x, basestring) else json.dumps(x)
+    return x if isinstance(x, str) else json.dumps(x)
 
 
 if __name__ == '__main__':
@@ -211,15 +204,15 @@ if __name__ == '__main__':
             default_value = query(defaults, key_parts)
         except (IndexError, KeyError):
             # Guess the type as we don't have a schema...
-            default_value = unicode('')
-        if isinstance(default_value, basestring):
-            value = unicode(args.value)
+            default_value = ''
+        if isinstance(default_value, str):
+            value = args.value
         else:
             try:
                 value = json.loads(args.value)
             except ValueError:
                 # invalid json is treated as unquoted string
-                value = unicode(args.value)
+                value = args.value
 
         top_key = key_parts[0]
         if top_key not in overrides and isinstance(config[top_key], dict):

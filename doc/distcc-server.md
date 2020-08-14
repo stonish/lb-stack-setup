@@ -47,7 +47,6 @@ DISTCC_PRINCIPAL=distccd DISTCC_HOSTS="127.0.0.1:12345/1,auth=lbquantaperf02.cer
     contrib/bin/distcc -o test.o -c test.cpp
 ```
 
-
 ### Create a whitelist of users that have access
 
 The whitelist is a file containing CERN usernames, one on each line.

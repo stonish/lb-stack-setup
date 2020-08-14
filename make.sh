@@ -25,7 +25,6 @@ CONTRIB=$contribPath
 USE_CCACHE=$useCcache
 USE_DISTCC=$useDistcc
 USE_DISTCC_PUMP=true
-# export VERBOSE=1
 # DEBUG_DISTCC=true; USE_CCACHE=false
 # DEBUG_CCACHE=true
 
@@ -140,7 +139,7 @@ setup_distcc_hosts() {
   # Consider doing port forwarding it a distcc wrapper.
 
   local distcc_env
-  if ! distcc_env=$(python "$DIR/setup-distcc.py"); then
+  if ! distcc_env=$("$DIR/setup-distcc.py"); then
     return 1
   fi
   eval $distcc_env
@@ -256,14 +255,15 @@ elif [ "$USE_DISTCC" = true ]; then
   export COMPILER_PREFIX="$DIR/../contrib/bin/distcc"
 fi
 
+compile_commands_src="$PROJECT/build.$BINARY_TAG/compile_commands.json"
+compile_commands_dst="$OUTPUT/compile_commands-$PROJECT.json"
+runtime_env_src="$PROJECT/build.$BINARY_TAG/python.env"
+runtime_env_dst="$OUTPUT/runtime-$PROJECT.env"
+
 make -f "$DIR/project.mk" -C "$PROJECT" "$@"
 # cd "$PROJECT/build.$BINARY_TAG" && ninja $NINJAFLAGS "$@" && cd -
 # TODO catch CTRL-C during make here and do the clean up, see
 #      https://unix.stackexchange.com/questions/163561/control-which-process-gets-cancelled-by-ctrlc
-run_cmd="$PROJECT/build.$BINARY_TAG/run"
-if [ -f $run_cmd ]; then
-  $run_cmd >"$PROJECT/build.$BINARY_TAG/python.env" 2>/dev/null || true
-fi
 
 ###########################################################
 # clean up
@@ -276,4 +276,18 @@ fi
 if [ "$USE_CCACHE" = true ]; then
   # print ccache stats
   (grep -E -o "Result: .*" "$CCACHE_LOGFILE" 2> /dev/null | sort | uniq -c) || true
+fi
+
+# Copy compile commands and runtime environment if changed
+cmp --silent "$compile_commands_src" "$compile_commands_dst" \
+  || cp -f "$compile_commands_src" "$compile_commands_dst" 2>/dev/null \
+  || true
+run_cmd="$PROJECT/build.$BINARY_TAG/run"
+if [ -f $run_cmd ]; then
+  # TODO the following costs about 0.2s, should only run it if the xenv changed
+  if $run_cmd >"$runtime_env_src" 2>/dev/null; then
+    cmp --silent "$runtime_env_src" "$runtime_env_dst" \
+      || cp -f "$runtime_env_src" "$runtime_env_dst" 2>/dev/null \
+      || true
+  fi
 fi

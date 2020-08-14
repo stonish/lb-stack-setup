@@ -56,9 +56,10 @@ if [ "$USE_KERBEROS" = true ]; then
 fi
 
 if [ "$USE_DOCKER" = true ]; then
-    ( cd "${DIR}"; python -c 'import setup; setup.assert_cvmfs()' )
+    ( cd "${DIR}"; python3 -c 'import setup; setup.assert_cvmfs()' )
     args=(
-        --docker-tag v4.57
+        --docker-tag v4.57.py3
+        --docker-prefix=gitlab-registry.cern.ch/rmatev/lb-stack-setup
         --quiet-env --lbenv -c ${BINARY_TAG}
         -C "${DIR}/.." --use-absolute-path
         --workdir "$PWD"

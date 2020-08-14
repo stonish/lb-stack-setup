@@ -4,12 +4,12 @@ stages:
   - make
 
 # image should match what is used for lb-docker-run (see build-env)
-image: gitlab-registry.cern.ch/rmatev/lb-stack-setup/centos7-build-py3:latest
+image: gitlab-registry.cern.ch/rmatev/lb-stack-setup/centos7-build:v4.57.py3
 
 # setup as readme:
 #   stage: setup
 #   script:
-#     - curl https://gitlab.cern.ch/rmatev/lb-stack-setup/raw/master/setup.py | python - -b $CI_COMMIT_SHA stack
+#     - curl https://gitlab.cern.ch/rmatev/lb-stack-setup/raw/master/setup.py | python3 - -b $CI_COMMIT_SHA stack
 
 setup:
   stage: setup
@@ -17,10 +17,10 @@ setup:
     - cvmfs
   script:
     - git --version
-    - python setup.py --debug --repo $CI_REPOSITORY_URL --branch $CI_COMMIT_SHA stack
+    - python3 setup.py --debug --repo $CI_REPOSITORY_URL --branch $CI_COMMIT_SHA stack
     - cd stack
     - utils/config.py useDistcc false
-    # python setup.py --repo . [--branch $CI_COMMIT_SHA] stack
+    # python3 setup.py --repo . [--branch $CI_COMMIT_SHA] stack
   artifacts:
     paths:
       - stack/

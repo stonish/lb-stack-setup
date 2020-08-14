@@ -1,14 +1,16 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 """Write project configuration in a makefile."""
 from __future__ import print_function
 import glob
 import itertools
 import os
+import pathlib
 import re
 import traceback
 import sys
 from config import read_config, DIR
 from utils import setup_logging, run
+from vscode import write_vscode_settings
 
 DATA_PACKAGE_DIR = "DBASE"
 
@@ -20,23 +22,8 @@ class NotGaudiProjectError(RuntimeError):
     pass
 
 
-try:
-    # Python >= 3.5
-    import pathlib
-
-    def mkdir_p(path):
-        pathlib.Path(path).mkdir(parents=True, exist_ok=True)
-except ImportError:
-
-    def mkdir_p(path):
-        try:
-            os.makedirs(path)
-        except OSError as exc:
-            import errno
-            if exc.errno == errno.EEXIST and os.path.isdir(path):
-                pass
-            else:
-                raise
+def mkdir_p(path):
+    pathlib.Path(path).mkdir(parents=True, exist_ok=True)
 
 
 def git_url_branch(project):
@@ -120,7 +107,7 @@ def list_repos(path=''):
 
 
 def checkout(projects, data_packages):
-    """Clone projects and data packagas, and return make configuration.
+    """Clone projects and data packages, and return make configuration.
 
     The project dependencies of `projects` are cloned recursively.
 
@@ -137,36 +124,37 @@ def checkout(projects, data_packages):
 
     assert set().union(*project_deps.values()).issubset(project_deps)
 
-    # Find projects that we wont build but may be dependent on those to build
-    for r in list_repos(''):
+    mkdir_p(DATA_PACKAGE_DIR)
+    for name in data_packages:
+        clone_package(name, DATA_PACKAGE_DIR)
+
+    return project_deps
+
+
+def find_project_deps(repos, project_deps={}):
+    project_deps = project_deps.copy()
+    for r in repos:
         if r not in project_deps:
             try:
                 project_deps[r] = cmake_deps(r)
             except NotGaudiProjectError:
                 pass
+    return project_deps
 
-    inv_dependencies = {
+
+def inv_dependencies(project_deps):
+    return {
         d: set(p for p, deps in project_deps.items() if d in deps)
         for d in project_deps
     }
 
-    mkdir_p(DATA_PACKAGE_DIR)
-    for name in data_packages:
-        clone_package(name, DATA_PACKAGE_DIR)
 
-    makefile_config = [
-        "PROJECTS := " + " ".join(sorted(project_deps)),
-        "DATA_PACKAGES := " + " ".join(sorted(data_packages)),
-    ]
-    for p, deps in sorted(project_deps.items()):
-        makefile_config += [
-            "{}_DEPS := {}".format(p, ' '.join(deps)),
-        ]
-    for p, deps in sorted(inv_dependencies.items()):
-        makefile_config += [
-            "{}_INV_DEPS := {}".format(p, ' '.join(deps)),
-        ]
-    return makefile_config
+def topo_sorted(deps):
+    def walk(projects, seen):
+        return sum((seen.add(p) or (walk(deps[p], seen) + [p])
+                    for p in projects if p not in seen), [])
+
+    return walk(deps, set())
 
 
 def main(targets):
@@ -186,17 +174,50 @@ def main(targets):
     if 'build' in targets or 'all' in targets or not targets:
         projects += config['defaultProjects']
 
+    repos = list_repos()
+    dp_repos = list_repos(DATA_PACKAGE_DIR)
+
+    # cloned default projects
+    default_projects = [p for p in config['defaultProjects'] if p in repos]
+
     try:
-        makefile_config = checkout(projects, config['dataPackages'])
+        data_packages = config['dataPackages']
+        project_deps = checkout(projects, data_packages)
+        # Find cloned projects that we won't build but that may be
+        # dependent on those to build.
+        project_deps = find_project_deps(repos, project_deps)
+        # Order repos according to dependencies
+        repos = topo_sorted(project_deps) + sorted(
+            set(repos).difference(project_deps))
+
+        makefile_config = [
+            "PROJECTS := " + " ".join(sorted(project_deps)),
+            "DATA_PACKAGES := " + " ".join(sorted(data_packages)),
+        ]
+        for p, deps in sorted(project_deps.items()):
+            makefile_config += [
+                "{}_DEPS := {}".format(p, ' '.join(deps)),
+            ]
+        for p, deps in sorted(inv_dependencies(project_deps).items()):
+            makefile_config += [
+                "{}_INV_DEPS := {}".format(p, ' '.join(deps)),
+            ]
         makefile_config += [
             "CONTRIB_PATH := " + config["contribPath"],
-            "REPOS := " +
-            " ".join(list_repos() + list_repos(DATA_PACKAGE_DIR)),
-            "build: " + " ".join(config['defaultProjects']),
+            "REPOS := " + " ".join(repos + dp_repos),
+            "build: " + " ".join(default_projects),
         ]
-    except Exception as e:
+    except Exception:
         traceback.print_exc()
         makefile_config = ['$(error Error occurred in checkout)']
+
+    try:
+        write_vscode_settings(repos, dp_repos, project_deps, config)
+    except Exception:
+        traceback.print_exc()
+        makefile_config = [
+            '$(warning Error occurred in updating VSCode settings)'
+        ]
 
     config_path = os.path.join(output_path, "configuration.mk")
     with open(config_path, "w") as f:

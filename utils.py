@@ -7,26 +7,34 @@ try:
 except ImportError:
     DEVNULL = open(os.devnull, 'r')
 
-log = None
+_log = None
+_log_filename = None
 
 
 def setup_logging(directory):
-    if not os.path.isdir(directory):
-        os.mkdir(directory)
+    global _log, _log_filename
+    log_filename = os.path.join(directory, 'log')
+    if _log is not None:
+        if log_filename != _log_filename:
+            raise ValueError('requested log to {} but already have {}'.format(
+                log_filename, _log_filename))
+        return _log
+    _log_filename = log_filename
+    os.makedirs(directory, exist_ok=True)
+
     logging.basicConfig(
         level=logging.DEBUG,
         format=
         '%(asctime)s.%(msecs)03d %(name)-15s %(levelname)-8s %(message)s',
         datefmt='%Y-%m-%dT%H:%M:%S',
-        filename=os.path.join(directory, 'log'),
+        filename=log_filename,
         filemode='a')
     console = logging.StreamHandler()
     console.setLevel(logging.INFO)
     console.setFormatter(logging.Formatter('%(levelname)-8s %(message)s'))
     logging.getLogger('').addHandler(console)
-    global log
-    log = logging.getLogger(os.path.basename(__file__))
-    return log
+    _log = logging.getLogger(os.path.basename(__file__))
+    return _log
 
 
 def run(args,
@@ -36,8 +44,8 @@ def run(args,
         check=True,
         stdin=DEVNULL,
         **kwargs):
-    log.debug('command: ' +
-              (repr(args) if shell else ' '.join(map(repr, args))))
+    _log.debug('command: ' +
+               (repr(args) if shell else ' '.join(map(repr, args))))
     p = Popen(
         args,
         shell=shell,
@@ -47,9 +55,9 @@ def run(args,
         **kwargs)
     stdout, stderr = p.communicate()
     level = logging.ERROR if check and p.returncode else logging.DEBUG
-    log.log(level, 'retcode: ' + str(p.returncode))
-    log.log(level, 'stderr: ' + str(stderr))
-    log.log(level, 'stdout: ' + str(stdout))
+    _log.log(level, 'retcode: ' + str(p.returncode))
+    _log.log(level, 'stderr: ' + stderr.decode())
+    _log.log(level, 'stdout: ' + stdout.decode())
     if check and p.returncode != 0:
         raise CalledProcessError(p.returncode, args)
     return namedtuple('CompletedProcess', ['returncode', 'stdout', 'stderr'])(

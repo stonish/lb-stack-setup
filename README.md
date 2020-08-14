@@ -16,7 +16,7 @@ for example, `$HOME` or `/afs/cern.ch/work/j/jdoe`.
 Adjust the following command according to how you want the directory containing your stack to be called and then run it (here we use simply "`stack`"):
 
 ```sh
-curl https://gitlab.cern.ch/rmatev/lb-stack-setup/raw/master/setup.py | python - stack
+curl https://gitlab.cern.ch/rmatev/lb-stack-setup/raw/master/setup.py | python3 - stack
 ```
 
 The script will first check that all prerequisites are met. If it fails, check
@@ -104,7 +104,10 @@ The `Makefile` provided features the following targets.
 
 ### Visual Studio Code
 
-Experimental VS Code support exists in the [vscode](/../tree/vscode) branch.
+There is experimental VS Code support via an auto-generated
+configuration files (`stack.code-workspace` and `Project/.vscode/settings.json`) for a
+[multi-root workspace](https://code.visualstudio.com/docs/editor/multi-root-workspaces).
+The file is updated every time you run `make`.
 Currently, only intellisense for C++ and Python are supported and there are no
 other integrations such as building and testing from within VS Code.
 See [doc/vscode.md](/../tree/vscode/doc/vscode.md) for more information.
@@ -193,7 +196,7 @@ or use `cmakeFlags.default` to affect all projects.
 In case there is a fix or an update to the setup, just run `setup.py`
 
 ```sh
-python utils/setup.py
+python3 utils/setup.py
 ```
 
 It attempts to pull the latest `master` and to update your `config.json`.
@@ -221,7 +224,7 @@ If you start from scratch, you can normally just tweak the way you run
 
 ```sh
 curl https://gitlab.cern.ch/rmatev/lb-stack-setup/raw/master/setup.py | \
-    python - stack -b vscode
+    python3 - stack -b vscode
 ```
 
 > __Note:__ In some rare cases, you might need to download `setup.py` not from
@@ -247,7 +250,7 @@ configuration is made consistent with the new branch.
 Once you have a clone of this repo (e.g. the `stack/utils` directory), you can run
 
 ```sh
-python setup.py --repo . path/to/new/stack
+python3 setup.py --repo . path/to/new/stack
 ```
 
 which will use the `HEAD` (i.e. the currently checked out branch) of your local
@@ -275,6 +278,7 @@ Note that uncommitted changes will not be in the new clone.
      `.output/make.sh.env`
    - the compilation environment (in which `project.mk` is invoked):
      `.output/project.mk.env`
+3. To see in detail what ninja executes, use `make Project VERBOSE=1`.
 
 If you fixed it, great! If you think it's possible that someone else hits the
 same problem, plese [open an issue](/../issues/new) or submit a merge request.
