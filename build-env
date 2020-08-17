@@ -70,18 +70,6 @@ if [ "$USE_DOCKER" = true ]; then
     # TODO lbenvPath is not respected in the docker case
 else
     # Start a clean LbEnv a la lb-docker-run
-    cache="${OUTPUT}/lbenv-cache.sh"
-    if [[ !( -f "$cache" ) || \
-          ( "${DIR}/config.json" -nt "$cache" ) || \
-          ( "${DIR}/default-config.json" -nt "$cache" ) || \
-          ( "${DIR}/native-env.sh" -nt "$cache" ) ]]; then
-        if ! env -i bash "${DIR}/native-env.sh" "$lbenvPath"/bin/LbEnv.sh ${BINARY_TAG} > "$cache"; then
-            log ERROR "Check 'lbenvPath' configuration setting"
-            rm -f "$cache"
-            exit 1
-        fi
-    fi
-
     args=(
         "HOSTNAME=${HOSTNAME}"
         "HOME=${HOME}"
@@ -93,6 +81,23 @@ else
     test -z ${TMPDIR+x} || args+=("TMPDIR=${TMPDIR}")
     test -z ${XDG_RUNTIME_DIR+x} || args+=("XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR}")
     test -z ${MAKEFLAGS+x} || args+=("MAKEFLAGS=${MAKEFLAGS}")
-    # TODO set the extra variables from args[] after sourcing $cache
-    env -i "${args[@]}" bash -c ". '$cache'; \"\$@\"" bash "$@"
+    PYTHON_EXECUTABLE=$(command -v python3)
+    if [ $PYTHON_EXECUTABLE != "/usr/bin/python3" ]; then
+        args+=("PATH=/usr/local/bin:/usr/bin:${PYTHON_EXECUTABLE%/*}")
+    fi
+
+    args_hash=$(cksum <<<"${args[@]}")
+    cache="${OUTPUT}/lbenv-cache-${args_hash// /_}.sh"
+    if [[ !( -f "$cache" ) || \
+          ( "${DIR}/config.json" -nt "$cache" ) || \
+          ( "${DIR}/default-config.json" -nt "$cache" ) || \
+          ( "${DIR}/native-env.sh" -nt "$cache" ) || \
+          ( "${DIR}/build-env" -nt "$cache" ) ]]; then
+        if ! env -i "${args[@]}" bash "${DIR}/native-env.sh" "$lbenvPath"/bin/LbEnv.sh ${BINARY_TAG} > "$cache"; then
+            log ERROR "Check 'lbenvPath' configuration setting"
+            rm -f "$cache"
+            exit 1
+        fi
+    fi
+    env -i bash -c ". '$cache'; \"\$@\"" bash "$@"
 fi
