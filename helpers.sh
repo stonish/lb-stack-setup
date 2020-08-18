@@ -2,6 +2,13 @@ _helpers_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 config() { "${_helpers_dir}/config.py" "$@"; }
 
+setup_output() {
+    if [ -z "$OUTPUT" ]; then
+        OUTPUT="${OUTPUT:-$(config outputPath)}"
+    fi
+    mkdir -p "$OUTPUT"
+}
+
 gitc() { pushd "$1" >/dev/null && git "${@:2}" && popd >/dev/null; }
 
 log() {
@@ -14,11 +21,7 @@ log() {
     else
         ts=$(date "+%Y-%m-%dT%H:%M:%S    ")
     fi
-    printf "%s %-15s %-8s %s\n" "$ts" "${logname:-bash}" "$1" "$2" >> "$LOG_FILE"
+    printf "%s %-15s %-8s %s\n" "$ts" "${logname:-bash}" "$1" "$2" >> "$OUTPUT/log"
 }
-
-OUTPUT="$(config outputPath)"
-LOG_FILE="$OUTPUT/log"
-mkdir -p "$OUTPUT"
 
 # TODO log *everything* with https://askubuntu.com/a/1001404/417217

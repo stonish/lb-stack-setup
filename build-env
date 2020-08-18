@@ -1,14 +1,14 @@
 #!/bin/bash
 set -eo pipefail
-
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 source "$DIR/helpers.sh"
 logname="build-env"
-
-eval $(config --sh binaryTag useDocker useDistcc lbenvPath)
+eval $(config --sh outputPath binaryTag useDocker useDistcc lbenvPath)
+OUTPUT="$outputPath"
 BINARY_TAG="$binaryTag"
 USE_DOCKER="$useDocker"
 USE_DISTCC="$useDistcc"
+setup_output
 
 USE_KERBEROS=true
 if [ "$1" = "--no-kerberos" ]; then
