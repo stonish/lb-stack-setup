@@ -343,8 +343,12 @@ if opts.sshAgent:
 
 if opts.kerberos:
     logging.debug('sharing kerberos tokens with container')
-    opts.env.append('KRB5CCNAME')
-    opts.volume.append(os.environ['KRB5CCNAME'].split(':')[1])
+    krb5ccname = os.environ.get('KRB5CCNAME', '').split(':')[-1]
+    if os.path.isfile(krb5ccname):
+        opts.env.append('KRB5CCNAME')
+        opts.volume.append(krb5ccname)
+    else:
+        sys.exit('the --kerberos flag requires KRB5CCNAME to point to a file')
 
 if not opts.user and not opts.no_map_user:
     if not sys.platform == 'darwin':

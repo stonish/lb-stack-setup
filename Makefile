@@ -22,9 +22,9 @@ CONTRIB_DEPS := $(CONTRIB_PATH)/bin/.cmake_timestamp $(CONTRIB_PATH)/bin/ninja $
 CONTRIB_DEPS += $(CONTRIB_PATH)/bin/ninjatracing $(CONTRIB_PATH)/bin/post_build_ninja_summary.py
 contrib: $(CONTRIB_DEPS)
 $(CONTRIB_PATH)/bin/% $(CONTRIB_PATH)/bin/.%_timestamp: $(DIR)/install-%.sh
-	@"${DIR}/build-env" --no-kerberos bash "$<"
+	@"${DIR}/build-env" bash "$<"
 $(CONTRIB_PATH)/bin/ninjatracing $(CONTRIB_PATH)/bin/post_build_ninja_summary.py: $(DIR)/install-tools.sh
-	@"${DIR}/build-env" --no-kerberos bash "$<"
+	@"${DIR}/build-env" bash "$<"
 
 clean: $(patsubst %,%-clean,$(PROJECTS))
 purge: $(patsubst %,%/purge,$(PROJECTS))
@@ -50,6 +50,9 @@ $(1)/run: $(DIR)/project-run.sh
 $(1)/%: $$($(1)_DEPS) fast/$(1)/% ;
 fast/$(1)/%: $(1)/run $(CONTRIB_DEPS)
 	@$(DIR)/build-env $(DIR)/make.sh $(1) $$*
+# check kerberos token when running tests
+fast/$(1)/test: $(1)/run $(CONTRIB_DEPS)
+	@$(DIR)/build-env --check-kerberos $(DIR)/make.sh $(1) test
 # exception for purge and clean: always do fast/Project/purge or clean
 $(1)/purge: fast/$(1)/purge ;
 $(1)/clean: fast/$(1)/clean ;
