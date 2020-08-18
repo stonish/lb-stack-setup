@@ -211,6 +211,7 @@ def main(targets):
             "build: " + " ".join(default_projects),
         ]
     except Exception:
+        project_deps = {}
         traceback.print_exc()
         makefile_config = ['$(error Error occurred in checkout)']
 
