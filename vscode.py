@@ -167,7 +167,8 @@ def write_project_settings(repos, project_deps, config):
         except KeyError:
             log.debug('Using partial PYTHONPATH from dependencies for {}'.
                       format(project))
-            paths = sum((get_paths(d) for d in project_deps[project]), [])
+            paths = sum((get_paths(d) for d in project_deps.get(project, [])),
+                        [])
             python_paths[project] = paths
             return paths
 

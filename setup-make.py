@@ -154,7 +154,7 @@ def inv_dependencies(project_deps):
 
 def topo_sorted(deps):
     def walk(projects, seen):
-        return sum((seen.add(p) or (walk(deps[p], seen) + [p])
+        return sum((seen.add(p) or (walk(deps.get(p, []), seen) + [p])
                     for p in projects if p not in seen), [])
 
     return walk(deps, set())
