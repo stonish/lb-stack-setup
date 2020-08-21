@@ -19,6 +19,16 @@ Adjust the following command according to how you want the directory containing 
 curl https://gitlab.cern.ch/rmatev/lb-stack-setup/raw/master/setup.py | python3 - stack
 ```
 
+> **Note:** If your system lacks Python 3 (`/usr/bin/python3`), ask for it to
+> be installed. As a temporary workaround you can use the following Python 3
+> installation:
+>
+> ```sh
+> export PATH=$PATH:/cvmfs/lhcb.cern.ch/lib/var/lib/LbEnv/unstable/linux-64/bin
+> ```
+>
+> You will need to do this every time you work with the setup.
+
 The script will first check that all prerequisites are met. If it fails, check
 [doc/prerequisites.md](doc/prerequisites.md) for more information.
 Then it will clone this repo inside a new directory `stack/utils` and do the
@@ -82,22 +92,27 @@ make fast/Moore/test ARGS='-R hlt1_example$'
 make fast/Moore/test ARGS='-R hlt1_example -V'
 ```
 
+Note that changes in python sources are immediatelly "applied" in downstream projects
+(unlike a "manual" stack setup with `lb-project-init`). For example, after changing a
+`.py` in LHCb, you can do `Moore/run` or `make Moore/test ...` without having to
+`make Moore` first.
+
 ## Makefile instructions
 
 The `Makefile` provided features the following targets.
 
-* Global targets
-  * `all` (or `build`): builds the default projects (this is the default target),
-  * `clean`: remove build products for all cloned projects (keeping the sources and CMake cache),
-  * `purge`: similar to `clean`, but also remove the CMake temporary files,
-  * `help`: print a list of available targets,
-  * `for-each CMD="do-something"`: run a command in each git repository (projects, data packages or other).
-* Project targets
-  * `<Project>`: build the required project (with dependencies),
-  * `<Project>/<target>`: build the specified target in the given project,
+- Global targets
+  - `all` (or `build`): builds the default projects (this is the default target),
+  - `clean`: remove build products for all cloned projects (keeping the sources and CMake cache),
+  - `purge`: similar to `clean`, but also remove the CMake temporary files,
+  - `help`: print a list of available targets,
+  - `for-each CMD="do-something"`: run a command in each git repository (projects, data packages or other).
+- Project targets
+  - `<Project>`: build the required project (with dependencies),
+  - `<Project>/<target>`: build the specified target in the given project,
     for example, to get the list of targets available in Gaudi you can call `make Gaudi/help`,
-  * `<Project>-clean`: clean `<Project>` and the projects that depend on it
-  * `fast/<Project>[/<target>]`: same as the target `<Project>[/<target>]`
+  - `<Project>-clean`: clean `<Project>` and the projects that depend on it
+  - `fast/<Project>[/<target>]`: same as the target `<Project>[/<target>]`
     but do not try to build the dependencies.
 
 ## Integrations
@@ -110,7 +125,7 @@ configuration files (`stack.code-workspace` and `Project/.vscode/settings.json`)
 The file is updated every time you run `make`.
 Currently, only intellisense for C++ and Python are supported and there are no
 other integrations such as building and testing from within VS Code.
-See [doc/vscode.md](/../tree/vscode/doc/vscode.md) for more information.
+See [doc/vscode.md](doc/vscode.md) for more information.
 
 ## Configuration settings
 

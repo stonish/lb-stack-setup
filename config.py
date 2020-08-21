@@ -43,6 +43,7 @@ AUTOMATIC_DEFAULTS = {
     'localPoolDepth': lambda: 2 * cpu_count(),
     'distccLocalslots': cpu_count,
     'distccLocalslotsCpp': lambda: 2 * cpu_count(),
+    'useDistcc': lambda: cpu_count() < 24,
 }
 
 

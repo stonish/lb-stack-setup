@@ -53,11 +53,13 @@ def run(args,
         stdout=kwargs.pop('stdout', PIPE if capture_stdout else None),
         stderr=kwargs.pop('stderr', PIPE if capture_stderr else None),
         **kwargs)
-    stdout, stderr = p.communicate()
+    stdout, stderr = [
+        b if b is None else b.decode('utf-8') for b in p.communicate()
+    ]
     level = logging.ERROR if check and p.returncode else logging.DEBUG
     _log.log(level, 'retcode: ' + str(p.returncode))
-    _log.log(level, 'stderr: ' + stderr.decode())
-    _log.log(level, 'stdout: ' + stdout.decode())
+    _log.log(level, 'stderr: {}'.format(stderr))
+    _log.log(level, 'stdout: {}'.format(stdout))
     if check and p.returncode != 0:
         raise CalledProcessError(p.returncode, args)
     return namedtuple('CompletedProcess', ['returncode', 'stdout', 'stderr'])(

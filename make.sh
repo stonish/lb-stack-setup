@@ -9,7 +9,6 @@ set -eo pipefail
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 source "$DIR/helpers.sh"
 logname="make.sh"
-printenv | sort > "$OUTPUT/make.sh.env"
 
 if [ "$#" -lt 2 ]; then
     echo "usage: $(basename $0) project targets" >&2
@@ -27,6 +26,8 @@ USE_DISTCC=$useDistcc
 USE_DISTCC_PUMP=true
 # DEBUG_DISTCC=true; USE_CCACHE=false
 # DEBUG_CCACHE=true
+setup_output
+printenv | sort > "$OUTPUT/make.sh.env"
 
 # explicitly define a fast TMPDIR, unless debugging
 if [ "$DEBUG_CCACHE" = true -o "$DEBUG_DISTCC" = true ]; then

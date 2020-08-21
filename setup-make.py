@@ -97,6 +97,9 @@ def clone_package(name, path):
             os.path.join(DIR, 'build-env'),
             os.path.join(config['lbenvPath'], 'bin/git-lb-clone-pkg'), name
         ],
+            stdout=None,
+            stderr=None,
+            stdin=None,
             cwd=path)
 
 
@@ -151,7 +154,7 @@ def inv_dependencies(project_deps):
 
 def topo_sorted(deps):
     def walk(projects, seen):
-        return sum((seen.add(p) or (walk(deps[p], seen) + [p])
+        return sum((seen.add(p) or (walk(deps.get(p, []), seen) + [p])
                     for p in projects if p not in seen), [])
 
     return walk(deps, set())
@@ -172,20 +175,23 @@ def main(targets):
         if m:
             projects.append(m.group('project'))
     if 'build' in targets or 'all' in targets or not targets:
-        projects += config['defaultProjects']
-
-    repos = list_repos()
-    dp_repos = list_repos(DATA_PACKAGE_DIR)
-
-    # cloned default projects
-    default_projects = [p for p in config['defaultProjects'] if p in repos]
+        build_target_deps = config['defaultProjects']
+        projects += build_target_deps
+    else:
+        build_target_deps = []
 
     try:
         data_packages = config['dataPackages']
         project_deps = checkout(projects, data_packages)
+
+        # After we cloned the minimum necessary, check for other repos
+        repos = list_repos()
+        dp_repos = list_repos(DATA_PACKAGE_DIR)
+
         # Find cloned projects that we won't build but that may be
         # dependent on those to build.
         project_deps = find_project_deps(repos, project_deps)
+
         # Order repos according to dependencies
         repos = topo_sorted(project_deps) + sorted(
             set(repos).difference(project_deps))
@@ -205,9 +211,10 @@ def main(targets):
         makefile_config += [
             "CONTRIB_PATH := " + config["contribPath"],
             "REPOS := " + " ".join(repos + dp_repos),
-            "build: " + " ".join(default_projects),
+            "build: " + " ".join(build_target_deps),
         ]
     except Exception:
+        project_deps = {}
         traceback.print_exc()
         makefile_config = ['$(error Error occurred in checkout)']
 
