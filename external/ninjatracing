@@ -12,7 +12,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Converts one (or several) .ninja_log files into chrome's about:tracing format.
 
 If clang -ftime-trace .json files are found adjacent to generated files they
@@ -34,6 +33,7 @@ import sys
 class Target:
     """Represents a single line read for a .ninja_log file. Start and end times
     are milliseconds."""
+
     def __init__(self, start, end):
         self.start = int(start)
         self.end = int(end)
@@ -55,7 +55,8 @@ def read_targets(log, show_all):
     targets = {}
     last_end_seen = 0
     for line in log:
-        start, end, _, name, cmdhash = line.strip().split('\t') # Ignore restat.
+        start, end, _, name, cmdhash = line.strip().split(
+            '\t')  # Ignore restat.
         if not show_all and int(end) < last_end_seen:
             # An earlier time stamp means that this step is the first in a new
             # build, possibly an incremental build. Throw away the previous data
@@ -68,8 +69,10 @@ def read_targets(log, show_all):
 
 class Threads:
     """Tries to reconstruct the parallelism from a .ninja_log"""
+
     def __init__(self):
-        self.workers = []  # Maps thread id to time that thread is occupied for.
+        self.workers = [
+        ]  # Maps thread id to time that thread is occupied for.
 
     def alloc(self, target):
         """Places target in an available thread, or adds a new thread."""
@@ -88,9 +91,9 @@ def read_events(trace, options):
     def include_event(event, options):
         """Only include events if they are complete events, are longer than
         granularity, and are not totals."""
-        return ((event['ph'] == 'X') and
-                (event['dur'] >= options['granularity']) and
-                (not event['name'].startswith('Total')))
+        return ((event['ph'] == 'X')
+                and (event['dur'] >= options['granularity'])
+                and (not event['name'].startswith('Total')))
 
     return [x for x in trace_data['traceEvents'] if include_event(x, options)]
 
@@ -139,44 +142,60 @@ def log_to_dicts(log, pid, options):
         tid = threads.alloc(target)
 
         yield {
-            'name': '%0s' % ', '.join(target.targets), 'cat': 'targets',
-            'ph': 'X', 'ts': (target.start * 1000),
+            'name': '%0s' % ', '.join(target.targets),
+            'cat': 'targets',
+            'ph': 'X',
+            'ts': (target.start * 1000),
             'dur': ((target.end - target.start) * 1000),
-            'pid': pid, 'tid': tid, 'args': {},
-            }
+            'pid': pid,
+            'tid': tid,
+            'args': {},
+        }
         if options.get('embed_time_trace', False):
             # Add time-trace information into the ninja trace.
             try:
                 ninja_log_dir = os.path.dirname(log.name)
             except AttributeError:
                 continue
-            for time_trace in embed_time_trace(ninja_log_dir, target, pid,
-                                               tid, options):
+            for time_trace in embed_time_trace(ninja_log_dir, target, pid, tid,
+                                               options):
                 yield time_trace
 
 
 def main(argv):
     usage = __doc__
     parser = optparse.OptionParser(usage)
-    parser.add_option('-a', '--showall', action='store_true', dest='showall',
-                      default=False,
-                      help='report on last build step for all outputs. Default '
-                      'is to report just on the last (possibly incremental) '
-                      'build')
-    parser.add_option('-g', '--granularity', type='int', default=50000,
-                      dest='granularity',
-                      help='minimum length time-trace event to embed in '
-                      'microseconds. Default: %default')
-    parser.add_option('-e', '--embed-time-trace', action='store_true',
-                      default=False, dest='embed_time_trace',
-                      help='embed clang -ftime-trace json file found adjacent '
-                      'to a target file')
+    parser.add_option(
+        '-a',
+        '--showall',
+        action='store_true',
+        dest='showall',
+        default=False,
+        help='report on last build step for all outputs. Default '
+        'is to report just on the last (possibly incremental) '
+        'build')
+    parser.add_option(
+        '-g',
+        '--granularity',
+        type='int',
+        default=50000,
+        dest='granularity',
+        help='minimum length time-trace event to embed in '
+        'microseconds. Default: %default')
+    parser.add_option(
+        '-e',
+        '--embed-time-trace',
+        action='store_true',
+        default=False,
+        dest='embed_time_trace',
+        help='embed clang -ftime-trace json file found adjacent '
+        'to a target file')
     (options, args) = parser.parse_args()
 
     if len(args) == 0:
-      print('Must specify at least one .ninja_log file')
-      parser.print_help()
-      return 1
+        print('Must specify at least one .ninja_log file')
+        parser.print_help()
+        return 1
 
     entries = []
     for pid, log_file in enumerate(args):
