@@ -110,7 +110,7 @@ configuration files (`stack.code-workspace` and `Project/.vscode/settings.json`)
 The file is updated every time you run `make`.
 Currently, only intellisense for C++ and Python are supported and there are no
 other integrations such as building and testing from within VS Code.
-See [doc/vscode.md](/../tree/vscode/doc/vscode.md) for more information.
+See [doc/vscode.md](doc/vscode.md) for more information.
 
 ## Configuration settings
 
