@@ -92,6 +92,11 @@ make fast/Moore/test ARGS='-R hlt1_example$'
 make fast/Moore/test ARGS='-R hlt1_example -V'
 ```
 
+Note that changes in python sources are immediatelly "applied" in downstream projects
+(unlike a "manual" stack setup with `lb-project-init`). For example, after changing a
+`.py` in LHCb, you can do `Moore/run` or `make Moore/test ...` without having to
+`make Moore` first.
+
 ## Makefile instructions
 
 The `Makefile` provided features the following targets.
