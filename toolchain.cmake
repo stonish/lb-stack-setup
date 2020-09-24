@@ -53,7 +53,25 @@ endif()
 
 # Delegate to a toolchain.cmake in the project or the default
 find_file(lbdevtools_toolchain NAMES toolchain.cmake PATH_SUFFIXES ..)
-if(EXISTS ${CMAKE_SOURCE_DIR}/toolchain.cmake)
+
+set(_project "${CMAKE_PROJECT_NAME}")
+# gaudi_project() calls project() and sets the name, but this happens after the
+# the toolchain (too late), so instead use a heuristic (last component of path):
+if (_project STREQUAL "Project")
+  get_filename_component(_project ${CMAKE_SOURCE_DIR} NAME)
+endif()
+
+# FIXME Gauss' toolchain.cmake does not work with this setup
+# so copy over the necessary bits
+if(_project STREQUAL "Gauss")
+  set(LCG_LAYER LHCB_4 CACHE STRING "Specific set of version to use")
+  option(LCG_USE_GENERATORS "enable/disable use of LCG generators" ON)
+endif()
+
+if(EXISTS ${CMAKE_SOURCE_DIR}/toolchain.cmake
+   AND NOT _project STREQUAL "Geant4"  # FIXME Geant4's toolchain.cmake does not work with this setup
+   AND NOT _project STREQUAL "Gauss"  # FIXME Gauss' toolchain.cmake does not work with this setup
+   )
   message(STATUS "Delegating to project-specific toolchain at ${CMAKE_SOURCE_DIR}/toolchain.cmake")
   # in this case the project toolchain should delegate to the default
   include(${CMAKE_SOURCE_DIR}/toolchain.cmake)
