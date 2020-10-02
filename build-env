@@ -108,7 +108,7 @@ else
           ( "${DIR}/default-config.json" -nt "$cache" ) || \
           ( "${DIR}/native-env.sh" -nt "$cache" ) || \
           ( "${DIR}/build-env" -nt "$cache" ) ]]; then
-        if ! env -i "${args[@]}" bash "${DIR}/native-env.sh" "$lbenvPath"/bin/LbEnv.sh > "$cache"; then
+        if ! env -i "${args[@]}" bash "${DIR}/native-env.sh" "$lbenvPath" > "$cache"; then
             log ERROR "Check 'lbenvPath' configuration setting"
             rm -f "$cache"
             exit 1

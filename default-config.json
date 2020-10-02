@@ -29,7 +29,7 @@
 	"useDocker": false,
 	"useCcache": true,
 	"useDistcc": null,
-	"lbenvPath": "/cvmfs/lhcb.cern.ch/lib/var/lib/LbEnv/879/stable/x86_64-centos7",
+	"lbenvPath": "/cvmfs/lhcb.cern.ch/lib/var/lib/LbEnv/981/stable/linux-64",
 	"projectPath": "..",
 	"contribPath": "../contrib",
 	"ccachePath": "../.ccache",
