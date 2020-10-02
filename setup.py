@@ -45,7 +45,7 @@ def is_stack_dir(path):
     path = realpath(path)
     utils = join(path, 'utils')
     return (os.path.isdir(join(utils, '.git'))
-            and realpath(join(path, 'Makefile')) == join(utils, 'Makefile'))
+            and os.path.isfile(join(utils, 'Makefile')))
 
 
 def assert_cvmfs():
@@ -156,8 +156,6 @@ if __name__ == '__main__':
         git('clone', args.repo, utils_dir)
         if args.branch:
             git('checkout', args.branch)
-        # the target needs to be relative
-        os.symlink(join('utils', 'Makefile'), join(stack_dir, 'Makefile'))
     else:
         remote_ref = args.branch or 'HEAD'
         logging.info(
@@ -170,6 +168,13 @@ if __name__ == '__main__':
             logging.error(
                 'Could not "git pull" cleanly. Check for uncommitted changes.')
             sys.exit(1)
+
+    # the target needs to be relative
+    try:
+        os.remove(join(stack_dir, 'Makefile'))
+    except FileNotFoundError:
+        pass
+    os.symlink(join('utils', 'Makefile'), join(stack_dir, 'Makefile'))
 
     sys.path.insert(0, utils_dir)
     from config import read_config, write_config, CONFIG
@@ -185,10 +190,14 @@ if __name__ == '__main__':
         new_overrides['useDocker'] = use_docker
         # Backup configuration
         config_backup = CONFIG + '.' + datetime.now().isoformat() + '.bak'
-        shutil.copy2(CONFIG, config_backup)
-        logging.info('Backed up `{}` to `{}`.'.format(CONFIG, config_backup))
-        # Merge new and existing configuration
-        logging.info('Updating existing configuration...')
+        try:
+            shutil.copy2(CONFIG, config_backup)
+            logging.info('Backed up `{}` to `{}`.'.format(
+                CONFIG, config_backup))
+            # Merge new and existing configuration
+            logging.info('Updating existing configuration...')
+        except FileNotFoundError:
+            pass  # config.json does not exist, just create it silently
         conflicts = False
         for key, new_value in new_overrides.items():
             if overrides.get(key, new_value) != new_value:
