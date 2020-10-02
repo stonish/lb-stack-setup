@@ -64,6 +64,12 @@ if(NOT CMAKE_SOURCE_DIR MATCHES "CMakeTmp")
     # in this case the project toolchain should delegate to the default
     include(${CMAKE_SOURCE_DIR}/toolchain.cmake)
   else()
+    execute_process(
+      COMMAND python -c "import LbDevTools; print(LbDevTools.DATA_DIR + '/toolchain.cmake')"
+      OUTPUT_VARIABLE _lbenv_toolchain
+      OUTPUT_STRIP_TRAILING_WHITESPACE)
+    message(FATAL_ERROR AAAAAAAAAAAAAAAA ${_lbenv_toolchain})
+    # include(${_lbenv_toolchain})
     include(${_project_path}/Gaudi/cmake/GaudiDefaultToolchain.cmake)
   endif()
 
