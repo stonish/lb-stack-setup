@@ -20,6 +20,13 @@ for specifis, but in short you need to run
 sudo yum install HEP_OSlibs
 ```
 
+### CentOS 8 (experimental)
+
+Since HEP_OSlibs is missing as of now, install some of it manually.
+```sh
+sudo dnf install openssl-devel openssl-libs # ...
+```
+
 ### Other than CentOS 7 (e.g. a laptop)
 
 You need docker to run a CentOS 7 container.
