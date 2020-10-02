@@ -29,13 +29,6 @@ if(NOT CMAKE_SOURCE_DIR MATCHES "CMakeTmp")
   # Note that the cmakePrefixPath settings typically contains the
   # $CMAKE_PREFIX_PATH that comes from LbEnv.
 
-  # Make sure cmake will use the local install of ninja
-  execute_process(
-    COMMAND ${CMAKE_CURRENT_LIST_DIR}/config.py contribPath
-    OUTPUT_VARIABLE _contrib_path
-    OUTPUT_STRIP_TRAILING_WHITESPACE)
-  set(CMAKE_MAKE_PROGRAM ${_contrib_path}/bin/ninja CACHE FILEPATH "")
-
   set(CMAKE_USE_CCACHE ON)  # use compile.sh
   set(GAUDI_DIAGNOSTICS_COLOR ON)  # nicer errors
 
