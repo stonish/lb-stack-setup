@@ -18,10 +18,10 @@ CMD = true
 for-each:
 	@for p in $(REPOS) ; do if [[ -d $$p && ! " $(EXCLUDE) " == *" $$p "*  ]] ; then ( cd $$p && pwd && $(CMD) ) ; fi ; done
 
-CONTRIB_DEPS := $(CONTRIB_PATH)/bin/.cmake_timestamp $(CONTRIB_PATH)/bin/ninja $(CONTRIB_PATH)/bin/ccache $(CONTRIB_PATH)/bin/distcc
+CONTRIB_DEPS += $(CONTRIB_PATH)/bin/ccache $(CONTRIB_PATH)/bin/distcc
 CONTRIB_DEPS += $(CONTRIB_PATH)/bin/ninjatracing $(CONTRIB_PATH)/bin/post_build_ninja_summary.py
 contrib: $(CONTRIB_DEPS)
-$(CONTRIB_PATH)/bin/% $(CONTRIB_PATH)/bin/.%_timestamp: $(DIR)/install-%.sh
+$(CONTRIB_PATH)/bin/%: $(DIR)/install-%.sh
 	@"${DIR}/build-env" bash "$<"
 $(CONTRIB_PATH)/bin/ninjatracing $(CONTRIB_PATH)/bin/post_build_ninja_summary.py: $(DIR)/install-tools.sh
 	@"${DIR}/build-env" bash "$<"
@@ -68,7 +68,12 @@ fast/$(1)-clean:
 endef
 $(foreach proj,$(PROJECTS),$(eval $(call PROJECT_settings,$(proj))))
 
-.PHONY: $(ALL_TARGETS)
+# stack.code-workspace is always remade by setup-make.py, so this is just
+# to avoid the message "Nothing to be done for `stack.code-workspace'"
+stack.code-workspace:
+	@ # noop command
+
+.PHONY: $(ALL_TARGETS) stack.code-workspace
 
 # ignore -j flag and run serially
 .NOTPARALLEL:

@@ -129,6 +129,8 @@ def write_workspace_settings(repos,
                       'Maybe Gaudi is not yet (fully) built.')
 
     with open(output_path, 'w') as f:
+        f.write("// DO NOT EDIT: this file is auto-generated from {}\n".format(
+            template_path))
         json.dump(settings, f, indent=4, sort_keys=True)
 
 
