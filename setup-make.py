@@ -26,6 +26,15 @@ def mkdir_p(path):
     pathlib.Path(path).mkdir(parents=True, exist_ok=True)
 
 
+def symlink(src, dst):
+    """Create a symlink only if not already existing and equivalent."""
+    if os.path.realpath(dst) == src:
+        return
+    if os.path.isfile(dst):
+        os.remove(dst)
+    os.symlink(src, dst)
+
+
 def git_url_branch(project):
     group = config['gitGroup']
     branch = config['gitBranch']
@@ -179,6 +188,14 @@ def main(targets):
         projects += build_target_deps
     else:
         build_target_deps = []
+
+    # Install symlinks to external software such that CMake doesn't cache them
+    LBENV_BINARIES = ['cmake', 'ctest', 'ninja']
+    mkdir_p(os.path.join(config['contribPath'], 'bin'))
+    for fn in LBENV_BINARIES:
+        symlink(
+            os.path.join(config['lbenvPath'], 'bin', fn),
+            os.path.join(config['contribPath'], 'bin', fn))
 
     try:
         data_packages = config['dataPackages']
