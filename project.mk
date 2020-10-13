@@ -90,9 +90,7 @@ endif
 
 ifneq ($(NINJA),)
   ifeq ($(USE_MAKE),)
-    ifeq ($(shell grep "FORTRAN\|NO_NINJA" CMakeLists.txt),)
-      USE_NINJA := 1
-    endif
+    USE_NINJA := 1
   endif
 endif
 
@@ -155,7 +153,6 @@ ifeq ($(VERBOSE),)
 # (emulate the default CMake install target)
 install: patch-python-ns
 	cd $(BUILDDIR) && $(CMAKE) -P cmake_install.cmake | grep -v "^-- Up-to-date:"
-  # added by RM
 	cp $(BUILDDIR)/config/$(PROJECT)-build.xenv $(INSTALLDIR)/$(PROJECT).xenv
 endif
 
