@@ -3,7 +3,7 @@
         "recommendations": [
             "eamodio.gitlens",
             "ms-python.python",
-            "ms-pyright.pyright",
+            "ms-python.vscode-pylance",
             "ms-vscode.cpptools",
             "ms-vsliveshare.vsliveshare",
             "twxs.cmake",
