@@ -3,6 +3,7 @@ import json
 import os
 import re
 import shutil
+import stat
 from collections import OrderedDict
 from utils import setup_logging
 
@@ -60,6 +61,24 @@ def create_clang_format(config, path='.clang-format'):
             'from LbDevTools import createClangFormat\n'
             'createClangFormat({!r})'.format(path)
         ])
+
+
+def create_python_tool_wrappers(config):
+    """Create environment agnostic wrappers for LbEnv tools.
+
+    The vscode-python extension executes yapf/flake8 inside the runtime
+    environment (defined by python.envFile). For us this is the LCG
+    python, which is incompatible with LbEnv. This simply produces
+    "env -i" wrappers of the LbEnv executables.
+
+    """
+    for name in ['flake8', 'yapf']:
+        src = os.path.join(config['lbenvPath'], 'bin', name)
+        dst = os.path.join(config['outputPath'], name)
+        with open(dst, 'w') as f:
+            f.write('#!/bin/sh\n')
+            f.write('env -i {} "$@"\n'.format(src))
+            os.chmod(f.fileno(), stat.S_IRWXU)
 
 
 def update_json(filename, update):
@@ -204,3 +223,4 @@ def write_vscode_settings(repos, dp_repos, project_deps, config):
     write_project_settings(repos, project_deps, config)
     write_data_package_settings(dp_repos)
     create_clang_format(config)
+    create_python_tool_wrappers(config)

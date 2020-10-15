@@ -55,16 +55,14 @@
         "files.trimTrailingWhitespace": true,
         "python.envFile": "{outputPath}/runtime-${workspaceFolderBasename}.env",
         "python.formatting.provider": "yapf",
-        // https://github.com/microsoft/vscode-python/issues/5567
-        // yapfPath should ideally be "${workspaceFolder:utils}/yapf"
-        "python.formatting.yapfPath": "{utilsPath}/yapf",
+        "python.formatting.yapfPath": "{outputPath}/yapf",
         "python.languageServer": "Pylance",
         "python.linting.enabled": true,
         "python.linting.flake8Args": [
             "--select=F"
         ],
         "python.linting.flake8Enabled": true,
-        "python.linting.flake8Path": "{utilsPath}/flake8",
+        "python.linting.flake8Path": "{outputPath}/flake8",
         "python.linting.pylintEnabled": false,
         "python.pythonPath": "<placeholder: build at least gaudi for intellisense to work>"
     }
