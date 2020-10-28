@@ -53,8 +53,8 @@ make Moore
 For example, building from Gaudi up until Moore takes 40 min on a mobile i5 CPU
 with 2 physical cores.
 
-> __Note:__ the first time you `make`, some recent (or patched) versions of
-> CMake, Ninja, ccache and distcc (plus a bunch of scripts) will be installed.
+> __Note:__ the first time you `make`, a recent (or patched) version of
+> distcc (plus a bunch of scripts) will be installed.
 > This should take less than 5 minutes. If needed redo this step with
 `rm -rf contrib; make contrib`
 

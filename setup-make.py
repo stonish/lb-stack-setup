@@ -190,7 +190,7 @@ def main(targets):
         build_target_deps = []
 
     # Install symlinks to external software such that CMake doesn't cache them
-    LBENV_BINARIES = ['cmake', 'ctest', 'ninja']
+    LBENV_BINARIES = ['cmake', 'ctest', 'ninja', 'ccache']
     mkdir_p(os.path.join(config['contribPath'], 'bin'))
     for fn in LBENV_BINARIES:
         symlink(
