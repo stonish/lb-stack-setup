@@ -231,6 +231,9 @@ def main(targets):
             "build: " + " ".join(build_target_deps),
         ]
     except Exception:
+        # Get repos in case the checkout fails
+        repos = list_repos()
+        dp_repos = list_repos(DATA_PACKAGE_DIR)
         project_deps = {}
         traceback.print_exc()
         makefile_config = ['$(error Error occurred in checkout)']
