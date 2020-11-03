@@ -263,6 +263,7 @@ compile_commands_dst="$OUTPUT/compile_commands-$PROJECT.json"
 runtime_env_src="$PROJECT/build.$BINARY_TAG/python.env"
 runtime_env_dst="$OUTPUT/runtime-$PROJECT.env"
 
+printenv | sort > "$OUTPUT/project.mk.env"
 make -f "$DIR/project.mk" -C "$PROJECT" "$@"
 # cd "$PROJECT/build.$BINARY_TAG" && ninja $NINJAFLAGS "$@" && cd -
 # TODO catch CTRL-C during make here and do the clean up, see
