@@ -69,12 +69,15 @@ if [ "$CHECK_KERBEROS" = true ]; then
     fi
 fi
 
-# CMAKE_PREFIX_PATH is handled in toolchain.cmake!
 vars=(
     "LCG_VERSION=$lcgVersion"
     "LBENV_CURRENT_WORKSPACE=$projectPath"
 )
 test -z ${MAKEFLAGS+x} || vars+=("MAKEFLAGS=${MAKEFLAGS}")
+# CMAKE_PREFIX_PATH is handled in make.sh!
+# If we set it here, LbEnv (native or Docker) would prepend the usual prefixes.
+# This limits how we can customise CMake, e.g. it is not possible to override
+# the LbDevTools toolchain.
 
 if [ "$USE_DOCKER" = true ]; then
     ( cd "${DIR}"; python3 -c 'import setup; setup.assert_cvmfs()' )

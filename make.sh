@@ -18,7 +18,7 @@ PROJECT="$1"
 shift
 
 # steering options
-eval $(config --sh outputPath contribPath ccachePath useCcache useDistcc)
+eval $(config --sh outputPath contribPath ccachePath useCcache useDistcc cmakePrefixPath)
 OUTPUT=$outputPath
 CONTRIB=$contribPath
 USE_CCACHE=$useCcache
@@ -236,6 +236,8 @@ compile_commands_dst="$OUTPUT/compile_commands-$PROJECT.json"
 runtime_env_src="$PROJECT/build.$BINARY_TAG/python.env"
 runtime_env_dst="$OUTPUT/runtime-$PROJECT.env"
 
+# Check build-env to see why we set CMAKE_PREFIX_PATH here.
+export CMAKE_PREFIX_PATH="$cmakePrefixPath"
 printenv | sort > "$OUTPUT/project.mk.env"
 make -f "$DIR/project.mk" -C "$PROJECT" "$@"
 # cd "$PROJECT/build.$BINARY_TAG" && ninja $NINJAFLAGS "$@" && cd -

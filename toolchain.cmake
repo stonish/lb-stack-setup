@@ -38,18 +38,6 @@ if(NOT DEFINED _LBSTACK_PROCESSED)
   # this check is needed because the toolchain is called when checking the
   # compiler (without the proper cache)
   if(NOT CMAKE_SOURCE_DIR MATCHES "CMakeTmp")
-    # Set CMAKE_PREFIX_PATH environment variable
-    execute_process(
-      COMMAND ${CMAKE_CURRENT_LIST_DIR}/config.py cmakePrefixPath
-      OUTPUT_VARIABLE _cmake_prefix_path_colons
-      OUTPUT_STRIP_TRAILING_WHITESPACE)
-
-    # Confusingly, Gaudi uses the environment variable CMAKE_PREFIX_PATH
-    # to populate the cmake variable CMAKE_PREFIX_PATH, so we play along.
-    set(ENV{CMAKE_PREFIX_PATH} "${_cmake_prefix_path_colons}")
-    # Note that the cmakePrefixPath settings typically contains the
-    # $CMAKE_PREFIX_PATH that comes from LbEnv.
-
     # Limit parallelism of non-distributable jobs
     execute_process(
       COMMAND ${CMAKE_CURRENT_LIST_DIR}/config.py localPoolDepth
