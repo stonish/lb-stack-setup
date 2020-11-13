@@ -85,9 +85,10 @@ setup_ccache() {
 
 pump_startup() {
   # start the include server manually (instead of pump --startup) for more control
-  # TODO hardcoded python3
-  local PYTHON=/cvmfs/sft.cern.ch/lcg/releases/LCG_96bpython3/Python/3.6.5/x86_64-centos7-gcc9-opt/bin/python
-  local include_server_install="$CONTRIB/lib/python3.6/site-packages/include_server"
+  local include_server_install=$(python -c "
+import sysconfig
+print(sysconfig.get_path('purelib', vars={'base': '$CONTRIB'}))
+  ")/include_server
   local pid_file="$OUTPUT/distcc-pump.pid"
 
   # kill stray include servers (as pump relies on no changes during build)
@@ -113,8 +114,9 @@ pump_startup() {
   # TODO add a separator line to the stdout/stderr or rotate logs
   # Start the include server directly, avoiding the `pump` wrapper.
   # This allows more control, e.g. to chose the version of python
+  # (not necessarily the one used to build )
   local cmd="PYTHONPATH='$PYTHONPATH:$include_server_install' \
-    $PYTHON '$include_server_install/include_server.py' \
+    python '$include_server_install/include_server.py' \
       --port '$INCLUDE_SERVER_PORT' --pid_file '$pid_file' \
       $debug_args"
   if [ "$DEBUG_DISTCC" != true ]; then

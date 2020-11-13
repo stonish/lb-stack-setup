@@ -72,8 +72,7 @@ fi
 if [ "$USE_DOCKER" = true ]; then
     ( cd "${DIR}"; python3 -c 'import setup; setup.assert_cvmfs()' )
     args=(
-        --docker-tag v4.57.py3
-        --docker-prefix=gitlab-registry.cern.ch/rmatev/lb-stack-setup
+        --docker-tag v4.57
         --quiet-env --lbenv -c ${BINARY_TAG}
         -C "${DIR}/.." --use-absolute-path
         --workdir "$PWD"
@@ -96,10 +95,6 @@ else
     test -z ${TMPDIR+x} || args+=("TMPDIR=${TMPDIR}")
     test -z ${XDG_RUNTIME_DIR+x} || args+=("XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR}")
     test -z ${MAKEFLAGS+x} || args+=("MAKEFLAGS=${MAKEFLAGS}")
-    PYTHON_EXECUTABLE=$(command -v python3)
-    if [ $PYTHON_EXECUTABLE != "/usr/bin/python3" ]; then
-        args+=("PATH=/usr/local/bin:/usr/bin:${PYTHON_EXECUTABLE%/*}")
-    fi
 
     args_hash=$(cksum <<<"${args[@]}")
     cache="${OUTPUT}/lbenv-cache-${args_hash// /_}.sh"

@@ -1,6 +1,0 @@
-#!/bin/bash
-
-# vscode-python executes yapf inside the Project.env (i.e. build) environment,
-# which does not work. Cleaning the environment beforehand does the job:
-
-env -i /cvmfs/lhcb.cern.ch/lib/var/lib/LbEnv/stable/x86_64-centos7/bin/flake8 "$@"

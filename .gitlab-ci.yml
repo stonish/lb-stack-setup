@@ -34,6 +34,7 @@ contrib:
   script:
     - cd stack
     - make contrib
+    - bash utils/ci-utils/test-contrib.sh
   artifacts:
     paths:
       - stack/contrib/

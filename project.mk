@@ -144,8 +144,9 @@ endif
 # This wrapping around the test target is used to ensure the generation of
 # the XML output from ctest.
 test: $(BUILDDIR)/$(BUILD_CONF_FILE)
-	$(RM) -r $(BUILDDIR)/Testing $(BUILDDIR)/html
+	$(RM) -r $(BUILDDIR)/Testing
 	-cd $(BUILDDIR) && $(CTEST) -T test $(value ARGS)
+	$(RM) -r $(BUILDDIR)/html
 	+$(BUILD_CMD) HTMLSummary
 
 ifeq ($(VERBOSE),)

@@ -20,14 +20,7 @@ curl https://gitlab.cern.ch/rmatev/lb-stack-setup/raw/master/setup.py | python3 
 ```
 
 > **Note:** If your system lacks Python 3 (`/usr/bin/python3`), ask for it to
-> be installed. As a temporary workaround you can use the following Python 3
-> installation:
->
-> ```sh
-> export PATH=$PATH:/cvmfs/lhcb.cern.ch/lib/var/lib/LbEnv/unstable/linux-64/bin
-> ```
->
-> You will need to do this every time you work with the setup.
+> be installed, or simply source the LHCb environment.
 
 The script will first check that all prerequisites are met. If it fails, check
 [doc/prerequisites.md](doc/prerequisites.md) for more information.
@@ -60,8 +53,8 @@ make Moore
 For example, building from Gaudi up until Moore takes 40 min on a mobile i5 CPU
 with 2 physical cores.
 
-> __Note:__ the first time you `make`, some recent (or patched) versions of
-> CMake, Ninja, ccache and distcc (plus a bunch of scripts) will be installed.
+> __Note:__ the first time you `make`, a recent (or patched) version of
+> distcc (plus a bunch of scripts) will be installed.
 > This should take less than 5 minutes. If needed redo this step with
 `rm -rf contrib; make contrib`
 
