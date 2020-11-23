@@ -269,7 +269,7 @@ def SummarizeEntries(entries, extra_step_types):
     assert (len(running_tasks) == 0)
 
     # Warn if the sum of weighted times is off by more than half a second.
-    if abs(length - weighted_total) > 500:
+    if abs(length - weighted_total) > 0.5:
         print('Discrepancy!!! Length = %.3f, weighted total = %.3f' %
               (length, weighted_total))
 
