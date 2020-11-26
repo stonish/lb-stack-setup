@@ -50,6 +50,8 @@ if(NOT DEFINED _LBSTACK_PROCESSED)
   set(_LBSTACK_PROCESSED TRUE)
 endif()
 
+# FIXME Temporary workaround until LbDevTools is fixed
+set(Python_FIND_STRATEGY LOCATION)  # Trust search hints to find the wanted Python
 
 # Delegate to a toolchain.cmake in the project or the default
 find_file(lbdevtools_toolchain NAMES toolchain.cmake PATH_SUFFIXES ..)
