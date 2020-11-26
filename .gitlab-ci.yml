@@ -4,7 +4,10 @@ stages:
   - make
 
 # image should match what is used for lb-docker-run (see build-env)
-image: gitlab-registry.cern.ch/rmatev/lb-stack-setup/centos7-build:v4.57.py3
+image: gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:v4.57
+
+variables:
+  LHCB_ENV_MODE: "lbenv-stable"  # Use the default LbEnv environment from the lbdocker container
 
 # setup as readme:
 #   stage: setup
@@ -17,28 +20,14 @@ setup:
     - cvmfs
   script:
     - git --version
-    - python3 setup.py --debug --repo $CI_REPOSITORY_URL --branch $CI_COMMIT_SHA stack
+    - python3 setup.py --debug --repo . --branch $CI_COMMIT_SHA stack
     - cd stack
     - utils/config.py useDistcc false
-    # python3 setup.py --repo . [--branch $CI_COMMIT_SHA] stack
-  artifacts:
-    paths:
-      - stack/
-
-contrib:
-  stage: contrib
-  tags:
-    - cvmfs
-  variables:
-    GIT_STRATEGY: none
-  script:
-    - cd stack
     - make contrib
     - bash utils/ci-utils/test-contrib.sh
   artifacts:
     paths:
-      - stack/contrib/
-    expire_in: 1 week
+      - stack/
 
 make-old-cmake:
   stage: make
