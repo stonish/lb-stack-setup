@@ -59,7 +59,7 @@
         "python.languageServer": "Pylance",
         "python.linting.enabled": true,
         "python.linting.flake8Args": [
-            "--select=F"
+            "--select=F,E71,E9,W1,W6"
         ],
         "python.linting.flake8Enabled": true,
         "python.linting.flake8Path": "{outputPath}/flake8",
