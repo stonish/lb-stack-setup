@@ -64,6 +64,7 @@
         "python.linting.flake8Enabled": true,
         "python.linting.flake8Path": "{outputPath}/flake8",
         "python.linting.pylintEnabled": false,
-        "python.pythonPath": "<placeholder: build at least gaudi for intellisense to work>"
+        "python.pythonPath": "<placeholder: build at least gaudi for intellisense to work>",
+        "restructuredtext.languageServer.disabled": true
     }
 }
