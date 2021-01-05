@@ -5,6 +5,7 @@ KEEP_SRC=${KEEP_SRC:-false}
 if [ "$KEEP_SRC" = true ]; then
     SRC_BASE=${SRC_BASE:-$CONTRIB/src}
 else
+    mkdir -p $(dirname $(mktemp -u))
     SRC_BASE=${SRC_BASE:-$(mktemp --tmpdir -d lb-stack-setup-install.XXXXX)}
 fi
 
