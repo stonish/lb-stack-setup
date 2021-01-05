@@ -194,7 +194,8 @@ Alternatively, if you like to persist the flags you pass per project, set the ap
 configuration setting, e.g.
 
 ```sh
-utils/config.py cmakeFlags.Allen '-DSTANDALONE=OFF -DSEQUENCE=velo'
+utils/config.py -- cmakeFlags.Allen '-DSTANDALONE=OFF -DSEQUENCE=velo'
+utils/config.py -- cmakeFlags.Moore '-DLOKI_BUILD_FUNCTOR_CACHE=OFF'
 ```
 
 or use `cmakeFlags.default` to affect all projects.
