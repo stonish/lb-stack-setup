@@ -55,8 +55,8 @@ def git_url_branch(project):
 def cmake_name(project):
     with open(os.path.join(project, 'CMakeLists.txt')) as f:
         cmake = f.read()
-    m = re.search(r'gaudi_project\(\s*(\w+)\s', cmake)
-    return m.group(1)
+    m = re.search(r'\s+(gaudi_)?project\(\s*(?P<name>\w+)\s', cmake)
+    return m.group('name')
 
 
 def cmake_deps(project):
@@ -65,9 +65,11 @@ def cmake_deps(project):
         with open(cmake_path) as f:
             cmake = f.read()
     except IOError:
-        raise NotGaudiProjectError('{} is not a Gaudi project'.format(project))
+        raise NotGaudiProjectError('{} is not a CMake project'.format(project))
     m = re.search(r'gaudi_project\(([^\)]+)\)', cmake)
     if not m:
+        if project in ['Gaudi', 'Detector']:
+            return []
         raise NotGaudiProjectError('{} is not a Gaudi project'.format(project))
     args = m.group(1).split()
     try:

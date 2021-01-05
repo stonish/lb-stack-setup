@@ -29,6 +29,31 @@ setup:
     paths:
       - stack/
 
+make:
+  stage: make
+  tags:
+    - cvmfs
+  variables:
+    GIT_STRATEGY: none
+    # make sure we don't use BINARY_TAG or CMTCONFIG
+    PLATFORM: x86_64-centos7-gcc9-opt
+  script:
+    - cd stack
+    - utils/config.py binaryTag $PLATFORM
+    - utils/config.py
+    - make Gaudi/configure
+    - bash utils/ci-utils/test-cmake.sh Gaudi/build.$PLATFORM
+    - make Gaudi
+    - make Gaudi/configure  # test a reconfigure
+    - bash utils/ci-utils/test-cmake.sh Gaudi/build.$PLATFORM
+    # TODO test Detector when we switch to master
+    - make LHCb/configure
+    - bash utils/ci-utils/test-cmake.sh LHCb/build.$PLATFORM
+  cache:
+    key: "$CI_JOB_NAME"
+    paths:
+      - stack/.ccache/
+
 make-old-cmake:
   stage: make
   tags:

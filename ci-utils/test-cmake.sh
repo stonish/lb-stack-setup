@@ -22,6 +22,12 @@ then
     error 'CMake build type is not Release'
 fi
 
+if ! cmake -LA -N $build | \
+     grep '^CMAKE_CXX_COMPILER_LAUNCHER:' | grep "utils/compile.sh"
+then
+    error 'Compiler launcher is not compile.sh'
+fi
+
 if ! grep 'command = .*utils/compile.sh .*g++' $rules_ninja | sort -u
 then
     error 'Compiler launcher is not compile.sh'
