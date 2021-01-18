@@ -299,20 +299,29 @@ reproduce the problem.
 
 ## Known issues
 
-- We don't know how to run over GRID files
 - You MUST run the top-level `make` from the directory where it resides.
 - Need to be able to run docker without sudo.
-- CMake emits a bunch of warnings.
+- CMake emits a bunch of warnings (can be ignored)
+
     ```log
       No project() command is present.  The top-level CMakeLists.txt file must
       contain a literal, direct call to the project() command.  Add a line of
       code such as
     ```
+
 - distcc is not happy about some of our generated files (can be ignored)
+
     ```log
     distcc[2541] (dcc_talk_to_include_server) Warning: include server gave up analyzing
     distcc[2541] (dcc_build_somewhere) Warning: failed to get includes from include server, preprocessing locally
     ```
+
+- Exception from xenv (LbEnv/1020): this is a race condition when creating the xenvc cache, just retry the build.
+
+    ```log
+    _pickle.UnpicklingError: pickle data was truncated
+    ```
+
 - Manual initial setup can be improved with e.g. cookiecutter.
 - `lb-docker-run` should be upstreamed and removed from this repo.
 - Logging is not uniform, and worse not documented
