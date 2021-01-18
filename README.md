@@ -266,6 +266,23 @@ which will use the `HEAD` (i.e. the currently checked out branch) of your local
 repo to create a new stack setup at the given path.
 Note that uncommitted changes will not be in the new clone.
 
+### Use custom toolchains (LbDevTools and lcg-toolchains)
+
+If you need to debug the toolchain, or use a custom version, you can do so by
+cloning LbDevTools and prepending the path to the cmake directory to `cmakePrefixPath`:
+
+```sh
+git clone ssh://git@gitlab.cern.ch:7999/lhcb-core/LbDevTools.git
+utils/config.py cmakePrefixPath "$(pwd)/LbDevTools/LbDevTools/data/cmake:\$CMAKE_PREFIX_PATH"
+```
+
+To use a local copy of the new-style CMake toolchains (currently only for Gaudi),
+simply clone the repository in the stack directory:
+
+```sh
+git clone ssh://git@gitlab.cern.ch:7999/lhcb-core/lcg-toolchains.git
+```
+
 ### Migrate from another stack setup
 
 - Follow the [Get started](#get-started) instructions and stop before compiling.
