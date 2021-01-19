@@ -200,6 +200,16 @@ utils/config.py -- cmakeFlags.Moore '-DLOKI_BUILD_FUNCTOR_CACHE=OFF'
 
 or use `cmakeFlags.default` to affect all projects.
 
+### Use DD4hep and Detector
+
+To use DD4hep and the new [Detector](https://gitlab.cern.ch/lhcb/Detector) project,
+checkout the `master` branch of Detector and pass `USE_DD4HEP=ON` to CMake
+
+```sh
+git -C Detector switch master
+utils/config.py -- cmakeFlags.default '-DUSE_DD4HEP=ON'
+```
+
 ### Update the setup
 
 In case there is a fix or an update to the setup, just run `setup.py`
