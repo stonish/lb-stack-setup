@@ -4,7 +4,10 @@ stages:
   - make
 
 # image should match what is used for lb-docker-run (see build-env)
-image: gitlab-registry.cern.ch/rmatev/lb-stack-setup/centos7-build:v4.57.py3
+image: gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:v4.57
+
+variables:
+  LHCB_ENV_MODE: "lbenv-stable"  # Use the default LbEnv environment from the lbdocker container
 
 # setup as readme:
 #   stage: setup
@@ -17,30 +20,49 @@ setup:
     - cvmfs
   script:
     - git --version
-    - python3 setup.py --debug --repo $CI_REPOSITORY_URL --branch $CI_COMMIT_SHA stack
+    - python3 setup.py --debug --repo . --branch $CI_COMMIT_SHA stack
     - cd stack
     - utils/config.py useDistcc false
-    # python3 setup.py --repo . [--branch $CI_COMMIT_SHA] stack
-  artifacts:
-    paths:
-      - stack/
-
-contrib:
-  stage: contrib
-  tags:
-    - cvmfs
-  variables:
-    GIT_STRATEGY: none
-  script:
-    - cd stack
     - make contrib
     - bash utils/ci-utils/test-contrib.sh
   artifacts:
     paths:
-      - stack/contrib/
-    expire_in: 1 week
+      - stack/
 
-make:
+.make:
+  stage: make
+  tags:
+    - cvmfs
+  variables:
+    GIT_STRATEGY: none
+    # make sure we don't use BINARY_TAG or CMTCONFIG
+    PLATFORM: x86_64-centos7-gcc9-opt
+  script:
+    - cd stack
+    - utils/config.py binaryTag $PLATFORM
+    - utils/config.py
+    - make Gaudi/configure
+    - bash utils/ci-utils/test-cmake.sh Gaudi/build.$PLATFORM
+    - make Gaudi
+    - make Gaudi/configure  # test a reconfigure
+    - bash utils/ci-utils/test-cmake.sh Gaudi/build.$PLATFORM
+    # TODO test Detector when we switch to master
+    - make LHCb/configure
+    - bash utils/ci-utils/test-cmake.sh LHCb/build.$PLATFORM
+  cache:
+    key: "$CI_JOB_NAME"
+    paths:
+      - stack/.ccache/
+
+make:x86_64-centos7-gcc9-opt:
+  extends: .make
+
+make:x86_64-centos7-gcc9+py3-opt:
+  extends: .make
+  variables:
+    PLATFORM: x86_64-centos7-gcc9+py3-opt
+
+make-old-cmake:
   stage: make
   tags:
     - cvmfs
@@ -48,7 +70,16 @@ make:
     GIT_STRATEGY: none
   script:
     - cd stack
+    - utils/config.py gitBranch.Gaudi v34r1
+    - utils/config.py gitBranch.Detector v0-patches
+    - make Gaudi/configure
+    - bash utils/ci-utils/test-cmake.sh Gaudi/build.$(utils/config.py binaryTag)
     - make Gaudi
+    - make Gaudi/configure  # test a reconfigure
+    - bash utils/ci-utils/test-cmake.sh Gaudi/build.$(utils/config.py binaryTag)
+    # Detector/v0-patches is a dummy, so no point in testing it
+    - make LHCb/configure
+    - bash utils/ci-utils/test-cmake.sh LHCb/build.$(utils/config.py binaryTag)
   cache:
     key: "$CI_JOB_NAME"
     paths:

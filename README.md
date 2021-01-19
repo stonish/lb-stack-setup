@@ -194,10 +194,21 @@ Alternatively, if you like to persist the flags you pass per project, set the ap
 configuration setting, e.g.
 
 ```sh
-utils/config.py cmakeFlags.Allen '-DSTANDALONE=OFF -DSEQUENCE=velo'
+utils/config.py -- cmakeFlags.Allen '-DSTANDALONE=OFF -DSEQUENCE=velo'
+utils/config.py -- cmakeFlags.Moore '-DLOKI_BUILD_FUNCTOR_CACHE=OFF'
 ```
 
 or use `cmakeFlags.default` to affect all projects.
+
+### Use DD4hep and Detector
+
+To use DD4hep and the new [Detector](https://gitlab.cern.ch/lhcb/Detector) project,
+checkout the `master` branch of Detector and pass `USE_DD4HEP=ON` to CMake
+
+```sh
+git -C Detector switch master
+utils/config.py -- cmakeFlags.default '-DUSE_DD4HEP=ON'
+```
 
 ### Update the setup
 
@@ -265,6 +276,23 @@ which will use the `HEAD` (i.e. the currently checked out branch) of your local
 repo to create a new stack setup at the given path.
 Note that uncommitted changes will not be in the new clone.
 
+### Use custom toolchains (LbDevTools and lcg-toolchains)
+
+If you need to debug the toolchain, or use a custom version, you can do so by
+cloning LbDevTools and prepending the path to the cmake directory to `cmakePrefixPath`:
+
+```sh
+git clone ssh://git@gitlab.cern.ch:7999/lhcb-core/LbDevTools.git
+utils/config.py cmakePrefixPath "$(pwd)/LbDevTools/LbDevTools/data/cmake:\$CMAKE_PREFIX_PATH"
+```
+
+To use a local copy of the new-style CMake toolchains (currently only for Gaudi),
+simply clone the repository in the stack directory:
+
+```sh
+git clone ssh://git@gitlab.cern.ch:7999/lhcb-core/lcg-toolchains.git
+```
+
 ### Migrate from another stack setup
 
 - Follow the [Get started](#get-started) instructions and stop before compiling.
@@ -298,20 +326,29 @@ reproduce the problem.
 
 ## Known issues
 
-- We don't know how to run over GRID files
 - You MUST run the top-level `make` from the directory where it resides.
 - Need to be able to run docker without sudo.
-- CMake emits a bunch of warnings.
+- CMake emits a bunch of warnings (can be ignored)
+
     ```log
       No project() command is present.  The top-level CMakeLists.txt file must
       contain a literal, direct call to the project() command.  Add a line of
       code such as
     ```
+
 - distcc is not happy about some of our generated files (can be ignored)
+
     ```log
     distcc[2541] (dcc_talk_to_include_server) Warning: include server gave up analyzing
     distcc[2541] (dcc_build_somewhere) Warning: failed to get includes from include server, preprocessing locally
     ```
+
+- Exception from xenv (LbEnv/1020): this is a race condition when creating the xenvc cache, just retry the build.
+
+    ```log
+    _pickle.UnpicklingError: pickle data was truncated
+    ```
+
 - Manual initial setup can be improved with e.g. cookiecutter.
 - `lb-docker-run` should be upstreamed and removed from this repo.
 - Logging is not uniform, and worse not documented

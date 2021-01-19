@@ -18,7 +18,7 @@ PROJECT="$1"
 shift
 
 # steering options
-eval $(config --sh outputPath contribPath ccachePath useCcache useDistcc)
+eval $(config --sh outputPath contribPath ccachePath useCcache useDistcc cmakePrefixPath)
 OUTPUT=$outputPath
 CONTRIB=$contribPath
 USE_CCACHE=$useCcache
@@ -185,40 +185,6 @@ setup_distcc() {
   fi
 }
 
-
-# TODO remove this in a couple of months (September)
-if [ "$USE_DISTCC" = true ]; then
-  if ! gitc "$PROJECT/../Gaudi" grep -q GENREFLEX_JOB_POOL -- \
-      cmake/modules/EnableROOT6.cmake; then
-    log ERROR "GENREFLEX_JOB_POOL not supported by Gaudi cmake!"
-    log ERROR "Please update to latest master or cherry pick 5dd5dceb26"
-    exit 1
-  fi
-fi
-
-if [ -f Makefile ]; then
-  # FIXME check wont't work when PROJECT is a multi-dir path
-  if [ "$PROJECT" = Gaudi ] && [ -f "$PROJECT/Makefile" ]; then
-    # FIXME remove the following once Makefile is removed from Gaudi
-    # update-index is needed as older git diff-index only does a "quick look"
-    # see https://stackoverflow.com/a/34808299
-    gitc "$PROJECT" update-index --refresh &>/dev/null || true
-    if gitc "$PROJECT" diff-index --quiet HEAD -- Makefile; then
-      rm -f "$PROJECT/Makefile"
-      # hide the removed file from status and diffs
-      gitc "$PROJECT" update-index --assume-unchanged Makefile
-    else
-      log ERROR "Could not remove Gaudi/Makefile safely!"
-      log ERROR "Please commit or undo any local modifications"
-      exit 1
-    fi
-  else
-    # FIXME tremove the following in two months (September)
-    # ruthlessly delete any untracked Makefile or toolchain
-    gitc "$PROJECT" clean -xf -- Makefile toolchain.cmake
-  fi
-fi
-
 # Disable distcc if all targets do not cause compilation
 if [ "$USE_DISTCC" = true ]; then
   USE_DISTCC=false
@@ -245,6 +211,13 @@ if [ "$USE_DISTCC" = true -a "$DEBUG_DISTCC" != true ]; then
   fi
 fi
 
+# Disable distcc for Gaudi
+# TODO remove once we can deal with the new wrappers
+if [ "$USE_DISTCC" = true ] && [ "$PROJECT" = Gaudi ]; then
+  log WARNING "distcc is not supported for Gaudi"
+  USE_DISTCC=false
+fi
+
 [ "$USE_CCACHE" = true ] && setup_ccache
 [ "$USE_DISTCC" = true ] && setup_distcc
 
@@ -263,6 +236,9 @@ compile_commands_dst="$OUTPUT/compile_commands-$PROJECT.json"
 runtime_env_src="$PROJECT/build.$BINARY_TAG/python.env"
 runtime_env_dst="$OUTPUT/runtime-$PROJECT.env"
 
+# Check build-env to see why we set CMAKE_PREFIX_PATH here.
+export CMAKE_PREFIX_PATH="$cmakePrefixPath"
+printenv | sort > "$OUTPUT/project.mk.env"
 make -f "$DIR/project.mk" -C "$PROJECT" "$@"
 # cd "$PROJECT/build.$BINARY_TAG" && ninja $NINJAFLAGS "$@" && cd -
 # TODO catch CTRL-C during make here and do the clean up, see
@@ -288,7 +264,7 @@ cmp --silent "$compile_commands_src" "$compile_commands_dst" \
 run_cmd="$PROJECT/build.$BINARY_TAG/run"
 if [ -f $run_cmd ]; then
   # TODO the following costs about 0.2s, should only run it if the xenv changed
-  if $run_cmd >"$runtime_env_src" 2>/dev/null; then
+  if $run_cmd env >"$runtime_env_src" 2>/dev/null; then
     cmp --silent "$runtime_env_src" "$runtime_env_dst" \
       || cp -f "$runtime_env_src" "$runtime_env_dst" 2>/dev/null \
       || true

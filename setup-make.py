@@ -12,10 +12,18 @@ from config import read_config, DIR
 from utils import setup_logging, run
 from vscode import write_vscode_settings
 
-DATA_PACKAGE_DIR = "DBASE"
+DATA_PACKAGE_DIRS = ["DBASE", "PARAM"]
 
 config = read_config()
 log = setup_logging(config['outputPath'])
+
+
+def data_package_container(name):
+    param_packages = [
+        "BcVegPyData", "ChargedProtoANNPIDParam", "Geant4Files", "GenXiccData",
+        "MCatNLOData", "MIBData", "ParamFiles", "QMTestFiles", "TMVAWeights"
+    ]
+    return "PARAM" if name in param_packages else "DBASE"
 
 
 class NotGaudiProjectError(RuntimeError):
@@ -47,8 +55,8 @@ def git_url_branch(project):
 def cmake_name(project):
     with open(os.path.join(project, 'CMakeLists.txt')) as f:
         cmake = f.read()
-    m = re.search(r'gaudi_project\(\s*(\w+)\s', cmake)
-    return m.group(1)
+    m = re.search(r'\s+(gaudi_)?project\(\s*(?P<name>\w+)\s', cmake)
+    return m.group('name')
 
 
 def cmake_deps(project):
@@ -57,9 +65,11 @@ def cmake_deps(project):
         with open(cmake_path) as f:
             cmake = f.read()
     except IOError:
-        raise NotGaudiProjectError('{} is not a Gaudi project'.format(project))
+        raise NotGaudiProjectError('{} is not a CMake project'.format(project))
     m = re.search(r'gaudi_project\(([^\)]+)\)', cmake)
     if not m:
+        if project in ['Gaudi', 'Detector']:
+            return []
         raise NotGaudiProjectError('{} is not a Gaudi project'.format(project))
     args = m.group(1).split()
     try:
@@ -101,6 +111,11 @@ def clone(project):
 
 
 def clone_package(name, path):
+    if path != 'DBASE' and os.path.isdir(os.path.join('DBASE', name)):
+        log.warning(
+            'Please move package {} from {} to {} and `make purge`'.format(
+                name, 'DBASE', path))
+
     if not os.path.isdir(os.path.join(path, name)):
         run([
             os.path.join(DIR, 'build-env'),
@@ -136,9 +151,10 @@ def checkout(projects, data_packages):
 
     assert set().union(*project_deps.values()).issubset(project_deps)
 
-    mkdir_p(DATA_PACKAGE_DIR)
     for name in data_packages:
-        clone_package(name, DATA_PACKAGE_DIR)
+        container = data_package_container(name)
+        mkdir_p(container)
+        clone_package(name, container)
 
     return project_deps
 
@@ -203,7 +219,7 @@ def main(targets):
 
         # After we cloned the minimum necessary, check for other repos
         repos = list_repos()
-        dp_repos = list_repos(DATA_PACKAGE_DIR)
+        dp_repos = sum((list_repos(d) for d in DATA_PACKAGE_DIRS), [])
 
         # Find cloned projects that we won't build but that may be
         # dependent on those to build.
@@ -233,7 +249,7 @@ def main(targets):
     except Exception:
         # Get repos in case the checkout fails
         repos = list_repos()
-        dp_repos = list_repos(DATA_PACKAGE_DIR)
+        dp_repos = sum((list_repos(d) for d in DATA_PACKAGE_DIRS), [])
         project_deps = {}
         traceback.print_exc()
         makefile_config = ['$(error Error occurred in checkout)']

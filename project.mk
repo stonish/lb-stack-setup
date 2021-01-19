@@ -44,13 +44,11 @@
 # note that DIR will end with a /
 DIR := $(dir $(lastword $(MAKEFILE_LIST)))
 PROJECT := $(notdir $(CURDIR))
-_output_path := $(shell "$(DIR)config.py" outputPath)
-_dummy := $(shell mkdir -p "$(_output_path)" && printenv | sort > "$(_output_path)/project.mk.env")
 
 # settings
 CMAKE := cmake
 CTEST := ctest
-NINJA := $(shell which ninja 2> /dev/null)
+NINJA := ninja
 
 # modified by RM
 ifeq ($(findstring CMAKE_TOOLCHAIN_FILE,$(CMAKEFLAGS)),)
@@ -154,7 +152,7 @@ ifeq ($(VERBOSE),)
 # (emulate the default CMake install target)
 install: patch-python-ns
 	cd $(BUILDDIR) && $(CMAKE) -P cmake_install.cmake | grep -v "^-- Up-to-date:"
-	cp $(BUILDDIR)/config/$(PROJECT)-build.xenv $(INSTALLDIR)/$(PROJECT).xenv
+	test -f $(BUILDDIR)/config/$(PROJECT)-build.xenv && cp $(BUILDDIR)/config/$(PROJECT)-build.xenv $(INSTALLDIR)/$(PROJECT).xenv || true
 endif
 
 # ensure that the target are always passed to the CMake Makefile

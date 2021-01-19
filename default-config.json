@@ -6,8 +6,9 @@
 		"Moore"
 	],
 	"gitBranch": {
-		"Gaudi": "v34r1",
+		"Gaudi": "master",
 		"Detector": "v0-patches",
+		"Geant4": "Sim10",
 		"default": "master"
 	},
 	"lcgVersion": "97a",
@@ -29,10 +30,10 @@
 	"useDocker": false,
 	"useCcache": true,
 	"useDistcc": null,
-	"lbenvPath": "/cvmfs/lhcb.cern.ch/lib/var/lib/LbEnv/1020/stable/linux-64",
+	"lbenvPath": "/cvmfs/lhcb.cern.ch/lib/var/lib/LbEnv/1059/stable/linux-64",
 	"projectPath": "..",
 	"contribPath": "../contrib",
-	"ccachePath": "../.ccache",
+	"ccachePath": "../.ccache/$BINARY_TAG",
 	"outputPath": "../.output",
 	"localPoolDepth": null,
 	"distccHosts": [

@@ -3,7 +3,7 @@ set -eo pipefail
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 source "$DIR/helpers.sh"
 logname="build-env"
-eval $(config --sh outputPath binaryTag useDocker useDistcc lbenvPath)
+eval $(config --sh outputPath binaryTag useDocker useDistcc lbenvPath lcgVersion projectPath)
 OUTPUT="$outputPath"
 BINARY_TAG="$binaryTag"
 USE_DOCKER="$useDocker"
@@ -69,6 +69,16 @@ if [ "$CHECK_KERBEROS" = true ]; then
     fi
 fi
 
+vars=(
+    "LCG_VERSION=$lcgVersion"
+    "LBENV_CURRENT_WORKSPACE=$projectPath"
+)
+test -z ${MAKEFLAGS+x} || vars+=("MAKEFLAGS=${MAKEFLAGS}")
+# CMAKE_PREFIX_PATH is handled in make.sh!
+# If we set it here, LbEnv (native or Docker) would prepend the usual prefixes.
+# This limits how we can customise CMake, e.g. it is not possible to override
+# the LbDevTools toolchain.
+
 if [ "$USE_DOCKER" = true ]; then
     ( cd "${DIR}"; python3 -c 'import setup; setup.assert_cvmfs()' )
     args=(
@@ -77,9 +87,11 @@ if [ "$USE_DOCKER" = true ]; then
         -C "${DIR}/.." --use-absolute-path
         --workdir "$PWD"
     )
+    for var in "${vars[@]}"; do
+        args+=(-e "$var")
+    done
     # if KRB5CCNAME is empty, don't try to forward the kerberos token
     test -z ${KRB5CCNAME} || args+=(--kerberos)
-    test -z ${MAKEFLAGS+x} || args+=(-e "MAKEFLAGS=${MAKEFLAGS}")
     "${DIR}/lb-docker-run" "${args[@]}" ${LB_DOCKER_RUN_FLAGS} "$@"
     # TODO lbenvPath is not respected in the docker case
 else
@@ -91,10 +103,10 @@ else
         "TERM=${TERM}"
         "BINARY_TAG=${BINARY_TAG}"
         )
-    test -z ${KRB5CCNAME+x} || args+=("KRB5CCNAME=${KRB5CCNAME}")
-    test -z ${TMPDIR+x} || args+=("TMPDIR=${TMPDIR}")
-    test -z ${XDG_RUNTIME_DIR+x} || args+=("XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR}")
-    test -z ${MAKEFLAGS+x} || args+=("MAKEFLAGS=${MAKEFLAGS}")
+    args+=( "${vars[@]}" )
+    test -z ${KRB5CCNAME} || args+=("KRB5CCNAME=${KRB5CCNAME}")
+    test -z ${TMPDIR} || args+=("TMPDIR=${TMPDIR}")
+    test -z ${XDG_RUNTIME_DIR} || args+=("XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR}")
 
     args_hash=$(cksum <<<"${args[@]}")
     cache="${OUTPUT}/lbenv-cache-${args_hash// /_}.sh"

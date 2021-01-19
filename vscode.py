@@ -141,8 +141,11 @@ def write_workspace_settings(repos,
             log.warning('Both g++ and clang in path, using g++.')
         if gcc_cmd:
             settings['settings']['C_Cpp.default.compilerPath'] = gcc_cmd
+            settings['settings']['C_Cpp.default.intelliSenseMode'] = 'gcc-x64'
         elif clang_cmd:
             settings['settings']['C_Cpp.default.compilerPath'] = clang_cmd
+            settings['settings'][
+                'C_Cpp.default.intelliSenseMode'] = 'clang-x64'
         else:
             log.debug('Could not find compiler executable. '
                       'Maybe Gaudi is not yet (fully) built.')
@@ -211,7 +214,10 @@ def write_data_package_settings(repos):
             settings_path,
             dict_update({
                 # prevent warnings that compile commands are missing
-                'C_Cpp.default.compileCommands': ''
+                'C_Cpp.default.compileCommands':
+                '',
+                'C_Cpp.default.compilerPath':
+                '/cvmfs/lhcb.cern.ch/lib/bin/x86_64-centos7/lcg-g++-9.2.0',
             }))
 
 
