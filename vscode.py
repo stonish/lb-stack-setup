@@ -5,7 +5,7 @@ import re
 import shutil
 import stat
 from collections import OrderedDict
-from utils import setup_logging
+from utils import setup_logging, write_file_if_different
 
 DIR = os.path.dirname(__file__)
 TEMPLATE = os.path.join(DIR, 'template.code-workspace')
@@ -75,10 +75,8 @@ def create_python_tool_wrappers(config):
     for name in ['flake8', 'yapf']:
         src = os.path.join(config['lbenvPath'], 'bin', name)
         dst = os.path.join(config['outputPath'], name)
-        with open(dst, 'w') as f:
-            f.write('#!/bin/sh\n')
-            f.write('env -i {} "$@"\n'.format(src))
-            os.chmod(f.fileno(), stat.S_IRWXU)
+        contents = '#!/bin/sh\nenv -i {} "$@"\n'.format(src)
+        write_file_if_different(dst, contents, mode=stat.S_IRWXU)
 
 
 def update_json(filename, update):
@@ -88,8 +86,8 @@ def update_json(filename, update):
             data = json.load(f)
     except FileNotFoundError:
         data = {}
-    with open(filename, 'w') as f:
-        json.dump(update(data), f, indent=4, sort_keys=True)
+    contents = json.dumps(update(data), indent=4, sort_keys=True)
+    write_file_if_different(filename, contents)
 
 
 def dict_update(updates):
@@ -150,10 +148,9 @@ def write_workspace_settings(repos,
             log.debug('Could not find compiler executable. '
                       'Maybe Gaudi is not yet (fully) built.')
 
-    with open(output_path, 'w') as f:
-        f.write("// DO NOT EDIT: this file is auto-generated from {}\n".format(
-            template_path))
-        json.dump(settings, f, indent=4, sort_keys=True)
+    output = "// DO NOT EDIT: this file is auto-generated from {}\n{}".format(
+        template_path, json.dumps(settings, indent=4, sort_keys=True))
+    write_file_if_different(output_path, output)
 
 
 def write_project_settings(repos, project_deps, config):
