@@ -176,7 +176,7 @@ def write_project_settings(repos, project_deps, config):
         veto = re.compile(r'/build.[^/]+/|/InstallArea/')
         python_paths[project] = [p for p in paths if not veto.search(p)]
 
-    missing_runtime = set(repos).difference(python_paths)
+    missing_runtime = set(project_deps).difference(python_paths)
     if missing_runtime:
         log.info('Build {} to get full Python intellisense.'.format(
             ', '.join(missing_runtime)))
