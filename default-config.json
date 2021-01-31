@@ -14,7 +14,7 @@
 	"lcgVersion": "97a",
 	"cmakePrefixPath": "$CMAKE_PREFIX_PATH:/cvmfs/sft.cern.ch/lcg/releases",
 	"cmakeFlags": {
-		"default": "",
+		"default": "-Wno-dev",
 		"Allen": "-DSTANDALONE=OFF"
 	},
 	"gitGroup": {
