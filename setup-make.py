@@ -229,6 +229,7 @@ def main(targets):
             set(repos).difference(project_deps))
 
         makefile_config = [
+            "BINARY_TAG := {}".format(config["binaryTag"]),
             "PROJECTS := " + " ".join(sorted(project_deps)),
             "DATA_PACKAGES := " + " ".join(sorted(data_packages)),
         ]
