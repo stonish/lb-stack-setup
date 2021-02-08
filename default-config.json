@@ -5,6 +5,8 @@
 		"Brunel",
 		"Moore"
 	],
+	"extraDependencies": {
+	},
 	"gitBranch": {
 		"Gaudi": "master",
 		"Detector": "v0-patches",

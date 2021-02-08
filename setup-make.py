@@ -26,7 +26,7 @@ def data_package_container(name):
     return "PARAM" if name in param_packages else "DBASE"
 
 
-class NotGaudiProjectError(RuntimeError):
+class NotCMakeProjectError(RuntimeError):
     pass
 
 
@@ -65,12 +65,10 @@ def cmake_deps(project):
         with open(cmake_path) as f:
             cmake = f.read()
     except IOError:
-        raise NotGaudiProjectError('{} is not a CMake project'.format(project))
+        raise NotCMakeProjectError('{} is not a CMake project'.format(project))
     m = re.search(r'gaudi_project\(([^\)]+)\)', cmake)
     if not m:
-        if project in ['Gaudi', 'Detector']:
-            return []
-        raise NotGaudiProjectError('{} is not a Gaudi project'.format(project))
+        return []
     args = m.group(1).split()
     try:
         args = args[args.index('USE') + 1:]
@@ -80,13 +78,13 @@ def cmake_deps(project):
     # take (name, version) pairs until the next keyword
     # (see gaudi_project in GaudiProjectConfig.cmake)
     KEYWORDS = ['USE', 'DATA', 'TOOLS', 'FORTRAN']
-    deps = list(itertools.takewhile(lambda x: not x in KEYWORDS, args))
+    deps = list(itertools.takewhile(lambda x: x not in KEYWORDS, args))
     if not len(deps) % 2 == 0:
         raise RuntimeError('Bad gaudi_project() call in {}'.format(cmake_path))
     return deps[::2]
 
 
-def clone(project):
+def clone_cmake_project(project):
     """Clone project and return canonical name."""
     m = [x for x in os.listdir('.') if x.lower() == project.lower()]
     assert len(m) <= 1, 'Multiple directories for project: ' + str(m)
@@ -144,8 +142,8 @@ def checkout(projects, data_packages):
     while to_checkout:
         p = to_checkout.pop(0)
         if not os.path.isdir(p):
-            p = clone(p)
-        deps = cmake_deps(p)
+            p = clone_cmake_project(p)
+        deps = cmake_deps(p) + config['extraDependencies'].get(p, [])
         to_checkout.extend(sorted(set(deps).difference(project_deps)))
         project_deps[p] = deps
 
@@ -164,8 +162,9 @@ def find_project_deps(repos, project_deps={}):
     for r in repos:
         if r not in project_deps:
             try:
-                project_deps[r] = cmake_deps(r)
-            except NotGaudiProjectError:
+                project_deps[r] = (
+                    cmake_deps(r) + config['extraDependencies'].get(r, []))
+            except NotCMakeProjectError:
                 pass
     return project_deps
 
