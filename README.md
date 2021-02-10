@@ -74,7 +74,7 @@ Below you see commands used in a typical testing workflow.
 
 ```sh
 # make project and dependencies
-make Moore
+make Moore  # or equivalently, make Moore/
 # list available tests
 make fast/Moore/test ARGS='-N'
 # run all tests with 4 parallel jobs
@@ -102,6 +102,7 @@ The `Makefile` provided features the following targets.
   - `for-each CMD="do-something"`: run a command in each git repository (projects, data packages or other).
 - Project targets
   - `<Project>`: build the required project (with dependencies),
+  - `<Project>/`: same as the above,
   - `<Project>/<target>`: build the specified target in the given project,
     for example, to get the list of targets available in Gaudi you can call `make Gaudi/help`,
   - `<Project>-clean`: clean `<Project>` and the projects that depend on it

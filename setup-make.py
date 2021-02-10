@@ -195,7 +195,7 @@ def main(targets):
     # collect top level projects to be cloned
     projects = []
     for arg in targets:
-        m = re.match(r'^(fast/)?(?P<project>[A-Z]\w+)(/.+)?$', arg)
+        m = re.match(r'^(fast/)?(?P<project>[A-Z]\w+)(/.*)?$', arg)
         if m:
             projects.append(m.group('project'))
     if 'build' in targets or 'all' in targets or not targets:
