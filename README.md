@@ -200,7 +200,7 @@ utils/config.py -- cmakeFlags.Moore '-DLOKI_BUILD_FUNCTOR_CACHE=OFF'
 
 or use `cmakeFlags.default` to affect all projects.
 
-### Use DD4hep and Detector
+### Use DD4hep, Detector and Gaussino
 
 To use DD4hep and the new [Detector](https://gitlab.cern.ch/lhcb/Detector) project,
 checkout the `master` branch of Detector and pass `USE_DD4HEP=ON` to CMake
@@ -208,6 +208,18 @@ checkout the `master` branch of Detector and pass `USE_DD4HEP=ON` to CMake
 ```sh
 git -C Detector switch master
 utils/config.py -- cmakeFlags.default '-DUSE_DD4HEP=ON'
+```
+
+The easiest way to build Gaussino is to take the exact version built in the nightlies.
+For example, as of 9 Feb 2021, the latest build ID in the `lhcb-gaussino` slot is 885,
+so we need to do the following.
+
+```sh
+make fast/Gaussino/checkout  # clone Gaussino if not already there
+cd Gaussino
+git fetch ssh://git@gitlab.cern.ch:7999/lhcb-nightlies/Gaussino.git lhcb-gaussino/885
+git checkout FETCH_HEAD
+cd ..
 ```
 
 ### Update the setup
