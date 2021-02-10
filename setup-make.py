@@ -128,7 +128,7 @@ def clone_package(name, path):
 def list_repos(path=''):
     """Return all git repositories under the directory path."""
     paths = [p[:-5] for p in glob.glob(os.path.join(path, '*/.git'))]
-    return [p for p in paths if os.path.abspath(p) != DIR]
+    return sorted(p for p in paths if os.path.abspath(p) != DIR)
 
 
 def checkout(projects, data_packages):
@@ -225,8 +225,8 @@ def main(targets):
         project_deps = find_project_deps(repos, project_deps)
 
         # Order repos according to dependencies
-        repos = topo_sorted(project_deps) + sorted(
-            set(repos).difference(project_deps))
+        project_order = topo_sorted(project_deps) + repos
+        repos.sort(key=lambda x: project_order.index(x))
 
         makefile_config = [
             "BINARY_TAG := {}".format(config["binaryTag"]),
