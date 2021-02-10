@@ -44,18 +44,21 @@ def symlink(src, dst):
 
 
 def git_url_branch(project):
-    group = config['gitGroup']
+    url = config['gitUrl'].get(project)
+    if not url:
+        group = config['gitGroup']
+        group = group.get(project, group['default'])
+        url = '{}/{}/{}.git'.format(config['gitBase'], group, project)
     branch = config['gitBranch']
-    return ('{}/{}/{}.git'.format(config['gitBase'],
-                                  group.get(project, group['default']),
-                                  project),
-            branch.get(project, branch['default']))
+    branch = branch.get(project, branch['default'])
+    return url, branch
 
 
 def cmake_name(project):
     with open(os.path.join(project, 'CMakeLists.txt')) as f:
         cmake = f.read()
-    m = re.search(r'\s+(gaudi_)?project\(\s*(?P<name>\w+)\s', cmake)
+    m = re.search(
+        r'\s+(gaudi_)?project\(\s*(?P<name>\w+)\s', cmake, flags=re.IGNORECASE)
     return m.group('name')
 
 
