@@ -85,7 +85,13 @@ def cmake_deps(project):
 
 
 def clone_cmake_project(project):
-    """Clone project and return canonical name."""
+    """Clone project and return canonical name.
+
+    When cloning, if necessary, the directory is renamed to the
+    project's canonical name as specified in the CMakeLists.txt.
+    Nothing is done if the project directory already exists.
+
+    """
     m = [x for x in os.listdir('.') if x.lower() == project.lower()]
     assert len(m) <= 1, 'Multiple directories for project: ' + str(m)
     if not m:
@@ -194,10 +200,15 @@ def main(targets):
 
     # collect top level projects to be cloned
     projects = []
+    fast_checkout_projects = []
     for arg in targets:
-        m = re.match(r'^(fast/)?(?P<project>[A-Z]\w+)(/.*)?$', arg)
+        m = re.match(
+            r'^(?P<fast>fast/)?(?P<project>[A-Z]\w+)(/(?P<target>.*))?$', arg)
         if m:
-            projects.append(m.group('project'))
+            if m.group('fast') and m.group('target') == 'checkout':
+                fast_checkout_projects.append(m.group('project'))
+            else:
+                projects.append(m.group('project'))
     if 'build' in targets or 'all' in targets or not targets:
         build_target_deps = config['defaultProjects']
         projects += build_target_deps
@@ -213,6 +224,12 @@ def main(targets):
             os.path.join(config['contribPath'], 'bin', fn))
 
     try:
+        # Clone projects without following their dependencies and without
+        # making any real target, e.g. `make fast/Moore/checkout`.
+        for p in fast_checkout_projects:
+            clone_cmake_project(p)
+
+        # Clone data packages and projects to build with dependencies.
         data_packages = config['dataPackages']
         project_deps = checkout(projects, data_packages)
 

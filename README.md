@@ -107,7 +107,8 @@ The `Makefile` provided features the following targets.
     for example, to get the list of targets available in Gaudi you can call `make Gaudi/help`,
   - `<Project>-clean`: clean `<Project>` and the projects that depend on it
   - `fast/<Project>[/<target>]`: same as the target `<Project>[/<target>]`
-    but do not try to build the dependencies.
+    but do not try to build the dependencies,
+  - `fast/<Project>/checkout`: just checkout `<Project>` without its dependecies.
 
 ## Integrations
 

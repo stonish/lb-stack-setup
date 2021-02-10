@@ -53,6 +53,9 @@ fast/$(1)/%: $(1)/run $(CONTRIB_DEPS)
 # check kerberos token when running tests
 fast/$(1)/test: $(1)/run $(CONTRIB_DEPS)
 	@$(DIR)/build-env --check-kerberos $(DIR)/make.sh $(1) test
+# special checkout targets (noop here, as checkout is done in setup-make.py)
+fast/$(1)/checkout: ;@# noop
+$(1)/checkout: fast/$(1)/checkout ;
 # exception for purge and clean: always do fast/Project/purge or clean
 $(1)/purge: fast/$(1)/purge ;
 fast/$(1)/purge:
@@ -74,8 +77,7 @@ $(foreach proj,$(PROJECTS),$(eval $(call PROJECT_settings,$(proj))))
 
 # stack.code-workspace is always remade by setup-make.py, so this is just
 # to avoid the message "Nothing to be done for `stack.code-workspace'"
-stack.code-workspace:
-	@ # noop command
+stack.code-workspace: ;@# noop
 
 .PHONY: $(ALL_TARGETS) stack.code-workspace
 
