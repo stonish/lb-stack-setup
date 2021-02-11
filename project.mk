@@ -24,10 +24,6 @@
 #     clean
 #         remove build products from the build directory
 #
-#     purge [*]_
-#         deep clean of the build, including InstallArea
-#         (requires re-configuration)
-#
 #     help
 #         print the list of available targets
 #
@@ -119,16 +115,8 @@ patch-python-ns: all
 	@find $(BUILDDIR) -path '$(BUILDDIR)/*/genConf/*/__init__.py' -exec bash -c \
 	  "cp --backup=simple '$(DIR)/python_ns_init_pkgutil.py' '{}'" \;
 
-# deep clean
-purge:
-	$(RM) -r $(BUILDDIR) $(CURDIR)/InstallArea/$(BINARY_TAG)
-	find $(CURDIR) "(" -name "InstallArea" -prune -o -name "*.pyc" ")" -a -type f -exec $(RM) -v \{} \;
-
-# delegate any target to the build directory (except 'purge')
-ifneq ($(MAKECMDGOALS),purge)
 %: $(BUILDDIR)/$(BUILD_CONF_FILE) FORCE
 	+$(BUILD_CMD) $* -- $(BUILDFLAGS)
-endif
 
 # aliases
 .PHONY: configure test FORCE patch-python-ns  # fixed by RM (tests -> test)

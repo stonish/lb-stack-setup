@@ -63,12 +63,6 @@ if (_project STREQUAL "Project")
   get_filename_component(_project ${CMAKE_SOURCE_DIR} NAME)
 endif()
 
-# FIXME Gauss' toolchain.cmake does not work with this setup
-# so copy over the necessary bits
-if(_project STREQUAL "Gauss")
-  set(LCG_LAYER LHCB_4 CACHE STRING "Specific set of version to use")
-  option(LCG_USE_GENERATORS "enable/disable use of LCG generators" ON)
-endif()
 
 if(EXISTS ${CMAKE_SOURCE_DIR}/toolchain.cmake
    AND NOT _project STREQUAL "Geant4"  # FIXME Geant4's toolchain.cmake does not work with this setup

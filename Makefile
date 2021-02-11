@@ -40,7 +40,7 @@ ALL_TARGETS = all build clean purge contrib
 # ----------------------
 
 # public targets: project targets
-ALL_TARGETS += $(foreach p,$(PROJECTS),$(p) $(p)-clean fast/$(p) fast/$(p)-clean)
+ALL_TARGETS += $(foreach p,$(PROJECTS),$(p) $(p)/ $(p)-clean fast/$(p) fast/$(p)-clean)
 
 define PROJECT_settings
 $(1)/run: $(DIR)/project-run.sh
@@ -53,25 +53,31 @@ fast/$(1)/%: $(1)/run $(CONTRIB_DEPS)
 # check kerberos token when running tests
 fast/$(1)/test: $(1)/run $(CONTRIB_DEPS)
 	@$(DIR)/build-env --check-kerberos $(DIR)/make.sh $(1) test
+# special checkout targets (noop here, as checkout is done in setup-make.py)
+fast/$(1)/checkout: ;@# noop
+$(1)/checkout: fast/$(1)/checkout ;
 # exception for purge and clean: always do fast/Project/purge or clean
 $(1)/purge: fast/$(1)/purge ;
+fast/$(1)/purge:
+	$(RM) -r $(1)/build.$(BINARY_TAG) $(1)/InstallArea/$(BINARY_TAG)
+	find $(1) "(" -name "InstallArea" -prune -o -name "*.pyc" ")" -a -type f -exec $(RM) -v \{} \;
 $(1)/clean: fast/$(1)/clean ;
 # build... delegate to generic target
 $(1): $(1)/install
+$(1)/: $(1)/install
 fast/$(1): fast/$(1)/install
 # clean
 $(1)-clean: $(patsubst %,%-clean,$($(1)_INV_DEPS))
 	$$(MAKE) fast/$(1)-clean
 fast/$(1)-clean:
-	@test -d $(1)/build.$$(shell "$(DIR)/config.py" binaryTag) && $$(MAKE) $(1)/clean || true
-	$(RM) -r $(1)/InstallArea/$$(shell "$(DIR)/config.py" binaryTag)
+	@test -d $(1)/build.$(BINARY_TAG) && $$(MAKE) $(1)/clean || true
+	$(RM) -r $(1)/InstallArea/$(BINARY_TAG)
 endef
 $(foreach proj,$(PROJECTS),$(eval $(call PROJECT_settings,$(proj))))
 
 # stack.code-workspace is always remade by setup-make.py, so this is just
 # to avoid the message "Nothing to be done for `stack.code-workspace'"
-stack.code-workspace:
-	@ # noop command
+stack.code-workspace: ;@# noop
 
 .PHONY: $(ALL_TARGETS) stack.code-workspace
 

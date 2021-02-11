@@ -26,7 +26,7 @@ def data_package_container(name):
     return "PARAM" if name in param_packages else "DBASE"
 
 
-class NotGaudiProjectError(RuntimeError):
+class NotCMakeProjectError(RuntimeError):
     pass
 
 
@@ -44,18 +44,21 @@ def symlink(src, dst):
 
 
 def git_url_branch(project):
-    group = config['gitGroup']
+    url = config['gitUrl'].get(project)
+    if not url:
+        group = config['gitGroup']
+        group = group.get(project, group['default'])
+        url = '{}/{}/{}.git'.format(config['gitBase'], group, project)
     branch = config['gitBranch']
-    return ('{}/{}/{}.git'.format(config['gitBase'],
-                                  group.get(project, group['default']),
-                                  project),
-            branch.get(project, branch['default']))
+    branch = branch.get(project, branch['default'])
+    return url, branch
 
 
 def cmake_name(project):
     with open(os.path.join(project, 'CMakeLists.txt')) as f:
         cmake = f.read()
-    m = re.search(r'\s+(gaudi_)?project\(\s*(?P<name>\w+)\s', cmake)
+    m = re.search(
+        r'\s+(gaudi_)?project\(\s*(?P<name>\w+)\s', cmake, flags=re.IGNORECASE)
     return m.group('name')
 
 
@@ -65,12 +68,10 @@ def cmake_deps(project):
         with open(cmake_path) as f:
             cmake = f.read()
     except IOError:
-        raise NotGaudiProjectError('{} is not a CMake project'.format(project))
+        raise NotCMakeProjectError('{} is not a CMake project'.format(project))
     m = re.search(r'gaudi_project\(([^\)]+)\)', cmake)
     if not m:
-        if project in ['Gaudi', 'Detector']:
-            return []
-        raise NotGaudiProjectError('{} is not a Gaudi project'.format(project))
+        return []
     args = m.group(1).split()
     try:
         args = args[args.index('USE') + 1:]
@@ -80,14 +81,20 @@ def cmake_deps(project):
     # take (name, version) pairs until the next keyword
     # (see gaudi_project in GaudiProjectConfig.cmake)
     KEYWORDS = ['USE', 'DATA', 'TOOLS', 'FORTRAN']
-    deps = list(itertools.takewhile(lambda x: not x in KEYWORDS, args))
+    deps = list(itertools.takewhile(lambda x: x not in KEYWORDS, args))
     if not len(deps) % 2 == 0:
         raise RuntimeError('Bad gaudi_project() call in {}'.format(cmake_path))
     return deps[::2]
 
 
-def clone(project):
-    """Clone project and return canonical name."""
+def clone_cmake_project(project):
+    """Clone project and return canonical name.
+
+    When cloning, if necessary, the directory is renamed to the
+    project's canonical name as specified in the CMakeLists.txt.
+    Nothing is done if the project directory already exists.
+
+    """
     m = [x for x in os.listdir('.') if x.lower() == project.lower()]
     assert len(m) <= 1, 'Multiple directories for project: ' + str(m)
     if not m:
@@ -130,7 +137,7 @@ def clone_package(name, path):
 def list_repos(path=''):
     """Return all git repositories under the directory path."""
     paths = [p[:-5] for p in glob.glob(os.path.join(path, '*/.git'))]
-    return [p for p in paths if os.path.abspath(p) != DIR]
+    return sorted(p for p in paths if os.path.abspath(p) != DIR)
 
 
 def checkout(projects, data_packages):
@@ -144,8 +151,8 @@ def checkout(projects, data_packages):
     while to_checkout:
         p = to_checkout.pop(0)
         if not os.path.isdir(p):
-            p = clone(p)
-        deps = cmake_deps(p)
+            p = clone_cmake_project(p)
+        deps = cmake_deps(p) + config['extraDependencies'].get(p, [])
         to_checkout.extend(sorted(set(deps).difference(project_deps)))
         project_deps[p] = deps
 
@@ -164,8 +171,9 @@ def find_project_deps(repos, project_deps={}):
     for r in repos:
         if r not in project_deps:
             try:
-                project_deps[r] = cmake_deps(r)
-            except NotGaudiProjectError:
+                project_deps[r] = (
+                    cmake_deps(r) + config['extraDependencies'].get(r, []))
+            except NotCMakeProjectError:
                 pass
     return project_deps
 
@@ -180,7 +188,7 @@ def inv_dependencies(project_deps):
 def topo_sorted(deps):
     def walk(projects, seen):
         return sum((seen.add(p) or (walk(deps.get(p, []), seen) + [p])
-                    for p in projects if p not in seen), [])
+                    for p in sorted(projects) if p not in seen), [])
 
     return walk(deps, set())
 
@@ -195,10 +203,15 @@ def main(targets):
 
     # collect top level projects to be cloned
     projects = []
+    fast_checkout_projects = []
     for arg in targets:
-        m = re.match(r'^(fast/)?(?P<project>[A-Z]\w+)(/.+)?$', arg)
+        m = re.match(
+            r'^(?P<fast>fast/)?(?P<project>[A-Z]\w+)(/(?P<target>.*))?$', arg)
         if m:
-            projects.append(m.group('project'))
+            if m.group('fast') and m.group('target') == 'checkout':
+                fast_checkout_projects.append(m.group('project'))
+            else:
+                projects.append(m.group('project'))
     if 'build' in targets or 'all' in targets or not targets:
         build_target_deps = config['defaultProjects']
         projects += build_target_deps
@@ -214,6 +227,12 @@ def main(targets):
             os.path.join(config['contribPath'], 'bin', fn))
 
     try:
+        # Clone projects without following their dependencies and without
+        # making any real target, e.g. `make fast/Moore/checkout`.
+        for p in fast_checkout_projects:
+            clone_cmake_project(p)
+
+        # Clone data packages and projects to build with dependencies.
         data_packages = config['dataPackages']
         project_deps = checkout(projects, data_packages)
 
@@ -226,10 +245,11 @@ def main(targets):
         project_deps = find_project_deps(repos, project_deps)
 
         # Order repos according to dependencies
-        repos = topo_sorted(project_deps) + sorted(
-            set(repos).difference(project_deps))
+        project_order = topo_sorted(project_deps) + repos
+        repos.sort(key=lambda x: project_order.index(x))
 
         makefile_config = [
+            "BINARY_TAG := {}".format(config["binaryTag"]),
             "PROJECTS := " + " ".join(sorted(project_deps)),
             "DATA_PACKAGES := " + " ".join(sorted(data_packages)),
         ]
@@ -246,21 +266,18 @@ def main(targets):
             "REPOS := " + " ".join(repos + dp_repos),
             "build: " + " ".join(build_target_deps),
         ]
+
     except Exception:
-        # Get repos in case the checkout fails
-        repos = list_repos()
-        dp_repos = sum((list_repos(d) for d in DATA_PACKAGE_DIRS), [])
-        project_deps = {}
         traceback.print_exc()
         makefile_config = ['$(error Error occurred in checkout)']
-
-    try:
-        write_vscode_settings(repos, dp_repos, project_deps, config)
-    except Exception:
-        traceback.print_exc()
-        makefile_config = [
-            '$(warning Error occurred in updating VSCode settings)'
-        ]
+    else:
+        try:
+            write_vscode_settings(repos, dp_repos, project_deps, config)
+        except Exception:
+            traceback.print_exc()
+            makefile_config = [
+                '$(warning Error occurred in updating VSCode settings)'
+            ]
 
     config_path = os.path.join(output_path, "configuration.mk")
     with open(config_path, "w") as f:

@@ -5,6 +5,8 @@
 		"Brunel",
 		"Moore"
 	],
+	"extraDependencies": {
+	},
 	"gitBranch": {
 		"Gaudi": "master",
 		"Detector": "v0-patches",
@@ -14,14 +16,20 @@
 	"lcgVersion": "97a",
 	"cmakePrefixPath": "$CMAKE_PREFIX_PATH:/cvmfs/sft.cern.ch/lcg/releases",
 	"cmakeFlags": {
-		"default": "",
-		"Allen": "-DSTANDALONE=OFF"
+		"default": "-Wno-dev",
+		"Allen": "-DSTANDALONE=OFF",
+		"Gaussino": "-DPKG_CONFIG_USE_CMAKE_PREFIX_PATH=ON",
+		"Gauss": "-DLCG_LAYER=LHCB_4 -DLCG_USE_GENERATORS=ON"
 	},
 	"gitGroup": {
 		"Gaudi": "gaudi",
+		"Gaussino": "Gaussino",
 		"default": "lhcb"
 	},
 	"gitBase": null,
+	"gitUrl": {
+		"DD4hep": "https://github.com/AIDASoft/DD4hep.git"
+	},
 	"dataPackages": [
 		"AppConfig",
 		"PRConfig",

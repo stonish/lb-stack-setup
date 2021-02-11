@@ -64,3 +64,23 @@ def run(args,
         raise CalledProcessError(p.returncode, args)
     return namedtuple('CompletedProcess', ['returncode', 'stdout', 'stderr'])(
         p.returncode, stdout, stderr)
+
+
+def write_file_if_different(path, contents, mode=None):
+    """Write `contents` to file `path` unless already identical.
+
+    Returns old file contents if file was modified or None otherwise.
+
+    """
+    # use a+ instead of r+ so that the file is created if not existing
+    with open(path, 'a+') as f:
+        f.seek(0)
+        old_contents = f.read()
+        if contents == old_contents:
+            return None
+        f.seek(0)
+        f.truncate()
+        f.write(contents)
+        if mode is not None:
+            os.chmod(f.fileno(), mode)
+    return old_contents
