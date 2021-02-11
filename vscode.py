@@ -150,7 +150,17 @@ def write_workspace_settings(repos,
 
     output = "// DO NOT EDIT: this file is auto-generated from {}\n{}".format(
         template_path, json.dumps(settings, indent=4, sort_keys=True))
-    write_file_if_different(output_path, output)
+    old_config = write_file_if_different(output_path, output)
+    if old_config is not None:
+        import difflib
+        log.info("{} was updated".format(output_path))
+        log.debug("{} was updated:\n".format(output_path) + '\n'.join(
+            difflib.unified_diff(
+                old_config.splitlines(),
+                output.splitlines(),
+                fromfile=output_path,
+                tofile=output_path,
+            )))
 
 
 def write_project_settings(repos, project_deps, config):

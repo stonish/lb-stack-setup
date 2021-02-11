@@ -188,7 +188,7 @@ def inv_dependencies(project_deps):
 def topo_sorted(deps):
     def walk(projects, seen):
         return sum((seen.add(p) or (walk(deps.get(p, []), seen) + [p])
-                    for p in projects if p not in seen), [])
+                    for p in sorted(projects) if p not in seen), [])
 
     return walk(deps, set())
 
@@ -266,21 +266,18 @@ def main(targets):
             "REPOS := " + " ".join(repos + dp_repos),
             "build: " + " ".join(build_target_deps),
         ]
+
     except Exception:
-        # Get repos in case the checkout fails
-        repos = list_repos()
-        dp_repos = sum((list_repos(d) for d in DATA_PACKAGE_DIRS), [])
-        project_deps = {}
         traceback.print_exc()
         makefile_config = ['$(error Error occurred in checkout)']
-
-    try:
-        write_vscode_settings(repos, dp_repos, project_deps, config)
-    except Exception:
-        traceback.print_exc()
-        makefile_config = [
-            '$(warning Error occurred in updating VSCode settings)'
-        ]
+    else:
+        try:
+            write_vscode_settings(repos, dp_repos, project_deps, config)
+        except Exception:
+            traceback.print_exc()
+            makefile_config = [
+                '$(warning Error occurred in updating VSCode settings)'
+            ]
 
     config_path = os.path.join(output_path, "configuration.mk")
     with open(config_path, "w") as f:
