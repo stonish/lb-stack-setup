@@ -79,13 +79,15 @@ def create_python_tool_wrappers(config):
         write_file_if_different(dst, contents, mode=stat.S_IRWXU)
 
 
-def update_json(filename, update):
+def update_json(filename, update, default={}):
     try:
         shutil.move(filename, filename + "~")
         with open(filename + "~") as f:
             data = json.load(f)
+        if not isinstance(data, type(default)):
+            data = default
     except FileNotFoundError:
-        data = {}
+        data = default
     contents = json.dumps(update(data), indent=4, sort_keys=True)
     write_file_if_different(filename, contents)
 
@@ -99,8 +101,46 @@ def dict_update(updates):
     return update
 
 
+def get_toolchain(config):
+    toolchain = {
+        'python': '',
+        'cxx': '',
+        'cxx-type': '',
+    }
+    runtime_env_path = os.path.join(config['outputPath'], 'runtime-Gaudi.env')
+    path = get_runtime_var(runtime_env_path, 'PATH')
+    if not path:
+        log.debug(
+            'Could not get PATH from {}. '
+            'Maybe Gaudi is not yet (fully) built.'.format(runtime_env_path))
+        log.warning('Build at least Gaudi for C++/Python intellisense to work')
+    else:
+        python_cmd = shutil.which('python', path=path)
+        if python_cmd:
+            toolchain['python'] = python_cmd
+        else:
+            log.debug('Could not find python executable.'
+                      'Maybe Gaudi is not yet (fully) built.')
+
+        gcc_cmd = shutil.which('g++', path=path)
+        clang_cmd = shutil.which('clang', path=path)
+        if gcc_cmd and clang_cmd:
+            log.warning('Both g++ and clang in path, using g++.')
+        if gcc_cmd:
+            toolchain['cxx'] = gcc_cmd
+            toolchain['cxx-type'] = 'gcc-x64'
+        elif clang_cmd:
+            toolchain['cxx'] = clang_cmd
+            toolchain['cxx-type'] = 'clang-x64'
+        else:
+            log.debug('Could not find compiler executable. '
+                      'Maybe Gaudi is not yet (fully) built.')
+    return toolchain
+
+
 def write_workspace_settings(repos,
                              config,
+                             toolchain,
                              template_path=TEMPLATE,
                              output_path=WORKSPACE):
     stack_dir = os.path.dirname(output_path)
@@ -118,35 +158,10 @@ def write_workspace_settings(repos,
         folder_paths[path] = None  # None is a dummy value
     settings['folders'] = list({'path': p} for p in folder_paths)
 
-    runtime_env_path = os.path.join(config['outputPath'], 'runtime-Gaudi.env')
-    path = get_runtime_var(runtime_env_path, 'PATH')
-    if not path:
-        log.debug(
-            'Could not get PATH from {}. '
-            'Maybe Gaudi is not yet (fully) built.'.format(runtime_env_path))
-        log.warning('Build at least Gaudi for C++/Python intellisense to work')
-    else:
-        python_cmd = shutil.which('python', path=path)
-        if python_cmd:
-            settings['settings']['python.pythonPath'] = python_cmd
-        else:
-            log.debug('Could not find python executable.'
-                      'Maybe Gaudi is not yet (fully) built.')
-
-        gcc_cmd = shutil.which('g++', path=path)
-        clang_cmd = shutil.which('clang', path=path)
-        if gcc_cmd and clang_cmd:
-            log.warning('Both g++ and clang in path, using g++.')
-        if gcc_cmd:
-            settings['settings']['C_Cpp.default.compilerPath'] = gcc_cmd
-            settings['settings']['C_Cpp.default.intelliSenseMode'] = 'gcc-x64'
-        elif clang_cmd:
-            settings['settings']['C_Cpp.default.compilerPath'] = clang_cmd
-            settings['settings'][
-                'C_Cpp.default.intelliSenseMode'] = 'clang-x64'
-        else:
-            log.debug('Could not find compiler executable. '
-                      'Maybe Gaudi is not yet (fully) built.')
+    settings['settings']['python.pythonPath'] = toolchain['python']
+    settings['settings']['C_Cpp.default.compilerPath'] = toolchain['cxx']
+    settings['settings']['C_Cpp.default.intelliSenseMode'] = toolchain[
+        'cxx-type']
 
     output = "// DO NOT EDIT: this file is auto-generated from {}\n{}".format(
         template_path, json.dumps(settings, indent=4, sort_keys=True))
@@ -163,11 +178,15 @@ def write_workspace_settings(repos,
             )))
 
 
-def write_project_settings(repos, project_deps, config):
-    repos = {os.path.basename(path): path for path in repos}
+def write_project_settings(repos, project_deps, config, toolchain):
+    # Get only the CMake project repos
+    project_repos = {
+        os.path.basename(path): path
+        for path in repos if os.path.basename(path) in project_deps
+    }
     # Collect python import paths
     python_paths = {}
-    for project, repo_path in repos.items():
+    for project, repo_path in project_repos.items():
         os.makedirs(os.path.join(repo_path, '.vscode'), exist_ok=True)
 
         runtime_env_path = os.path.join(config['outputPath'],
@@ -203,7 +222,9 @@ def write_project_settings(repos, project_deps, config):
             python_paths[project] = paths
             return paths
 
-    for project, repo_path in repos.items():
+    log.debug('Potentially updating project settings for {}'.format(
+        ', '.join(project_repos)))
+    for project, repo_path in project_repos.items():
         settings_path = os.path.join(repo_path, '.vscode', 'settings.json')
         update_json(
             settings_path,
@@ -211,29 +232,26 @@ def write_project_settings(repos, project_deps, config):
                 'python.analysis.extraPaths': get_paths(project)
             }))
 
+        # C_Cpp.default.compilerPath in the workspace file is not enough,
+        # so add the per-project configuration file
+        def update(data):
+            data["configurations"] = [{
+                "name": "Linux",
+                "compilerPath": toolchain['cxx'],
+            }]
+            return data
 
-def write_data_package_settings(repos):
-    for path in repos:
-        os.makedirs(os.path.join(path, '.vscode'), exist_ok=True)
-        settings_path = os.path.join(path, '.vscode', 'settings.json')
-
-        update_json(
-            settings_path,
-            dict_update({
-                # prevent warnings that compile commands are missing
-                'C_Cpp.default.compileCommands':
-                '',
-                'C_Cpp.default.compilerPath':
-                '/cvmfs/lhcb.cern.ch/lib/bin/x86_64-centos7/lcg-g++-9.2.0',
-            }))
+        path = os.path.join(repo_path, '.vscode', 'c_cpp_properties.json')
+        update_json(path, update)
 
 
 def write_vscode_settings(repos, dp_repos, project_deps, config):
     global log
     log = setup_logging(config['outputPath'])
 
-    write_workspace_settings(repos + dp_repos, config)
-    write_project_settings(repos, project_deps, config)
-    write_data_package_settings(dp_repos)
+    toolchain = get_toolchain(config)
+
+    write_workspace_settings(repos + dp_repos, config, toolchain)
+    write_project_settings(repos, project_deps, config, toolchain)
     create_clang_format(config)
     create_python_tool_wrappers(config)
