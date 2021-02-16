@@ -264,7 +264,9 @@ cmp --silent "$compile_commands_src" "$compile_commands_dst" \
 run_cmd="$PROJECT/build.$BINARY_TAG/run"
 if [ -f $run_cmd ]; then
   # TODO the following costs about 0.2s, should only run it if the xenv changed
-  if $run_cmd env >"$runtime_env_src" 2>/dev/null; then
+  # Filter out PYTHONHOME to workaround an issue in the VSCode python extension,
+  # where the python interpreter is run in the wrong .env and causes a SIGABRT.
+  if ( $run_cmd env 2>/dev/null | grep -v '^PYTHONHOME=' >"$runtime_env_src" ) ; then
     cmp --silent "$runtime_env_src" "$runtime_env_dst" \
       || cp -f "$runtime_env_src" "$runtime_env_dst" 2>/dev/null \
       || true
