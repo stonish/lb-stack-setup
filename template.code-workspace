@@ -37,6 +37,7 @@
                 "path": "{utilsPath}/dictionary.txt"
             }
         ],
+        "cSpell.diagnosticLevel": "Hint",
         // List of dictionaries to use when checking files.
         "cSpell.dictionaries": [
             "lhcb"
@@ -48,6 +49,7 @@
             "#.*"
         ],
         "cSpell.language": "en,en-GB",
+        "cSpell.showStatus": false,
         "files.associations": {
             "*.C": "cpp",
             "*.icpp": "cpp"
