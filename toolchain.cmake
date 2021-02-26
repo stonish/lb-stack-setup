@@ -9,6 +9,10 @@ set(CMAKE_CXX_COMPILER_LAUNCHER "${compiler_launcher}" CACHE FILEPATH "lb-stack-
 # which resorts RULE_LAUNCH_COMPILE. Instead we use CMAKE_<LANG>_COMPILER_LAUNCHER
 set(CMAKE_USE_CCACHE OFF CACHE BOOL "lb-stack-setup override")
 
+# Generate compile_commands.json.
+# Since 3.17 the variable needs to be set in the toolchain or passed as env variable.
+option(CMAKE_EXPORT_COMPILE_COMMANDS "Enable/Disable output of compile commands during generation." ON)
+
 # Colourful compiler errors
 # - old-style CMake
 set(GAUDI_DIAGNOSTICS_COLOR ON CACHE BOOL "lb-stack-setup override")
