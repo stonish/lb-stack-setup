@@ -69,6 +69,7 @@
         "python.pythonPath": "<placeholder: build at least gaudi for intellisense to work>",
         "restructuredtext.languageServer.disabled": true,
         "telemetry.enableCrashReporter": false,
-        "telemetry.enableTelemetry": false
+        "telemetry.enableTelemetry": false,
+        "window.title": "${dirty}${activeEditorShort}${separator}${rootPath}"
     }
 }
