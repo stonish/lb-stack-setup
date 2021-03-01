@@ -66,7 +66,7 @@ def run(args,
         p.returncode, stdout, stderr)
 
 
-def write_file_if_different(path, contents, mode=None):
+def write_file_if_different(path, contents, mode=None, backup=None):
     """Write `contents` to file `path` unless already identical.
 
     Returns old file contents if file was modified or None otherwise.
@@ -76,6 +76,8 @@ def write_file_if_different(path, contents, mode=None):
     with open(path, 'a+') as f:
         f.seek(0)
         old_contents = f.read()
+        if callable(contents):
+            contents = contents(old_contents)
         if contents == old_contents:
             return None
         f.seek(0)
@@ -83,4 +85,23 @@ def write_file_if_different(path, contents, mode=None):
         f.write(contents)
         if mode is not None:
             os.chmod(f.fileno(), mode)
+    if backup is not None:
+        with open(backup, 'w') as f:
+            f.write(old_contents)
     return old_contents
+
+
+def topo_sorted(deps, start=None):
+    """Toplogically sort dependent projects.
+
+    Returns a sorted list of projects where each element can only depend
+    on the preceding ones. If `start` (list) is passed, only the listed
+    projects are traversed. Otherwise, all projects are traversed.
+
+    """
+
+    def walk(projects, seen):
+        return sum((seen.add(p) or (walk(deps.get(p, []), seen) + [p])
+                    for p in sorted(projects) if p not in seen), [])
+
+    return walk(start or deps, set())

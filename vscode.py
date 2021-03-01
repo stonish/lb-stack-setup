@@ -47,9 +47,14 @@ def read_runtime_env(filename):
 
 def get_runtime_var(filename, name, default=None):
     try:
-        return read_runtime_env(filename)[name]
-    except (FileNotFoundError, KeyError):
-        return default
+        # return read_runtime_env(filename)[name]
+        with open(filename) as f:
+            for line in f:
+                if line.startswith(name + '='):
+                    return line[len(name) + 1:].rstrip('\n')
+    except FileNotFoundError:
+        pass
+    return default
 
 
 def create_clang_format(config, path='.clang-format'):
@@ -80,16 +85,20 @@ def create_python_tool_wrappers(config):
 
 
 def update_json(filename, update, default={}):
-    try:
-        shutil.move(filename, filename + "~")
-        with open(filename + "~") as f:
-            data = json.load(f)
-        if not isinstance(data, type(default)):
+    def contents(old_contents):
+        try:
+            data = json.loads(old_contents)
+            if not isinstance(data, type(default)):
+                data = default
+        except json.JSONDecodeError:
             data = default
-    except FileNotFoundError:
-        data = default
-    contents = json.dumps(update(data), indent=4, sort_keys=True)
-    write_file_if_different(filename, contents)
+        new_data = update(data)
+        if new_data == data:
+            return old_contents
+        log.debug("Updating " + filename)
+        return json.dumps(new_data, indent=4, sort_keys=True)
+
+    write_file_if_different(filename, contents, backup=filename + "~")
 
 
 def dict_update(updates):
