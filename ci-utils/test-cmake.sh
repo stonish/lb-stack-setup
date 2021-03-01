@@ -23,9 +23,15 @@ then
 fi
 
 if ! cmake -LA -N $build | \
-     grep '^CMAKE_CXX_COMPILER_LAUNCHER:' | grep "utils/compile.sh"
+    grep '^CMAKE_CXX_COMPILER_LAUNCHER:' | grep "utils/compile.sh"
 then
     error 'Compiler launcher is not compile.sh'
+fi
+
+if ! cmake -LA -N $build | \
+    grep '^CMAKE_EXPORT_COMPILE_COMMANDS:BOOL=ON'
+then
+    error 'compile_commands.json is not generated'
 fi
 
 if ! grep 'command = .*utils/compile.sh .*g++' $rules_ninja | sort -u

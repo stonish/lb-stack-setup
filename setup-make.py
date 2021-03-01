@@ -9,13 +9,15 @@ import re
 import traceback
 import sys
 from config import read_config, DIR
-from utils import setup_logging, run
+from utils import setup_logging, run, topo_sorted
 from vscode import write_vscode_settings
 
 DATA_PACKAGE_DIRS = ["DBASE", "PARAM"]
+MAKE_TARGET_RE = re.compile(
+    r'^(?P<fast>fast/)?(?P<project>[A-Z]\w+)(/(?P<target>.*))?$')
 
-config = read_config()
-log = setup_logging(config['outputPath'])
+config = None
+log = None
 
 
 def data_package_container(name):
@@ -185,15 +187,11 @@ def inv_dependencies(project_deps):
     }
 
 
-def topo_sorted(deps):
-    def walk(projects, seen):
-        return sum((seen.add(p) or (walk(deps.get(p, []), seen) + [p])
-                    for p in sorted(projects) if p not in seen), [])
-
-    return walk(deps, set())
-
-
 def main(targets):
+    global config, log
+    config = read_config()
+    log = setup_logging(config['outputPath'])
+
     # save the host environment where we're executed
     output_path = config['outputPath']
     mkdir_p(output_path)
@@ -205,8 +203,7 @@ def main(targets):
     projects = []
     fast_checkout_projects = []
     for arg in targets:
-        m = re.match(
-            r'^(?P<fast>fast/)?(?P<project>[A-Z]\w+)(/(?P<target>.*))?$', arg)
+        m = MAKE_TARGET_RE.match(arg)
         if m:
             if m.group('fast') and m.group('target') == 'checkout':
                 fast_checkout_projects.append(m.group('project'))
