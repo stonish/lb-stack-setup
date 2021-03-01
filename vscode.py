@@ -5,7 +5,7 @@ import re
 import shutil
 import stat
 from collections import OrderedDict
-from utils import setup_logging, write_file_if_different
+from utils import setup_logging, write_file_if_different, topo_sorted
 
 DIR = os.path.dirname(__file__)
 TEMPLATE = os.path.join(DIR, 'template.code-workspace')
@@ -194,6 +194,8 @@ def write_project_settings(repos, project_deps, config, toolchain):
         for path in repos if os.path.basename(path) in project_deps
     }
     # Collect python import paths
+    build_dir_veto = '/build.' + config['binaryTag'] + '/'
+    install_area_veto = '/InstallArea/'
     python_paths = {}
     for project, repo_path in project_repos.items():
         os.makedirs(os.path.join(repo_path, '.vscode'), exist_ok=True)
@@ -211,47 +213,69 @@ def write_project_settings(repos, project_deps, config, toolchain):
 
         # filter out generated python (i.e. genConf) from both build and
         # install directories
-        veto = re.compile(r'/build.[^/]+/|/InstallArea/')
-        python_paths[project] = [p for p in paths if not veto.search(p)]
+        python_paths[project] = [
+            p for p in paths
+            if build_dir_veto not in p and install_area_veto not in p
+        ]
 
     missing_runtime = set(project_deps).difference(python_paths)
     if missing_runtime:
         log.info('Build {} to get full Python intellisense.'.format(
             ', '.join(missing_runtime)))
 
-    # For projects where we couldn't get PYTHONPATH, try some of their deps
-    def get_paths(project):
-        try:
-            return python_paths[project]
-        except KeyError:
-            log.debug('Using partial PYTHONPATH from dependencies for {}'.
-                      format(project))
-            paths = sum((get_paths(d) for d in project_deps.get(project, [])),
-                        [])
-            python_paths[project] = paths
-            return paths
-
     log.debug('Potentially updating project settings for {}'.format(
         ', '.join(project_repos)))
     for project, repo_path in project_repos.items():
-        settings_path = os.path.join(repo_path, '.vscode', 'settings.json')
+        env_file = os.path.join(config['outputPath'],
+                                'runtime-{}.env'.format(project))
+        compile_commands = os.path.join(
+            config['outputPath'], 'compile_commands-{}.json'.format(project))
+        deps = topo_sorted(project_deps, [project])
+
+        python_extra_paths = sum(
+            (python_paths.get(d, []) for d in reversed(deps)), [])
+        # remove duplicates while preserving order
+        python_extra_paths = list(dict.fromkeys(python_extra_paths))
+
+        include_path = [
+            "../{}/**".format(project_repos[d]) for d in reversed(deps)
+        ]
+        if not os.path.isfile(compile_commands):
+            # Create a file with an empty list so VSCode does not
+            # complain about projects that are not yet built and
+            # projects that have no compilation targets (e.g. MooreAnalysis).
+            with open(compile_commands, 'w') as f:
+                f.write("[]")
+            # NOTE: we don't want to set it to "" (the default), as the
+            # extension nags us with "info" messages:
+            # > would like to configure IntelliSense for the 'Xyz' folder.
+            # where no meaningful choice can exist...
+
         update_json(
-            settings_path,
+            os.path.join(repo_path, '.vscode', 'settings.json'),
             dict_update({
-                'python.analysis.extraPaths': get_paths(project)
+                # Set envFile here rather than in .code-workspace file
+                # as the python extension is mixing up projects.
+                'python.envFile': env_file,
+                # Specify python search path to be used (based on deps)
+                # if we couldn't get PYTHONPATH from env_file.
+                'python.analysis.extraPaths': python_extra_paths,
             }))
 
         # C_Cpp.default.compilerPath in the workspace file is not enough,
         # so add the per-project configuration file
-        def update(data):
-            data["configurations"] = [{
-                "name": "Linux",
-                "compilerPath": toolchain['cxx'],
-            }]
-            return data
-
-        path = os.path.join(repo_path, '.vscode', 'c_cpp_properties.json')
-        update_json(path, update)
+        update_json(
+            os.path.join(repo_path, '.vscode', 'c_cpp_properties.json'),
+            dict_update({
+                'configurations': [{
+                    "name": "Linux",
+                    "compileCommands": compile_commands,
+                    "compilerPath": toolchain['cxx'],
+                    # Specify where to find includes in case compile_commands
+                    # is not yet made or not up-to-date (a new .cpp was added).
+                    "includePath": include_path,
+                }]
+            }))
 
 
 def write_vscode_settings(repos, dp_repos, project_deps, config):

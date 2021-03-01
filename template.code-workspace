@@ -23,13 +23,13 @@
         "C_Cpp.clang_format_style": "file",
         "C_Cpp.configurationWarnings": "Disabled",
         "C_Cpp.default.cStandard": "c11",
-        "C_Cpp.default.compileCommands": "{outputPath}/compile_commands-${workspaceFolderBasename}.json",
+        // compileCommands is set per folder (.vscode/c_cpp_properties.json)
+        "C_Cpp.default.compileCommands": "",
         "C_Cpp.default.compilerPath": "<placeholder: build at least gaudi for intellisense to work>",
         "C_Cpp.default.cppStandard": "c++17",
         "C_Cpp.default.defines": [],
-        "C_Cpp.default.includePath": [
-            "${workspaceFolder}/**"
-        ],
+        // includePath is set per folder
+        "C_Cpp.default.includePath": [],
         "C_Cpp.default.intelliSenseMode": "clang-x64",
         "cSpell.dictionaryDefinitions": [
             {
@@ -55,7 +55,7 @@
             "*.icpp": "cpp"
         },
         "files.trimTrailingWhitespace": true,
-        "python.envFile": "{outputPath}/runtime-${workspaceFolderBasename}.env",
+        // python.envFile is set per folder (.vscode/settings.json)
         "python.formatting.provider": "yapf",
         "python.formatting.yapfPath": "{outputPath}/yapf",
         "python.languageServer": "Pylance",

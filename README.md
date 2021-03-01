@@ -340,6 +340,10 @@ reproduce the problem.
 
 ## Known issues
 
+- VSCode integration
+  - A `C/C++ Configuration Warnings` output window may appear once per session
+    to tell you that compile_commands for some projects are not up-to-date.
+    Build them in order not to get the warnings
 - You MUST run the top-level `make` from the directory where it resides.
 - Need to be able to run docker without sudo.
 - CMake emits a bunch of warnings (can be ignored)
