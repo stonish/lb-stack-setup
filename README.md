@@ -331,11 +331,11 @@ git clone ssh://git@gitlab.cern.ch:7999/lhcb-core/lcg-toolchains.git
 3. To see in detail what ninja executes, use `make Project VERBOSE=1`.
 
 If you fixed it, great! If you think it's possible that someone else hits the
-same problem, plese [open an issue](/../issues/new) or submit a merge request.
+same problem, plese [open an issue](/../../issues/new) or submit a merge request.
 
 If you couldn't figure it out, seek help on
 [Mattermost](https://mattermost.web.cern.ch/lhcb/messages/@rmatev)
-or open an [open an issue](/../issues/new), ideally provinding steps to
+or open an [open an issue](/../../issues/new), ideally provinding steps to
 reproduce the problem.
 
 ## Known issues
@@ -346,14 +346,6 @@ reproduce the problem.
     Build them in order not to get the warnings
 - You MUST run the top-level `make` from the directory where it resides.
 - Need to be able to run docker without sudo.
-- CMake emits a bunch of warnings (can be ignored)
-
-    ```log
-      No project() command is present.  The top-level CMakeLists.txt file must
-      contain a literal, direct call to the project() command.  Add a line of
-      code such as
-    ```
-
 - distcc is not happy about some of our generated files (can be ignored)
 
     ```log
@@ -367,8 +359,4 @@ reproduce the problem.
     _pickle.UnpicklingError: pickle data was truncated
     ```
 
-- Manual initial setup can be improved with e.g. cookiecutter.
-- `lb-docker-run` should be upstreamed and removed from this repo.
-- Logging is not uniform, and worse not documented
-- When using docker outside CERN, the port forwarding for distcc is done in
-  the container, which makes it execute quite frequently and adds overhead.
+- [GitLab issues](/../../issues)
