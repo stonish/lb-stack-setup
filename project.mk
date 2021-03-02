@@ -133,7 +133,7 @@ test: $(BUILDDIR)/$(BUILD_CONF_FILE)
 	$(RM) -r $(BUILDDIR)/Testing
 	-cd $(BUILDDIR) && $(CTEST) -T test $(value ARGS)
 	$(RM) -r $(BUILDDIR)/html
-	+$(BUILD_CMD) HTMLSummary
+	+@cd $(BUILDDIR) && $(CMAKE) -P $(DIR)/CTestXML2HTML.cmake
 
 ifeq ($(VERBOSE),)
 # less verbose install (see GAUDI-1018)
