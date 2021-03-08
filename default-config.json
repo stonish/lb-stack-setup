@@ -59,5 +59,6 @@
 	"distccPrincipal": "distccd",
 	"distccLocalslots": null,
 	"distccLocalslotsCpp": null,
-	"distccRandomize": true
+	"distccRandomize": true,
+	"vscodeWorkspaceSettings": {}
 }

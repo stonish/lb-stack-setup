@@ -136,6 +136,17 @@ Depending on what and where you build there are different recommendations.
   Currently 80 virtual cores are available for parallel compilation.
   You need a valid kerberos token and connectivity to lxplus (or to be inside the CERN network).
   Be aware that these are shared resources, set it to `false` if your local cluster is powerful.
+- `vscodeWorkspaceSettings`: include custom VSCode settings in the `.code-workspace` file.
+  For example, one can customize the color of the window title bar with
+
+    ```json
+    "vscodeWorkspaceSettings": {
+      "workbench.colorCustomizations": {
+        "titleBar.activeBackground": "#a75555",
+        "titleBar.activeForeground": "#ffffff"
+      }
+    }
+    ```
 
 All possible configuration settings and their defaults are stored in
 [default-config.json](default-config.json).
