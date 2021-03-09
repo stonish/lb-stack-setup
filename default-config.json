@@ -5,8 +5,7 @@
 		"Brunel",
 		"Moore"
 	],
-	"extraDependencies": {
-	},
+	"extraDependencies": {},
 	"gitBranch": {
 		"Gaudi": "master",
 		"Detector": "v0-patches",
@@ -18,8 +17,8 @@
 	"cmakeFlags": {
 		"default": "-Wno-dev",
 		"Allen": "-DSTANDALONE=OFF",
-		"Gaussino": "-DPKG_CONFIG_USE_CMAKE_PREFIX_PATH=ON",
-		"Gauss": "-DLCG_LAYER=LHCB_4 -DLCG_USE_GENERATORS=ON"
+		"Gaussino": "-DPKG_CONFIG_USE_CMAKE_PREFIX_PATH=ON -DLCG_LAYER=LHCB_5 -DLCG_USE_GENERATORS=ON",
+		"Gauss": "-DLCG_LAYER=LHCB_5 -DLCG_USE_GENERATORS=ON"
 	},
 	"gitGroup": {
 		"Gaudi": "gaudi",
@@ -59,5 +58,6 @@
 	"distccPrincipal": "distccd",
 	"distccLocalslots": null,
 	"distccLocalslotsCpp": null,
-	"distccRandomize": true
+	"distccRandomize": true,
+	"vscodeWorkspaceSettings": {}
 }

@@ -171,6 +171,7 @@ def write_workspace_settings(repos,
     settings['settings']['C_Cpp.default.compilerPath'] = toolchain['cxx']
     settings['settings']['C_Cpp.default.intelliSenseMode'] = toolchain[
         'cxx-type']
+    settings['settings'].update(config['vscodeWorkspaceSettings'])
 
     output = "// DO NOT EDIT: this file is auto-generated from {}\n{}".format(
         template_path, json.dumps(settings, indent=4, sort_keys=True))
