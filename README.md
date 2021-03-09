@@ -216,21 +216,56 @@ or use `cmakeFlags.default` to affect all projects.
 ### Use DD4hep, Detector and Gaussino
 
 To use DD4hep and the new [Detector](https://gitlab.cern.ch/lhcb/Detector) project,
-checkout the `master` branch of Detector and pass `USE_DD4HEP=ON` to CMake
+checkout the `master` branch of Detector and pass `USE_DD4HEP=ON` to CMake,
+and configure Geant4 to build with multi-threaded support.
 
 ```sh
 git -C Detector switch master
-utils/config.py -- cmakeFlags.default '-DUSE_DD4HEP=ON'
+utils/config.py -- cmakeFlags.default '-Wno-dev -DUSE_DD4HEP=ON'
+utils/config.py -- cmakeFlags.Geant4 '-Wno-dev -DGEANT4_BUILD_MULTITHREADED=ON'
 ```
 
-The easiest way to build Gaussino is to take the exact version built in the nightlies.
-For example, as of 9 Feb 2021, the latest build ID in the `lhcb-gaussino` slot is 885,
+A workaround is also needed until the LHCB_5 layer installation is comlete
+(see [LBCORE-1995](https://its.cern.ch/jira/browse/LBCORE-1995)).
+
+```sh
+utils/config.py -- cmakePrefixPath '$CMAKE_PREFIX_PATH:/cvmfs/sft.cern.ch/lcg/releases:/cvmfs/lhcb.cern.ch/lib/lcg/releases/LCG_97a/LCIO/02.13.03/x86_64-centos7-gcc9-opt'
+```
+
+#### Checkout and apply MRs for Gaussino and Gauss (preferred option)
+
+```sh
+make fast/Gaussino/checkout  # clone Gaussino if not already there
+cd Gaussino
+git fetch && git fetch origin '+refs/merge-requests/*/head:refs/remotes/origin/mr/*'
+git checkout origin/master
+git merge --no-edit origin/mr/9 origin/mr/13 origin/mr/18 origin/mr/19 origin/mr/21 origin/mr/23
+cd ..
+
+make fast/Gauss/checkout  # clone Gauss if not already there
+cd Gauss
+git fetch && git fetch origin '+refs/merge-requests/*/head:refs/remotes/origin/mr/*'
+git checkout origin/Futurev3
+git merge --no-edit origin/mr/686 origin/mr/695 origin/mr/718
+cd ..
+```
+
+#### Checkout the versions used in the nightlies (alternative option)
+
+An alternative to checkout Gaussino and Gauss is to take the exact version built in the nightlies.
+For example, as of 9 Mar 2021, the latest build ID in the `lhcb-gaussino` slot is 901,
 so we need to do the following.
 
 ```sh
 make fast/Gaussino/checkout  # clone Gaussino if not already there
 cd Gaussino
-git fetch ssh://git@gitlab.cern.ch:7999/lhcb-nightlies/Gaussino.git lhcb-gaussino/885
+git fetch ssh://git@gitlab.cern.ch:7999/lhcb-nightlies/Gaussino.git lhcb-gaussino/901
+git checkout FETCH_HEAD
+cd ..
+
+make fast/Gaussino/checkout  # clone Gauss if not already there
+cd Gauss
+git fetch ssh://git@gitlab.cern.ch:7999/lhcb-nightlies/Gauss.git lhcb-gaussino/901
 git checkout FETCH_HEAD
 cd ..
 ```

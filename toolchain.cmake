@@ -71,6 +71,7 @@ endif()
 if(EXISTS ${CMAKE_SOURCE_DIR}/toolchain.cmake
    AND NOT _project STREQUAL "Geant4"  # FIXME Geant4's toolchain.cmake does not work with this setup
    AND NOT _project STREQUAL "Gauss"  # FIXME Gauss' toolchain.cmake does not work with this setup
+   AND NOT _project STREQUAL "Gaussino"  # FIXME Gaussino's toolchain.cmake does not work with this setup
    )
   message(STATUS "Delegating to project-specific toolchain at ${CMAKE_SOURCE_DIR}/toolchain.cmake")
   # in this case the project toolchain should delegate to the default
