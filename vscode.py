@@ -240,6 +240,7 @@ def write_project_settings(repos, project_deps, config, toolchain):
 
         include_path = [
             "../{}/**".format(project_repos[d]) for d in reversed(deps)
+            if d in project_repos
         ]
         if not os.path.isfile(compile_commands):
             # Create a file with an empty list so VSCode does not
