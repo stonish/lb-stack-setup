@@ -20,7 +20,12 @@ curl https://gitlab.cern.ch/rmatev/lb-stack-setup/raw/master/setup.py | python3 
 ```
 
 > **Note:** If your system lacks Python 3 (`/usr/bin/python3`), ask for it to
-> be installed, or simply source the LHCb environment.
+> be installed, or simply source the LHCb environment with
+> `source /cvmfs/lhcb.cern.ch/lib/LbEnv` if it is not already sourced.
+
+> **Note:** If you are working in the LHCb Online network, set up git with
+> `git config --global 'http.https://github.com/.proxy' lbproxy01:8080`
+> to use the proxy to access GitHub.
 
 The script will first check that all prerequisites are met. If it fails, check
 [doc/prerequisites.md](doc/prerequisites.md) for more information.
