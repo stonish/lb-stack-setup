@@ -43,13 +43,11 @@ if(NOT DEFINED _LBSTACK_PROCESSED)
   # compiler (without the proper cache)
   if(NOT CMAKE_SOURCE_DIR MATCHES "CMakeTmp")
     # Limit parallelism of non-distributable jobs
-    execute_process(
-      COMMAND ${CMAKE_CURRENT_LIST_DIR}/config.py localPoolDepth
-      OUTPUT_VARIABLE _local_pool_depth
-      OUTPUT_STRIP_TRAILING_WHITESPACE)
-    set_property(GLOBAL APPEND PROPERTY JOB_POOLS local_pool=${_local_pool_depth})
-    set(CMAKE_JOB_POOL_LINK local_pool)
-    set(GENREFLEX_JOB_POOL local_pool)
+    if (DEFINED ENV{LOCAL_POOL_DEPTH})
+      set_property(GLOBAL APPEND PROPERTY JOB_POOLS local_pool=$ENV{LOCAL_POOL_DEPTH})
+      set(CMAKE_JOB_POOL_LINK local_pool)
+      set(GENREFLEX_JOB_POOL local_pool)
+    endif()
   endif()
   set(_LBSTACK_PROCESSED TRUE)
 endif()
