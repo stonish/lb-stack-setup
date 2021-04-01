@@ -5,9 +5,17 @@
 		"Alignment",
 		"Moore"
 	],
-	"extraDependencies": {},
+	"extraDependencies": {
+		"Detector": [
+			"DD4hep"
+		]
+	},
 	"gitBranch": {
 		"Gaudi": "master",
+		"DD4hep": "v01-16-01-patches",
+		"lcg-toolchains": "no-cvmfs-dd4hep",
+		"Gaussino": "rm-gong",
+		"Gauss": "rm-gong",
 		"default": "master",
 		"defaultDataPackages": "master"
 	},
@@ -16,8 +24,11 @@
 	"cmakeFlags": {
 		"default": "-Wno-dev",
 		"Allen": "-DSTANDALONE=OFF",
-		"Gaussino": "-DPKG_CONFIG_USE_CMAKE_PREFIX_PATH=ON -DLCG_LAYER=LHCB_7 -DLCG_USE_GENERATORS=ON",
-		"Gauss": "-DLCG_LAYER=LHCB_7 -DLCG_USE_GENERATORS=ON"
+		"Geant4": "-DGEANT4_BUILD_MULTITHREADED=ON",
+		"Gaussino": "-DLCG_LAYER=LHCB_7 -DLCG_USE_GENERATORS=ON -DUSE_DD4HEP=ON -DDD4hep_GIT_SOURCE=$projectPath/DD4hep",
+		"Gauss": "-DLCG_LAYER=LHCB_7 -DLCG_USE_GENERATORS=ON",
+		"DD4hep": "-DDD4HEP_SET_RPATH=OFF -DCMAKE_CXX_STANDARD=17 -DCMAKE_MAP_IMPORTED_CONFIG_FASTDEBUG=Debug",
+		"LHCb": "-DUSE_DD4HEP=ON"
 	},
 	"forwardEnv": [
 		"DISPLAY",
@@ -29,13 +40,13 @@
 	"gitGroup": {
 		"Gaudi": "gaudi",
 		"Gaussino": "Gaussino",
+		"DD4hep": "Gaussino",
+		"lcg-toolchains": "lhcb-core",
 		"default": "lhcb",
 		"defaultDataPackages": "lhcb-datapkg"
 	},
 	"gitBase": null,
-	"gitUrl": {
-		"DD4hep": "https://github.com/AIDASoft/DD4hep.git"
-	},
+	"gitUrl": {},
 	"dataPackages": [
 		"DBASE/AppConfig",
 		"DBASE/PRConfig",

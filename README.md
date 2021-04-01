@@ -297,41 +297,48 @@ make Rec BUILDFLAGS='-j 2'
 ### Use DD4hep, Detector and Gaussino
 
 To use DD4hep and the new [Detector](https://gitlab.cern.ch/lhcb/Detector) project,
-checkout the `master` branch of Detector and pass `USE_DD4HEP=ON` to CMake,
-and configure Geant4 to build with multi-threaded support.
+we need various necessary settings and special branches. They are maintained
+in the [`dd4hep`](https://gitlab.cern.ch/rmatev/lb-stack-setup/-/commits/dd4hep) branch.
+See [below](#use-a-non-standard-branch-of-lb-stack-setup) on how to use that branch.
+
+In case you have a stack already, make sure that you use the following special branches:
 
 ```sh
+git clone ssh://git@gitlab.cern.ch:7999/lhcb-core/lcg-toolchains.git
+git -C lcg-toolchains switch no-cvmfs-dd4hep
+git -C DD4hep switch v01-15-patches
 git -C Detector switch master
-utils/config.py -- cmakeFlags.default '-Wno-dev -DUSE_DD4HEP=ON'
-utils/config.py -- cmakeFlags.Geant4 '-Wno-dev -DGEANT4_BUILD_MULTITHREADED=ON'
+git -C Gaussino switch rm-gong
+git -C Gauss switch rm-gong
 ```
 
-A workaround is also needed until the LHCB_5 layer installation is comlete
-(see [LBCORE-1995](https://its.cern.ch/jira/browse/LBCORE-1995)).
+> **Important:** These are integration branches that include various MRs
+> that have not yet been merged to the mainstream branches. As such, they
+> are subject to (infrequent) rebases. To suggest changes you may open
+> MRs directly to the integration branches.
 
-```sh
-utils/config.py -- cmakePrefixPath '$CMAKE_PREFIX_PATH:/cvmfs/sft.cern.ch/lcg/releases:/cvmfs/lhcb.cern.ch/lib/lcg/releases/LCG_97a/LCIO/02.13.03/x86_64-centos7-gcc9-opt'
-```
+Alternatelvely, with the instuctions below you can start from the mainstream
+branches and mimic the nightlies but that is not guaranteed to work right now.
 
-#### Checkout and apply MRs for Gaussino and Gauss (preferred option)
+#### Checkout and apply MRs for Gaussino and Gauss (advanced option)
 
 ```sh
 make fast/Gaussino/checkout  # clone Gaussino if not already there
 cd Gaussino
 git fetch && git fetch origin '+refs/merge-requests/*/head:refs/remotes/origin/mr/*'
 git checkout origin/master
-git merge --no-edit origin/mr/9 origin/mr/13 origin/mr/18 origin/mr/19 origin/mr/21 origin/mr/23
+git merge --no-edit origin/mr/{9,33}
 cd ..
 
 make fast/Gauss/checkout  # clone Gauss if not already there
 cd Gauss
 git fetch && git fetch origin '+refs/merge-requests/*/head:refs/remotes/origin/mr/*'
-git checkout origin/Futurev3
-git merge --no-edit origin/mr/686 origin/mr/695 origin/mr/718
+git checkout origin/Futurev4
+git merge --no-edit origin/mr/{686,718,719,725}
 cd ..
 ```
 
-#### Checkout the versions used in the nightlies (alternative option)
+#### Checkout the versions used in the nightlies (advanced option)
 
 An alternative to checkout Gaussino and Gauss is to take the exact version built in the nightlies.
 For example, as of 9 Mar 2021, the latest build ID in the `lhcb-gaussino` slot is 901,
@@ -380,11 +387,11 @@ You might want to use a branch other than `master` to try out a new feature
 that is not merged yet.
 
 If you start from scratch, you can normally just tweak the way you run
-`setup.py`. For example, if you want to try out a branch called `vscode`, do
+`setup.py`. For example, if you want to try out a branch called `dd4hep`, do
 
 ```sh
 curl https://gitlab.cern.ch/rmatev/lb-stack-setup/raw/master/setup.py | \
-    python3 - stack -b vscode
+    python3 - stack -b dd4hep
 ```
 
 > __Note:__ In some rare cases, you might need to download `setup.py` not from
@@ -395,14 +402,14 @@ If you already have a stack set up, first check out the branch you want in utils
 ```sh
 cd utils
 git fetch
-git checkout vscode
+git checkout dd4hep
 ```
 
 then, rerun `setup.py`, giving the same branch name, so that your existing
 configuration is made consistent with the new branch.
 
 ```sh
-./setup.py -b vscode
+./setup.py -b dd4hep
 ```
 
 ### Develop lb-stack-setup
