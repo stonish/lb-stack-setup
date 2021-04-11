@@ -193,7 +193,8 @@ def write_project_settings(repos, project_deps, config, toolchain):
             if build_dir_veto not in p and install_area_veto not in p
         ]
 
-    missing_runtime = set(project_deps).difference(python_paths)
+    missing_runtime = set(project_deps).difference(python_paths).difference(
+        ['DD4hep'])
     if missing_runtime:
         log.info('Build {} to get full Python intellisense.'.format(
             ', '.join(missing_runtime)))
