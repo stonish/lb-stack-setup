@@ -58,15 +58,14 @@ def setup_logging(directory):
     return _log
 
 
-def run(args,
-        shell=False,
-        capture_stdout=True,
-        capture_stderr=True,
-        check=True,
-        stdin=DEVNULL,
-        **kwargs):
-    _log.debug('command: ' +
-               (repr(args) if shell else ' '.join(map(repr, args))))
+def run_nb(args,
+           shell=False,
+           capture_stdout=True,
+           capture_stderr=True,
+           check=True,
+           stdin=DEVNULL,
+           **kwargs):
+    """Non-blocking run() that returns a blocking function."""
     p = Popen(
         args,
         shell=shell,
@@ -74,17 +73,35 @@ def run(args,
         stdout=kwargs.pop('stdout', PIPE if capture_stdout else None),
         stderr=kwargs.pop('stderr', PIPE if capture_stderr else None),
         **kwargs)
-    stdout, stderr = [
-        b if b is None else b.decode('utf-8') for b in p.communicate()
-    ]
-    level = logging.ERROR if check and p.returncode else logging.DEBUG
-    _log.log(level, 'retcode: ' + str(p.returncode))
-    _log.log(level, 'stderr: {}'.format(stderr))
-    _log.log(level, 'stdout: {}'.format(stdout))
-    if check and p.returncode != 0:
-        raise CalledProcessError(p.returncode, args)
-    return namedtuple('CompletedProcess', ['returncode', 'stdout', 'stderr'])(
-        p.returncode, stdout, stderr)
+
+    def result():
+        _log.debug('command: ' +
+                   (repr(args) if shell else ' '.join(map(repr, args))))
+        stdout, stderr = [
+            b if b is None else b.decode('utf-8') for b in p.communicate()
+        ]
+        level = logging.ERROR if check and p.returncode else logging.DEBUG
+        _log.log(level, 'retcode: ' + str(p.returncode))
+        _log.log(level, 'stderr: {}'.format(stderr))
+        _log.log(level, 'stdout: {}'.format(stdout))
+        if check and p.returncode != 0:
+            raise CalledProcessError(p.returncode, args)
+        return namedtuple('CompletedProcess',
+                          ['returncode', 'stdout', 'stderr'])(p.returncode,
+                                                              stdout, stderr)
+
+    return result
+
+
+def run(args,
+        shell=False,
+        capture_stdout=True,
+        capture_stderr=True,
+        check=True,
+        stdin=DEVNULL,
+        **kwargs):
+    return run_nb(args, shell, capture_stdout, capture_stderr, check, stdin,
+                  **kwargs)()
 
 
 def write_file_if_different(path, contents, mode=None, backup=None):
