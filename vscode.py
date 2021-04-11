@@ -6,38 +6,12 @@ import shutil
 import stat
 from collections import OrderedDict
 from utils import setup_logging, write_file_if_different, topo_sorted
+from config import rinterp
 
 DIR = os.path.dirname(__file__)
 TEMPLATE = os.path.join(DIR, 'template.code-workspace')
 WORKSPACE = 'stack.code-workspace'
 log = None
-
-
-def rinterp(obj, mapping):
-    """Recursively interpolate object with a dict of values."""
-
-    class Default(dict):
-        """{xyz} is not replaced when xyz is not in dict."""
-
-        def __missing__(self, key):
-            return "{" + key + "}"
-
-    return _rinterp(obj, Default(mapping))
-
-
-def _rinterp(obj, mapping):
-    try:
-        return {k: _rinterp(v, mapping) for k, v in obj.items()}
-    except AttributeError:
-        pass
-    try:
-        return obj.format_map(mapping)
-    except AttributeError:
-        pass
-    try:
-        return [_rinterp(v, mapping) for v in obj]
-    except TypeError:
-        return obj
 
 
 def read_runtime_env(filename):

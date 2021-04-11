@@ -18,6 +18,33 @@ def cpu_count():
     return cpu_count()
 
 
+def rinterp(obj, mapping):
+    """Recursively interpolate object with a dict of values."""
+
+    class Default(dict):
+        """{xyz} is not replaced when xyz is not in dict."""
+
+        def __missing__(self, key):
+            return "{" + key + "}"
+
+    return _rinterp(obj, Default(mapping))
+
+
+def _rinterp(obj, mapping):
+    try:
+        return {k: _rinterp(v, mapping) for k, v in obj.items()}
+    except AttributeError:
+        pass
+    try:
+        return obj.format_map(mapping)
+    except AttributeError:
+        pass
+    try:
+        return [_rinterp(v, mapping) for v in obj]
+    except TypeError:
+        return obj
+
+
 def git_base():
     choices = [
         "ssh://git@gitlab.cern.ch:7999",
@@ -131,6 +158,9 @@ def read_config(original=False,
         if key in EXPAND_PATH_VARS:
             value = expand_path(value)
         config[key] = value
+
+    # Interpolate self-references like "{projectPath}/some/path"
+    config = rinterp(config, config)
 
     return (config, defaults, overrides) if original else config
 
