@@ -11,6 +11,27 @@ _log = None
 _log_filename = None
 
 
+class ConsoleFormatter(logging.Formatter):
+    """Colourful logging formatter."""
+
+    def __init__(self):
+        default = "\033[1m%(levelname)-8s\033[0m %(message)s"
+        yellow = "\x1b[33;21m"
+        red = "\x1b[31;21m"
+        self._default = logging.Formatter(default)
+        self._warning = logging.Formatter(yellow + default)
+        self._error = logging.Formatter(red + default)
+
+    def format(self, record):
+        if record.levelno < logging.WARNING:
+            formatter = self._default
+        elif record.levelno < logging.ERROR:
+            formatter = self._warning
+        else:
+            formatter = self._error
+        return formatter.format(record)
+
+
 def setup_logging(directory):
     global _log, _log_filename
     log_filename = os.path.join(directory, 'log')
@@ -31,7 +52,7 @@ def setup_logging(directory):
         filemode='a')
     console = logging.StreamHandler()
     console.setLevel(logging.INFO)
-    console.setFormatter(logging.Formatter('%(levelname)-8s %(message)s'))
+    console.setFormatter(ConsoleFormatter())
     logging.getLogger('').addHandler(console)
     _log = logging.getLogger(os.path.basename(__file__))
     return _log
