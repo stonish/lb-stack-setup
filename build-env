@@ -3,7 +3,7 @@ set -eo pipefail
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 source "$DIR/helpers.sh"
 logname="build-env"
-eval $(config --sh outputPath binaryTag useDocker useDistcc lbenvPath lcgVersion projectPath)
+eval $(config --sh outputPath binaryTag useDocker useDistcc lbenvPath lcgVersion localPoolDepth projectPath)
 OUTPUT="$outputPath"
 BINARY_TAG="$binaryTag"
 USE_DOCKER="$useDocker"
@@ -70,8 +70,10 @@ if [ "$CHECK_KERBEROS" = true ]; then
 fi
 
 vars=(
+    # TODO move some of these to make.sh as only needed for building and not running?
     "LCG_VERSION=$lcgVersion"
     "LBENV_CURRENT_WORKSPACE=$projectPath"
+    "LOCAL_POOL_DEPTH=$localPoolDepth"
 )
 test -z ${MAKEFLAGS+x} || vars+=("MAKEFLAGS=${MAKEFLAGS}")
 # CMAKE_PREFIX_PATH is handled in make.sh!

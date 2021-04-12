@@ -6,10 +6,12 @@ import itertools
 import os
 import pathlib
 import re
+import time
+from subprocess import CalledProcessError
 import traceback
 import sys
 from config import read_config, DIR
-from utils import setup_logging, run, topo_sorted
+from utils import setup_logging, run, run_nb, topo_sorted
 from vscode import write_vscode_settings
 
 DATA_PACKAGE_DIRS = ["DBASE", "PARAM"]
@@ -101,7 +103,7 @@ def clone_cmake_project(project):
     assert len(m) <= 1, 'Multiple directories for project: ' + str(m)
     if not m:
         url, branch = git_url_branch(project)
-        run(['git', 'clone', url])
+        run(['git', 'clone', url, project])
         run(['git', 'checkout', branch], cwd=project)
         run(['git', 'submodule', 'update', '--init', '--recursive'],
             cwd=project)
@@ -120,12 +122,14 @@ def clone_cmake_project(project):
 
 
 def clone_package(name, path):
+    # TODO remove warning in one year (November 2021)
     if path != 'DBASE' and os.path.isdir(os.path.join('DBASE', name)):
         log.warning(
             'Please move package {} from {} to {} and `make purge`'.format(
                 name, 'DBASE', path))
 
-    if not os.path.isdir(os.path.join(path, name)):
+    full_path = os.path.join(path, name)
+    if not os.path.isdir(full_path):
         run([
             os.path.join(DIR, 'build-env'),
             os.path.join(config['lbenvPath'], 'bin/git-lb-clone-pkg'), name
@@ -134,12 +138,61 @@ def clone_package(name, path):
             stderr=None,
             stdin=None,
             cwd=path)
+    return full_path
 
 
 def list_repos(path=''):
     """Return all git repositories under the directory path."""
     paths = [p[:-5] for p in glob.glob(os.path.join(path, '*/.git'))]
     return sorted(p for p in paths if os.path.abspath(p) != DIR)
+
+
+def _mtime_or_zero(path):
+    try:
+        return os.stat(path).st_mtime
+    except FileNotFoundError:
+        return 0
+
+
+def check_staleness(repos):
+    FETCH_TTL = 3600  # seconds
+    to_fetch = [
+        p for p in repos if time.time() -
+        _mtime_or_zero(os.path.join(p, '.git', 'FETCH_HEAD')) > FETCH_TTL
+    ]
+    if to_fetch:
+        log.info("Fetching {}".format(', '.join(to_fetch)))
+        ps = [run_nb(['git', 'fetch'], cwd=p, check=False) for p in to_fetch]
+        # wait for all fetching to finish
+        rcs = [result().returncode for result in ps]
+        failed = [p for p, rc in zip(to_fetch, rcs) if rc != 0]
+        if failed:
+            log.warning("Failed to fetch " + ", ".join(failed))
+
+    targets = ['origin/' + git_url_branch(p)[1] for p in repos]
+    ps = [
+        run_nb(['git', 'rev-list', '--count', '--left-right', t + '...'],
+               cwd=p) for p, t in zip(repos, targets)
+    ]
+    for path, target, result in zip(repos, targets, ps):
+        try:
+            res = result()
+            n_behind, n_ahead = map(int, res.stdout.split())
+            if n_behind:
+                ref_names = run(['git', 'log', '-n1', '--pretty=%D'],
+                                cwd=path).stdout.strip()
+                if not n_ahead:
+                    log.warning('{} ({}) is {} commits behind {}'.format(
+                        path, ref_names, n_behind, target))
+                else:
+                    log.warning(
+                        '{} ({}) is {} commits behind ({} ahead) {}'.format(
+                            path, ref_names, n_behind, n_ahead, target))
+            elif n_ahead:
+                log.info('{} is {} commits ahead {}'.format(
+                    path, n_ahead, target))
+        except (CalledProcessError, ValueError):
+            log.warning('Failed to get status of ' + path)
 
 
 def checkout(projects, data_packages):
@@ -152,18 +205,21 @@ def checkout(projects, data_packages):
     to_checkout = list(projects)
     while to_checkout:
         p = to_checkout.pop(0)
-        if not os.path.isdir(p):
-            p = clone_cmake_project(p)
+        p = clone_cmake_project(p)
         deps = cmake_deps(p) + config['extraDependencies'].get(p, [])
         to_checkout.extend(sorted(set(deps).difference(project_deps)))
         project_deps[p] = deps
 
+    # Check that all dependencies are also keys
     assert set().union(*project_deps.values()).issubset(project_deps)
 
+    dp_repos = []
     for name in data_packages:
         container = data_package_container(name)
         mkdir_p(container)
-        clone_package(name, container)
+        dp_repos.append(clone_package(name, container))
+
+    check_staleness(list(project_deps.keys()) + dp_repos)
 
     return project_deps
 

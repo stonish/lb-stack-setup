@@ -135,13 +135,9 @@ test: $(BUILDDIR)/$(BUILD_CONF_FILE)
 	$(RM) -r $(BUILDDIR)/html
 	+@cd $(BUILDDIR) && $(CMAKE) -P $(DIR)/CTestXML2HTML.cmake
 
-ifeq ($(VERBOSE),)
-# less verbose install (see GAUDI-1018)
-# (emulate the default CMake install target)
 install: patch-python-ns
 	cd $(BUILDDIR) && $(CMAKE) -P cmake_install.cmake | grep -v "^-- Up-to-date:"
 	test -f $(BUILDDIR)/config/$(PROJECT)-build.xenv && cp $(BUILDDIR)/config/$(PROJECT)-build.xenv $(INSTALLDIR)/$(PROJECT).xenv || true
-endif
 
 # ensure that the target are always passed to the CMake Makefile
 FORCE:

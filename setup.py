@@ -24,7 +24,6 @@ CVMFS_DIRS = [
     ('/cvmfs/lhcbdev.cern.ch', False),
     ('/cvmfs/sft.cern.ch', False),
 ]
-CVMFS_GIT = '/cvmfs/lhcb.cern.ch/lib/contrib/git/2.14.2/bin/git'
 GIT = 'git'
 URL_BASE = 'https://gitlab.cern.ch/rmatev/lb-stack-setup'
 REPO = URL_BASE + '.git'
@@ -87,14 +86,14 @@ def assert_os_or_docker():
     return use_docker
 
 
-def check_git_version():
+def assert_git_version():
     """Check git version and suggest alias if too old."""
     git_ver_str = check_output(['git', '--version']).decode('ascii').strip()
     git_ver = LooseVersion(git_ver_str.split()[2])
     if git_ver < LooseVersion('1.8'):
-        logging.warning(
-            'Old unspported git version {} detected. Consider using\n'
-            '    alias git={}'.format(git_ver, CVMFS_GIT))
+        sys.exit(
+            'Old unspported git version {} detected. See doc/prerequisites.md'.
+            format(git_ver))
 
 
 def git(*args, **kwargs):
@@ -146,7 +145,7 @@ if __name__ == '__main__':
     # Check prerequisites
     assert_cvmfs()
     use_docker = assert_os_or_docker()
-    check_git_version()
+    assert_git_version()
     # TODO check free space and warn? Do it smartly base on selected projects?
 
     # Do the actual new setup or update

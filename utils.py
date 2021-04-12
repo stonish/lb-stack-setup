@@ -11,6 +11,27 @@ _log = None
 _log_filename = None
 
 
+class ConsoleFormatter(logging.Formatter):
+    """Colourful logging formatter."""
+
+    def __init__(self):
+        default = "\033[1m%(levelname)-8s\033[0m %(message)s"
+        yellow = "\x1b[33;21m"
+        red = "\x1b[31;21m"
+        self._default = logging.Formatter(default)
+        self._warning = logging.Formatter(yellow + default)
+        self._error = logging.Formatter(red + default)
+
+    def format(self, record):
+        if record.levelno < logging.WARNING:
+            formatter = self._default
+        elif record.levelno < logging.ERROR:
+            formatter = self._warning
+        else:
+            formatter = self._error
+        return formatter.format(record)
+
+
 def setup_logging(directory):
     global _log, _log_filename
     log_filename = os.path.join(directory, 'log')
@@ -31,10 +52,45 @@ def setup_logging(directory):
         filemode='a')
     console = logging.StreamHandler()
     console.setLevel(logging.INFO)
-    console.setFormatter(logging.Formatter('%(levelname)-8s %(message)s'))
+    console.setFormatter(ConsoleFormatter())
     logging.getLogger('').addHandler(console)
     _log = logging.getLogger(os.path.basename(__file__))
     return _log
+
+
+def run_nb(args,
+           shell=False,
+           capture_stdout=True,
+           capture_stderr=True,
+           check=True,
+           stdin=DEVNULL,
+           **kwargs):
+    """Non-blocking run() that returns a blocking function."""
+    p = Popen(
+        args,
+        shell=shell,
+        stdin=stdin,
+        stdout=kwargs.pop('stdout', PIPE if capture_stdout else None),
+        stderr=kwargs.pop('stderr', PIPE if capture_stderr else None),
+        **kwargs)
+
+    def result():
+        _log.debug('command: ' +
+                   (repr(args) if shell else ' '.join(map(repr, args))))
+        stdout, stderr = [
+            b if b is None else b.decode('utf-8') for b in p.communicate()
+        ]
+        level = logging.ERROR if check and p.returncode else logging.DEBUG
+        _log.log(level, 'retcode: ' + str(p.returncode))
+        _log.log(level, 'stderr: {}'.format(stderr))
+        _log.log(level, 'stdout: {}'.format(stdout))
+        if check and p.returncode != 0:
+            raise CalledProcessError(p.returncode, args)
+        return namedtuple('CompletedProcess',
+                          ['returncode', 'stdout', 'stderr'])(p.returncode,
+                                                              stdout, stderr)
+
+    return result
 
 
 def run(args,
@@ -44,26 +100,8 @@ def run(args,
         check=True,
         stdin=DEVNULL,
         **kwargs):
-    _log.debug('command: ' +
-               (repr(args) if shell else ' '.join(map(repr, args))))
-    p = Popen(
-        args,
-        shell=shell,
-        stdin=stdin,
-        stdout=kwargs.pop('stdout', PIPE if capture_stdout else None),
-        stderr=kwargs.pop('stderr', PIPE if capture_stderr else None),
-        **kwargs)
-    stdout, stderr = [
-        b if b is None else b.decode('utf-8') for b in p.communicate()
-    ]
-    level = logging.ERROR if check and p.returncode else logging.DEBUG
-    _log.log(level, 'retcode: ' + str(p.returncode))
-    _log.log(level, 'stderr: {}'.format(stderr))
-    _log.log(level, 'stdout: {}'.format(stdout))
-    if check and p.returncode != 0:
-        raise CalledProcessError(p.returncode, args)
-    return namedtuple('CompletedProcess', ['returncode', 'stdout', 'stderr'])(
-        p.returncode, stdout, stderr)
+    return run_nb(args, shell, capture_stdout, capture_stderr, check, stdin,
+                  **kwargs)()
 
 
 def write_file_if_different(path, contents, mode=None, backup=None):

@@ -50,30 +50,29 @@ If not, install CVMFS by following the official instructions
 or [here](https://cvmfs.readthedocs.io/en/stable/cpt-quickstart.html).
 Check [below](#cvmfs-on-macos) for more detailed instructions for macOS.
 
-Configure your client by editing `/etc/cvmfs/default.local` and specifying the
+Configure your client by creating `/etc/cvmfs/default.local` and specifying the
 minimal set of cvmfs repos and the appropriate proxy. For example:
-```
+
+```ini
 CVMFS_REPOSITORIES=lhcb.cern.ch,lhcb-condb.cern.ch,lhcbdev.cern.ch,sft.cern.ch
 CVMFS_HTTP_PROXY="DIRECT"
 ```
+
 For a stationary machine it is recommended to use
 `CVMFS_HTTP_PROXY="http://ca-proxy.cern.ch:3128"` at CERN or whatever your
 sysadmin advises for another institute.
 
-
 ### Git
 
-Check that you have at least `git 1.8`
+For minimal functionality, check that you have at least Git 1.8
 
 ```sh
 git --version
 ```
 
-If not, the simplest solution (on Linux) is to define the alias
-
-```sh
-alias git=/cvmfs/lhcb.cern.ch/lib/contrib/git/2.14.2/bin/git
-```
+It is highly recommended to work with a much more recent version, such as
+the one shipped with the default LHCb environment ([LbEnv](https://lhcb-core-doc.web.cern.ch/lhcb-core-doc/LHCbEnvironment.html)).
+As of March 2021, the version there is 2.30.
 
 ### Libraries and headers
 

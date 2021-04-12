@@ -20,7 +20,12 @@ curl https://gitlab.cern.ch/rmatev/lb-stack-setup/raw/master/setup.py | python3 
 ```
 
 > **Note:** If your system lacks Python 3 (`/usr/bin/python3`), ask for it to
-> be installed, or simply source the LHCb environment.
+> be installed, or simply source the LHCb environment with
+> `source /cvmfs/lhcb.cern.ch/lib/LbEnv` if it is not already sourced.
+
+> **Note:** If you are working in the LHCb Online network, set up git with
+> `git config --global 'http.https://github.com/.proxy' lbproxy01:8080`
+> to use the proxy to access GitHub.
 
 The script will first check that all prerequisites are met. If it fails, check
 [doc/prerequisites.md](doc/prerequisites.md) for more information.
@@ -84,6 +89,10 @@ make fast/Moore/test ARGS='-R hlt1_example$'
 # verbose output showing test (failure) details
 make fast/Moore/test ARGS='-R hlt1_example -V'
 ```
+
+Using `ARGS` you can pass arbitrary arguments to
+[`ctest`](https://cmake.org/cmake/help/latest/manual/ctest.1.html).
+Check the documentation for other useful arguments (e.g. `--stop-on-failure`).
 
 Note that changes in python sources are immediatelly "applied" in downstream projects
 (unlike a "manual" stack setup with `lb-project-init`). For example, after changing a
