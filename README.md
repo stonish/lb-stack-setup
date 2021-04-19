@@ -92,7 +92,8 @@ make fast/Moore/test ARGS='-R hlt1_example -V'
 
 Using `ARGS` you can pass arbitrary arguments to
 [`ctest`](https://cmake.org/cmake/help/latest/manual/ctest.1.html).
-Check the documentation for other useful arguments (e.g. `--stop-on-failure`).
+Check the documentation for other useful arguments (e.g. `--stop-on-failure`
+and `--rerun-failed`).
 
 Note that changes in python sources are immediatelly "applied" in downstream projects
 (unlike a "manual" stack setup with `lb-project-init`). For example, after changing a
