@@ -67,7 +67,10 @@
         "python.linting.flake8Path": "{outputPath}/flake8",
         "python.linting.pylintEnabled": false,
         "python.pythonPath": "<placeholder: build at least gaudi for intellisense to work>",
+        "restructuredtext.confPath": " ${workspaceFolder}/doc/conf.py",
         "restructuredtext.languageServer.disabled": true,
+        "restructuredtext.linter.run": "off",
+        "restructuredtext.sphinxBuildPath": "{lbenvPath}/bin/sphinx-build",
         "telemetry.enableCrashReporter": false,
         "telemetry.enableTelemetry": false,
         "window.title": "${dirty}${activeEditorShort}${separator}${rootPath}"
