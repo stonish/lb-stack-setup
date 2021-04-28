@@ -101,25 +101,13 @@ endif
 BUILD_CMD := $(CMAKE) --build $(BUILDDIR) --target
 
 # default target
-patch-python-ns:
-
-# with the following patching, python modules are imported from the sources
-# of dependent projects and not the InstallArea (i.e. no need to rebuild)
-patch-python-ns: all
-	# Patching python namespaced packages for intellisense support...
-	@find $(BUILDDIR) -path '$(BUILDDIR)/python/*/__init__.py' -exec bash -c "\
-	  set -euo pipefail; \
-	  grep '^fname =' {} \
-	  | cat '$(DIR)/python_ns_init_pkgutil.py' - '$(DIR)/python_ns_init_gaudi.py' > '{}.new' \
-	  && mv --backup=simple '{}.new' '{}'" \;
-	@find $(BUILDDIR) -path '$(BUILDDIR)/*/genConf/*/__init__.py' -exec bash -c \
-	  "cp --backup=simple '$(DIR)/python_ns_init_pkgutil.py' '{}'" \;
+all:
 
 %: $(BUILDDIR)/$(BUILD_CONF_FILE) FORCE
 	+$(BUILD_CMD) $* -- $(BUILDFLAGS)
 
 # aliases
-.PHONY: configure test FORCE patch-python-ns  # fixed by RM (tests -> test)
+.PHONY: configure test FORCE  # fixed by RM (tests -> test)
 ifneq ($(wildcard $(BUILDDIR)/$(BUILD_CONF_FILE)),)
 configure: rebuild_cache
 else
@@ -135,7 +123,7 @@ test: $(BUILDDIR)/$(BUILD_CONF_FILE)
 	$(RM) -r $(BUILDDIR)/html
 	+@cd $(BUILDDIR) && $(CMAKE) -P $(DIR)/CTestXML2HTML.cmake
 
-install: patch-python-ns
+install: all
 	cd $(BUILDDIR) && $(CMAKE) -P cmake_install.cmake | grep -v "^-- Up-to-date:"
 	test -f $(BUILDDIR)/config/$(PROJECT)-build.xenv && cp $(BUILDDIR)/config/$(PROJECT)-build.xenv $(INSTALLDIR)/$(PROJECT).xenv || true
 
