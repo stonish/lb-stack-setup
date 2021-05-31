@@ -57,11 +57,7 @@ setup:
 make:x86_64-centos7-gcc9-opt:
   extends: .make
 
-make:x86_64-centos7-gcc9+py3-opt:
-  extends: .make
-  variables:
-    PLATFORM: x86_64-centos7-gcc9+py3-opt
-
+# Keep old cmake until it's easy to support (in case we need it for legacy branches).
 make-old-cmake:
   stage: make
   tags:
