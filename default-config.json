@@ -12,7 +12,7 @@
 		"Geant4": "master",
 		"default": "master"
 	},
-	"lcgVersion": "97a",
+	"lcgVersion": "100",
 	"cmakePrefixPath": "$CMAKE_PREFIX_PATH:/cvmfs/sft.cern.ch/lcg/releases",
 	"cmakeFlags": {
 		"default": "-Wno-dev",
