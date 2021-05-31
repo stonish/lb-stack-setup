@@ -7,7 +7,7 @@
 	],
 	"extraDependencies": {},
 	"gitBranch": {
-		"Gaudi": "master",
+		"Gaudi": "v35-patches",
 		"Detector": "v0-patches",
 		"Geant4": "master",
 		"default": "master"
