@@ -39,6 +39,9 @@ fi
 mkdir -p $TMPDIR
 # use our CMake
 export PATH=$CONTRIB/bin:$PATH
+# force a particular ninja executable since for some reason CMake does not
+# look into PATH and picks up /usr/bin/ninja-build when present.
+export CMAKE_MAKE_PROGRAM=$CONTRIB/bin/ninja
 # more informative build progress [notstarted>running>finished/total]
 export NINJA_STATUS="[%u>%r>%f/%t] "
 
