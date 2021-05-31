@@ -10,7 +10,7 @@ import time
 from subprocess import CalledProcessError
 import traceback
 import sys
-from config import read_config, DIR
+from config import read_config, DIR, GITLAB_READONLY_URL, GITLAB_BASE_URLS
 from utils import setup_logging, run, run_nb, topo_sorted
 from vscode import write_vscode_settings
 
@@ -47,12 +47,18 @@ def symlink(src, dst):
     os.symlink(src, dst)
 
 
-def git_url_branch(project):
+def git_url_branch(project, try_read_only=False):
     url = config['gitUrl'].get(project)
     if not url:
         group = config['gitGroup']
         group = group.get(project, group['default'])
         url = '{}/{}/{}.git'.format(config['gitBase'], group, project)
+    if try_read_only:
+        # Swap out the base for the read-only base
+        for base in GITLAB_BASE_URLS:
+            if url.startswith(base):
+                url = GITLAB_READONLY_URL + url[len(base):]
+                break
     branch = config['gitBranch']
     branch = branch.get(project, branch['default'])
     return url, branch
@@ -149,7 +155,8 @@ def list_repos(path=''):
 
 def _mtime_or_zero(path):
     try:
-        return os.stat(path).st_mtime
+        result = os.stat(path)
+        return result.st_mtime if result.st_size > 0 else 0
     except FileNotFoundError:
         return 0
 
@@ -162,7 +169,17 @@ def check_staleness(repos):
     ]
     if to_fetch:
         log.info("Fetching {}".format(', '.join(to_fetch)))
-        ps = [run_nb(['git', 'fetch'], cwd=p, check=False) for p in to_fetch]
+        ps = []
+        for p in to_fetch:
+            url, branch = git_url_branch(p, try_read_only=True)
+            ps.append(
+                # TODO: fetch origin if its URL matches the config's URL,
+                # otherwise, fetch the URL directly:
+                # run_nb(['git', 'fetch', url, branch], cwd=p, check=False))
+                # NOT WORKING because DPs trying to
+                # 'git' 'fetch' 'https://gitlab.cern.ch/lhcb/DBASE/AppConfig.git' 'master'
+                run_nb(['git', 'fetch', 'origin', branch], cwd=p, check=False))
+            #  +refs/merge-requests/*/head:refs/remotes/origin/mr/*
         # wait for all fetching to finish
         rcs = [result().returncode for result in ps]
         failed = [p for p, rc in zip(to_fetch, rcs) if rc != 0]
@@ -170,10 +187,8 @@ def check_staleness(repos):
             log.warning("Failed to fetch " + ", ".join(failed))
 
     targets = ['origin/' + git_url_branch(p)[1] for p in repos]
-    ps = [
-        run_nb(['git', 'rev-list', '--count', '--left-right', t + '...'],
-               cwd=p) for p, t in zip(repos, targets)
-    ]
+    diff_cmd = ['git', 'rev-list', '--count', '--left-right', 'FETCH_HEAD...']
+    ps = [run_nb(diff_cmd, cwd=p, check=False) for p in repos]
     for path, target, result in zip(repos, targets, ps):
         try:
             res = result()

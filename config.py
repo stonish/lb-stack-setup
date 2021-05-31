@@ -11,6 +11,12 @@ DEFAULT_CONFIG = os.path.join(DIR, 'default-config.json')
 CONFIG = os.path.join(DIR, 'config.json')
 # Special variables where paths are expanded
 EXPAND_PATH_VARS = ["projectPath", "contribPath", "ccachePath", "outputPath"]
+GITLAB_READONLY_URL = "https://gitlab.cern.ch"
+GITLAB_BASE_URLS = [
+    "ssh://git@gitlab.cern.ch:7999",
+    "https://:@gitlab.cern.ch:8443",
+    GITLAB_READONLY_URL,
+]
 
 
 def cpu_count():
@@ -46,19 +52,14 @@ def _rinterp(obj, mapping):
 
 
 def git_base():
-    choices = [
-        "ssh://git@gitlab.cern.ch:7999",
-        "https://:@gitlab.cern.ch:8443",
-        "https://gitlab.cern.ch",
-    ]
-    for base in choices:
+    for base in GITLAB_BASE_URLS:
         code = os.system(
             'git ls-remote {}/gaudi/Gaudi.git HEAD &>/dev/null'.format(base))
         if code == 0:
             # TODO output logging warnings on stderr
-            # if base != choices[0]:
+            # if base != GITLAB_BASE_URLS[0]:
             #     logging.warning('Using {} git base for cloning as {} is not accessible'
-            #                     .format(base, choices[0]))
+            #                     .format(base, GITLAB_BASE_URLS[0]))
             return base
     # This really should not happen, but let's not crash
     # TODO output logging warnings on stderr
