@@ -168,7 +168,7 @@ The platform set in your shell when running `make` or `run-env` is irrelevant.
 In order to change the platform used to compile and run, do the following
 
 ```sh
-utils/config.py binaryTag x86_64-centos7-gcc9-opt+g
+utils/config.py binaryTag x86_64_v3-centos7-gcc10-opt
 ```
 
 or edit the file `utils/config.json` directly.
@@ -197,13 +197,6 @@ For example, in order to use the `dev4` nightly build from Tuesday, it is enough
 ```sh
 utils/config.py lcgVersion dev4
 utils/config.py cmakePrefixPath '$CMAKE_PREFIX_PATH:/cvmfs/sft-nightlies.cern.ch/lcg/nightlies/dev4/Tue'
-```
-
-In order to use a Python 3 build of LCG, there is no need to select a Python 3 LCG
-build explicitly, but it is sufficient to set the platform in the following way
-
-```sh
-utils/config.py binaryTag x86_64-centos7-gcc9+py3-opt
 ```
 
 ### Pass flags to CMake

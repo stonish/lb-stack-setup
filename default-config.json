@@ -1,5 +1,5 @@
 {
-	"binaryTag": "x86_64-centos7-gcc9-opt",
+	"binaryTag": "x86_64_v2-centos7-gcc10-opt",
 	"defaultProjects": [
 		"Alignment",
 		"Brunel",
