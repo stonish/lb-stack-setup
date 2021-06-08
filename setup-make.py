@@ -72,7 +72,7 @@ def cmake_name(project):
     return m.group('name')
 
 
-def cmake_deps(project):
+def old_cmake_deps(project):
     cmake_path = os.path.join(project, 'CMakeLists.txt')
     try:
         with open(cmake_path) as f:
@@ -95,6 +95,25 @@ def cmake_deps(project):
     if not len(deps) % 2 == 0:
         raise RuntimeError('Bad gaudi_project() call in {}'.format(cmake_path))
     return deps[::2]
+
+
+def find_project_deps(project):
+    """Return the direct dependencies of a project."""
+    IGNORED_DEPENDENCIES = ["LCG", "DBASE", "PARAM"]
+    metadata_path = os.path.join(project, 'lhcbproject.yml')
+    try:
+        with open(metadata_path) as f:
+            metadata = f.read()
+        m = re.search(r'(\n|^)dependencies:\s(?P<deps>(\s+-\s+\w+\n)+)',
+                      metadata)
+        if not m:
+            raise RuntimeError(f'dependencies not found in {metadata_path}')
+        deps = [s.strip(' -') for s in m.group('deps').splitlines()]
+        deps = [d for d in deps if d not in IGNORED_DEPENDENCIES]
+    except IOError:
+        # Fall back to old-style cmake
+        deps = old_cmake_deps(project)
+    return deps + config['extraDependencies'].get(project, [])
 
 
 def clone_cmake_project(project):
@@ -221,7 +240,7 @@ def checkout(projects, data_packages):
     while to_checkout:
         p = to_checkout.pop(0)
         p = clone_cmake_project(p)
-        deps = cmake_deps(p) + config['extraDependencies'].get(p, [])
+        deps = find_project_deps(p)
         to_checkout.extend(sorted(set(deps).difference(project_deps)))
         project_deps[p] = deps
 
@@ -239,13 +258,12 @@ def checkout(projects, data_packages):
     return project_deps
 
 
-def find_project_deps(repos, project_deps={}):
+def find_all_deps(repos, project_deps={}):
     project_deps = project_deps.copy()
     for r in repos:
         if r not in project_deps:
             try:
-                project_deps[r] = (
-                    cmake_deps(r) + config['extraDependencies'].get(r, []))
+                project_deps[r] = find_project_deps(r)
             except NotCMakeProjectError:
                 pass
     return project_deps
@@ -310,7 +328,7 @@ def main(targets):
 
         # Find cloned projects that we won't build but that may be
         # dependent on those to build.
-        project_deps = find_project_deps(repos, project_deps)
+        project_deps = find_all_deps(repos, project_deps)
 
         # Order repos according to dependencies
         project_order = topo_sorted(project_deps) + repos
