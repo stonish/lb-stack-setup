@@ -23,11 +23,19 @@ log = None
 
 
 def data_package_container(name):
-    param_packages = [
-        "BcVegPyData", "ChargedProtoANNPIDParam", "Geant4Files", "GenXiccData",
-        "MCatNLOData", "MIBData", "ParamFiles", "QMTestFiles", "TMVAWeights"
-    ]
-    return "PARAM" if name in param_packages else "DBASE"
+    parts = name.split('/', 1)
+    if len(parts) > 1:
+        if parts[0] in DATA_PACKAGE_DIRS:
+            container, package = parts
+    else:
+        param_packages = [
+            "BcVegPyData", "ChargedProtoANNPIDParam", "Geant4Files",
+            "GenXiccData", "MCatNLOData", "MIBData", "ParamFiles",
+            "QMTestFiles", "TMVAWeights"
+        ]
+        package = name
+        container = "PARAM" if name in param_packages else "DBASE"
+    return container, package
 
 
 class NotCMakeProjectError(RuntimeError):
@@ -47,12 +55,20 @@ def symlink(src, dst):
     os.symlink(src, dst)
 
 
-def git_url_branch(project, try_read_only=False):
-    url = config['gitUrl'].get(project)
+def git_url_branch(repo, try_read_only=False):
+    # TODO for data packages we may look up 'DBASE/PRConfig' or 'PRConfig' in
+    #      gitUrl and gitGroup.
+    url = config['gitUrl'].get(repo)
     if not url:
         group = config['gitGroup']
-        group = group.get(project, group['default'])
-        url = '{}/{}/{}.git'.format(config['gitBase'], group, project)
+        path_parts = pathlib.PurePath(repo).parts
+        if path_parts[0] not in DATA_PACKAGE_DIRS:
+            group = group.get(repo, group['default'])
+            url = '{}/{}/{}.git'.format(config['gitBase'], group, repo)
+        else:
+            group = group.get(repo, group['defaultDataPackages'])
+            url = '{}/{}/{}.git'.format(config['gitBase'], group,
+                                        os.path.join(*path_parts[1:]))
     if try_read_only:
         # Swap out the base for the read-only base
         for base in GITLAB_BASE_URLS:
@@ -60,7 +76,7 @@ def git_url_branch(project, try_read_only=False):
                 url = GITLAB_READONLY_URL + url[len(base):]
                 break
     branch = config['gitBranch']
-    branch = branch.get(project, branch['default'])
+    branch = branch.get(repo, branch['default'])
     return url, branch
 
 
@@ -128,6 +144,7 @@ def clone_cmake_project(project):
     assert len(m) <= 1, 'Multiple directories for project: ' + str(m)
     if not m:
         url, branch = git_url_branch(project)
+        log.info(f'Cloning {project}...')
         run(['git', 'clone', url, project])
         run(['git', 'checkout', branch], cwd=project)
         run(['git', 'submodule', 'update', '--init', '--recursive'],
@@ -155,6 +172,7 @@ def clone_package(name, path):
 
     full_path = os.path.join(path, name)
     if not os.path.isdir(full_path):
+        log.info(f'Cloning {name}...')
         run([
             os.path.join(DIR, 'build-env'),
             os.path.join(config['lbenvPath'], 'bin/git-lb-clone-pkg'), name
@@ -166,10 +184,17 @@ def clone_package(name, path):
     return full_path
 
 
-def list_repos(path=''):
-    """Return all git repositories under the directory path."""
-    paths = [p[:-5] for p in glob.glob(os.path.join(path, '*/.git'))]
-    return sorted(p for p in paths if os.path.abspath(p) != DIR)
+def list_repos(dirs=['']):
+    """Return all git repositories under the given directories.
+
+    Excludes the `utils` directory.
+
+    """
+    all_paths = []
+    for d in dirs:
+        paths = [p[:-5] for p in glob.glob(os.path.join(d, '*/.git'))]
+        all_paths += sorted(p for p in paths if os.path.abspath(p) != DIR)
+    return all_paths
 
 
 def _mtime_or_zero(path):
@@ -248,8 +273,8 @@ def checkout(projects, data_packages):
     assert set().union(*project_deps.values()).issubset(project_deps)
 
     dp_repos = []
-    for name in data_packages:
-        container = data_package_container(name)
+    for spec in data_packages:
+        container, name = data_package_container(spec)
         mkdir_p(container)
         dp_repos.append(clone_package(name, container))
 
@@ -324,7 +349,7 @@ def main(targets):
 
         # After we cloned the minimum necessary, check for other repos
         repos = list_repos()
-        dp_repos = sum((list_repos(d) for d in DATA_PACKAGE_DIRS), [])
+        dp_repos = list_repos(DATA_PACKAGE_DIRS)
 
         # Find cloned projects that we won't build but that may be
         # dependent on those to build.
@@ -337,7 +362,6 @@ def main(targets):
         makefile_config = [
             "BINARY_TAG := {}".format(config["binaryTag"]),
             "PROJECTS := " + " ".join(sorted(project_deps)),
-            "DATA_PACKAGES := " + " ".join(sorted(data_packages)),
         ]
         for p, deps in sorted(project_deps.items()):
             makefile_config += [

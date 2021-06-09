@@ -23,16 +23,17 @@
 	"gitGroup": {
 		"Gaudi": "gaudi",
 		"Gaussino": "Gaussino",
-		"default": "lhcb"
+		"default": "lhcb",
+		"defaultDataPackages": "lhcb-datapkg"
 	},
 	"gitBase": null,
 	"gitUrl": {
 		"DD4hep": "https://github.com/AIDASoft/DD4hep.git"
 	},
 	"dataPackages": [
-		"AppConfig",
-		"PRConfig",
-		"ParamFiles"
+		"DBASE/AppConfig",
+		"DBASE/PRConfig",
+		"PARAM/ParamFiles"
 	],
 	"useDocker": false,
 	"useCcache": true,
