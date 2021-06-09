@@ -123,5 +123,5 @@ else
             exit 1
         fi
     fi
-    env -i bash -c ". '$cache'; \"\$@\"" bash "$@"
+    exec env -i bash -c ". '$cache'; exec \"\$@\"" bash "$@"
 fi

@@ -14,4 +14,4 @@ done
 PROJECT="${!iproject}"
 export LB_DOCKER_RUN_FLAGS="--ptrace ${@:1:$iproject-1}"
 # check kerberos token as we're most likely going to access data
-"${DIR}/build-env" --check-kerberos ${PROJECT}/build.${BINARY_TAG}/run "${@:$iproject+1}"
+exec "${DIR}/build-env" --check-kerberos ${PROJECT}/build.${BINARY_TAG}/run "${@:$iproject+1}"
