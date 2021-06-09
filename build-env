@@ -18,6 +18,9 @@ elif [ "$USE_DISTCC" = true ]; then
     CHECK_KERBEROS=true
 fi
 
+# Expand any variables in the command to run (e.g. $BINARY_TAG from run-env)
+cmd=$(eval echo "$1")
+
 if [ "$USE_DOCKER" != true ]; then
     # If using a native build, just check the OS
     HOST_OS=$(/cvmfs/lhcb.cern.ch/lib/bin/host_os)
@@ -94,7 +97,7 @@ if [ "$USE_DOCKER" = true ]; then
     done
     # if KRB5CCNAME is empty, don't try to forward the kerberos token
     test -z ${KRB5CCNAME} || args+=(--kerberos)
-    "${DIR}/lb-docker-run" "${args[@]}" ${LB_DOCKER_RUN_FLAGS} "$@"
+    "${DIR}/lb-docker-run" "${args[@]}" ${LB_DOCKER_RUN_FLAGS} "$cmd" "${@:2}"
     # TODO lbenvPath is not respected in the docker case
 else
     # Start a clean LbEnv a la lb-docker-run
@@ -123,5 +126,5 @@ else
             exit 1
         fi
     fi
-    exec env -i bash -c ". '$cache'; exec \"\$@\"" bash "$@"
+    exec env -i bash -c ". '$cache'; exec \"\$@\"" bash "$cmd" "${@:2}"
 fi
