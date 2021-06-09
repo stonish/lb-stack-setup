@@ -15,6 +15,7 @@ from utils import setup_logging, run, run_nb, topo_sorted
 from vscode import write_vscode_settings
 
 DATA_PACKAGE_DIRS = ["DBASE", "PARAM"]
+SPECIAL_TARGETS = ["update"]
 MAKE_TARGET_RE = re.compile(
     r'^(?P<fast>fast/)?(?P<project>[A-Z]\w+)(/(?P<target>.*))?$')
 
@@ -254,6 +255,58 @@ def check_staleness(repos):
             log.warning('Failed to get status of ' + path)
 
 
+def update_repos():
+    log.info("Updating projects and data packages...")
+    root_repos = list_repos()
+    dp_repos = list_repos(DATA_PACKAGE_DIRS)
+    # find the LHCb projects
+    projects = list(find_all_deps(root_repos, {}).keys())
+    repos = projects + dp_repos
+
+    # Skip repos where the tracking branch does not match the config
+    # or nothing is tracked (e.g. a tag is checked out).
+    not_tracking = []
+    ps = [
+        run_nb(['git', 'rev-parse', '--abbrev-ref', 'HEAD@{upstream}'],
+               cwd=repo,
+               check=False) for repo in repos
+    ]
+    for repo, get_result in zip(repos, ps):
+        res = get_result()
+        if res.returncode == 0:
+            _, branch = git_url_branch(repo, try_read_only=True)
+            tracking_branch = res.stdout.strip().split('/', 1)[1]
+            if branch != tracking_branch:
+                not_tracking.append(repo)  # tracking a non
+        else:
+            not_tracking.append(repo)
+    repos = [r for r in repos if r not in not_tracking]
+    log.info("Skipped repos not tracking the default branch: "
+             f"{', '.join(not_tracking)}.")
+
+    ps = []
+    for repo in repos:
+        url, branch = git_url_branch(repo, try_read_only=True)
+        ps.append(
+            run_nb([
+                'git', '-c', 'color.ui=always', 'pull', '--ff-only', url,
+                branch
+            ],
+                   cwd=repo,
+                   check=False))
+    up_to_date = []
+    for repo, get_result in zip(repos, ps):
+        res = get_result()
+        if res.returncode == 0:
+            if 'Already up to date.' in res.stdout:
+                up_to_date.append(repo)
+            else:
+                log.info(f"{repo}: {res.stdout.strip()}\n")
+        else:
+            log.warning(f'{repo}: FAIL\n\n{res.stderr.strip()}\n')
+    log.info(f"Up to date: {', '.join(up_to_date)}.")
+
+
 def checkout(projects, data_packages):
     """Clone projects and data packages, and return make configuration.
 
@@ -312,6 +365,20 @@ def main(targets):
     with open(os.path.join(output_path, 'host.env'), 'w') as f:
         for name, value in sorted(os.environ.items()):
             print(name + "=" + value, file=f)
+
+    # Separate out special targets
+    special_targets = [t for t in SPECIAL_TARGETS if t in targets]
+    targets = [t for t in targets if t not in SPECIAL_TARGETS]
+
+    # Handle special targets
+    if special_targets:
+        if len(special_targets) > 1:
+            exit(f"expected at most one special target, got {special_targets}")
+        if targets:
+            exit(f"expected only special targets, also got {targets}")
+        if 'update' in special_targets:
+            update_repos()
+        return
 
     # collect top level projects to be cloned
     projects = []

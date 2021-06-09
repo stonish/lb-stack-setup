@@ -107,6 +107,7 @@ The `Makefile` provided features the following targets.
   - `all` (or `build`): builds the default projects (this is the default target),
   - `clean`: remove build products for all cloned projects (keeping the sources and CMake cache),
   - `purge`: similar to `clean`, but also remove the CMake temporary files,
+  - `update`: pull remote updates for repos which are on the default branch,
   - `help`: print a list of available targets,
   - `for-each CMD="do-something"`: run a command in each git repository (projects, data packages or other).
 - Project targets

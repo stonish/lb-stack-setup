@@ -33,7 +33,7 @@ help:
 	@for t in $(ALL_TARGETS) ; do echo .. $$t ; done
 
 # public targets: main targets
-ALL_TARGETS = all build clean purge contrib
+ALL_TARGETS = all build clean purge contrib update
 
 # ----------------------
 # implementation details
@@ -78,6 +78,7 @@ $(foreach proj,$(PROJECTS),$(eval $(call PROJECT_settings,$(proj))))
 # stack.code-workspace is always remade by setup-make.py, so this is just
 # to avoid the message "Nothing to be done for `stack.code-workspace'"
 stack.code-workspace: ;@# noop
+update: ;@# noop
 
 .PHONY: $(ALL_TARGETS) stack.code-workspace
 
