@@ -20,6 +20,7 @@ fi
 
 # Expand any variables in the command to run (e.g. $BINARY_TAG from run-env)
 cmd=$(eval echo "$1")
+cmd=${cmd:-printenv}  # if no command is given, print environment
 
 if [ "$USE_DOCKER" != true ]; then
     # If using a native build, just check the OS
