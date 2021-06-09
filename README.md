@@ -146,6 +146,8 @@ Depending on what and where you build there are different recommendations.
   Currently 80 virtual cores are available for parallel compilation.
   You need a valid kerberos token and connectivity to lxplus (or to be inside the CERN network).
   Be aware that these are shared resources, set it to `false` if your local cluster is powerful.
+- `forwardEnv (list)`: A list of environment variables that should be propagated
+  to the build and runtime environment. You may use it for variables such as `GITCONDDBPATH`.
 - `vscodeWorkspaceSettings`: include custom VSCode settings in the `.code-workspace` file.
   For example, one can customize the color of the window title bar with
 

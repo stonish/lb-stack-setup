@@ -25,6 +25,7 @@ setup:
     - utils/config.py useDistcc false
     - make contrib
     - bash utils/ci-utils/test-contrib.sh
+    - bash utils/ci-utils/test-build-env.sh
   artifacts:
     paths:
       - stack/

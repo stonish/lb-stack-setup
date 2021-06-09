@@ -20,6 +20,11 @@
 		"Gaussino": "-DPKG_CONFIG_USE_CMAKE_PREFIX_PATH=ON -DLCG_LAYER=LHCB_5 -DLCG_USE_GENERATORS=ON",
 		"Gauss": "-DLCG_LAYER=LHCB_5 -DLCG_USE_GENERATORS=ON"
 	},
+	"forwardEnv": [
+		"DISPLAY",
+		"SSH_AUTH_SOCK",
+		"SSH_AGENT_PID"
+	],
 	"gitGroup": {
 		"Gaudi": "gaudi",
 		"Gaussino": "Gaussino",

@@ -3,7 +3,8 @@ set -eo pipefail
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 source "$DIR/helpers.sh"
 logname="build-env"
-eval $(config --sh outputPath binaryTag useDocker useDistcc lbenvPath lcgVersion localPoolDepth projectPath)
+eval $(config --sh outputPath binaryTag useDocker useDistcc lbenvPath lcgVersion localPoolDepth projectPath forwardEnv)
+
 OUTPUT="$outputPath"
 BINARY_TAG="$binaryTag"
 USE_DOCKER="$useDocker"
@@ -80,6 +81,11 @@ vars=(
     "LOCAL_POOL_DEPTH=$localPoolDepth"
 )
 test -z ${MAKEFLAGS+x} || vars+=("MAKEFLAGS=${MAKEFLAGS}")
+# Propagate variables listed explicitly in forwardEnv
+for var in "${forwardEnv[@]}"; do
+    test -z ${!var+x} || vars+=("$var=${!var}")
+done
+
 # CMAKE_PREFIX_PATH is handled in make.sh!
 # If we set it here, LbEnv (native or Docker) would prepend the usual prefixes.
 # This limits how we can customise CMake, e.g. it is not possible to override
