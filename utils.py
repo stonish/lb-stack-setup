@@ -1,5 +1,6 @@
 import logging
 import os
+import textwrap
 from collections import namedtuple
 from subprocess import Popen, PIPE, CalledProcessError
 try:
@@ -21,6 +22,7 @@ class ConsoleFormatter(logging.Formatter):
         self._default = logging.Formatter(default)
         self._warning = logging.Formatter(yellow + default)
         self._error = logging.Formatter(red + default)
+        self._header_len = 9
 
     def format(self, record):
         if record.levelno < logging.WARNING:
@@ -29,6 +31,8 @@ class ConsoleFormatter(logging.Formatter):
             formatter = self._warning
         else:
             formatter = self._error
+        record.msg = textwrap.indent(record.msg,
+                                     ' ' * self._header_len).lstrip()
         return formatter.format(record)
 
 
