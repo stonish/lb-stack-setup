@@ -46,7 +46,6 @@ if [ "$CHECK_KERBEROS" = true ]; then
     if [ "$USE_DISTCC" = true ]; then
         LEVEL=ERROR
         may_exit="exit 1"
-        # TODO we should not require kerberos when testing (e.g. make Gaudi/test)
     fi
 
     if [ "$USE_DOCKER" = true ]; then
@@ -61,7 +60,8 @@ if [ "$CHECK_KERBEROS" = true ]; then
     fi
 
     # Check for a valid ticket
-    if ! klist -s; then
+    klist -l | grep -q "@CERN\.CH" & klist_pid=$!  # run klist -s and klist -l in parallel
+    if ! { klist -s && wait $klist_pid; }; then
         log $LEVEL "No valid ticket found. Please get a new one with"
         log $LEVEL
         log $LEVEL "    kinit -r 7d <username>@CERN.CH"
