@@ -59,14 +59,17 @@ then
     error 'Job pool not used'
 fi
 
-n_genreflex=$(grep 'COMMAND = .*/genreflex ' $build_ninja | wc -l)
-# find genreflex followed by a blank line and count pool use
-# based on https://askubuntu.com/questions/919449/awk-matching-empty-lines
-n_genreflex_pool=$(awk '/COMMAND = .*genreflex /{flag=1}/^$/{flag=0}flag' $build_ninja \
-                   | grep 'pool = local_pool' | wc -l)
-if [ "$n_genreflex" != "$n_genreflex_pool" ]
-then
-    error 'genreflex does not use dedicated job pool'
+# Skip legacy (e.g. 2018) Gaudi versions that do not support GENREFLEX_JOB_POOL
+if ( cd "$build/.."; git grep GENREFLEX_JOB_POOL ) ; then
+    n_genreflex=$(grep 'COMMAND = .*/genreflex ' $build_ninja | wc -l)
+    # find genreflex followed by a blank line and count pool use
+    # based on https://askubuntu.com/questions/919449/awk-matching-empty-lines
+    n_genreflex_pool=$(awk '/COMMAND = .*genreflex /{flag=1}/^$/{flag=0}flag' $build_ninja \
+                    | grep 'pool = local_pool' | wc -l)
+    if [ "$n_genreflex" != "$n_genreflex_pool" ]
+    then
+        error 'genreflex does not use dedicated job pool'
+    fi
 fi
 
 echo -en $problems >&2

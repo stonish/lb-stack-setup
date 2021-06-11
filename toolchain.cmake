@@ -69,19 +69,25 @@ if (_project STREQUAL "Project")
 endif()
 
 
-if(EXISTS ${CMAKE_SOURCE_DIR}/toolchain.cmake
-   AND NOT _project STREQUAL "Geant4"  # FIXME Geant4's toolchain.cmake does not work with this setup
-   AND NOT _project STREQUAL "Gauss"  # FIXME Gauss' toolchain.cmake does not work with this setup
-   AND NOT _project STREQUAL "Gaussino"  # FIXME Gaussino's toolchain.cmake does not work with this setup
-   )
-  message(STATUS "Delegating to project-specific toolchain at ${CMAKE_SOURCE_DIR}/toolchain.cmake")
-  # in this case the project toolchain should delegate to the default
-  include(${CMAKE_SOURCE_DIR}/toolchain.cmake)
-else()
-  if(lbdevtools_toolchain)
-    message(STATUS "Delegating to default toolchain at ${lbdevtools_toolchain}")
-    include(${lbdevtools_toolchain})
+# this check is needed because the toolchain is called when checking the
+# compiler (without the proper cache). We need it here to support Gaudi
+# versions with old-style CMake, for which GAUDI_OLD_STYLE_PROJECT is not
+# pre-set in the LbDevTools toolchain and the detection fails.
+if(NOT CMAKE_SOURCE_DIR MATCHES "CMakeTmp")
+  if(EXISTS ${CMAKE_SOURCE_DIR}/toolchain.cmake
+    AND NOT _project STREQUAL "Geant4"  # FIXME Geant4's toolchain.cmake does not work with this setup
+    AND NOT _project STREQUAL "Gauss"  # FIXME Gauss' toolchain.cmake does not work with this setup
+    AND NOT _project STREQUAL "Gaussino"  # FIXME Gaussino's toolchain.cmake does not work with this setup
+    )
+    message(STATUS "Delegating to project-specific toolchain at ${CMAKE_SOURCE_DIR}/toolchain.cmake")
+    # in this case the project toolchain should delegate to the default
+    include(${CMAKE_SOURCE_DIR}/toolchain.cmake)
   else()
-    message(FATAL_ERROR "Cannot find default toolchain.cmake (from LbDevTools)")
+    if(lbdevtools_toolchain)
+      message(STATUS "Delegating to default toolchain at ${lbdevtools_toolchain}")
+      include(${lbdevtools_toolchain})
+    else()
+      message(FATAL_ERROR "Cannot find default toolchain.cmake (from LbDevTools)")
+    endif()
   endif()
 endif()
