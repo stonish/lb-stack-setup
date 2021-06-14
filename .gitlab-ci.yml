@@ -25,6 +25,7 @@ setup:
     - utils/config.py useDistcc false
     - make contrib
     - bash utils/ci-utils/test-contrib.sh
+    - bash utils/ci-utils/test-build-env.sh
   artifacts:
     paths:
       - stack/
@@ -36,11 +37,12 @@ setup:
   variables:
     GIT_STRATEGY: none
     # make sure we don't use BINARY_TAG or CMTCONFIG
-    PLATFORM: x86_64-centos7-gcc9-opt
+    # PLATFORM: x86_64_v2-centos7-gcc10-opt
   script:
     - cd stack
-    - utils/config.py binaryTag $PLATFORM
-    - utils/config.py
+    - test -n "$PLATFORM" && utils/config.py binaryTag $PLATFORM
+    - PLATFORM=$(utils/config.py binaryTag)
+    - utils/config.py  # print config
     - make Gaudi/configure
     - bash utils/ci-utils/test-cmake.sh Gaudi/build.$PLATFORM
     - make Gaudi
@@ -54,28 +56,33 @@ setup:
     paths:
       - stack/.ccache/
 
-make:x86_64-centos7-gcc9-opt:
+make:
   extends: .make
 
-# Keep old cmake until it's easy to support (in case we need it for legacy branches).
-make-old-cmake:
+# Test legacy branches until it's easy to support.
+make-legacy:
   stage: make
   tags:
     - cvmfs
   variables:
     GIT_STRATEGY: none
+    PLATFORM: x86_64-centos7-gcc62-opt
   script:
+    - export GAUDI_OLD_STYLE_PROJECT=YES  # FIXME: this shouldn't be needed
     - cd stack
-    - utils/config.py gitBranch.Gaudi v34r1
-    - utils/config.py gitBranch.Detector v0-patches
+    - test -n "$PLATFORM" && utils/config.py binaryTag $PLATFORM
+    - PLATFORM=$(utils/config.py binaryTag)
+    - utils/config.py lcgVersion 93
+    - utils/config.py gitBranch.default 2018-patches
+    - utils/config.py gitBranch.Gaudi v29-patches
+    - utils/config.py  # print config
     - make Gaudi/configure
-    - bash utils/ci-utils/test-cmake.sh Gaudi/build.$(utils/config.py binaryTag)
+    - bash utils/ci-utils/test-cmake.sh Gaudi/build.$PLATFORM
     - make Gaudi
     - make Gaudi/configure  # test a reconfigure
-    - bash utils/ci-utils/test-cmake.sh Gaudi/build.$(utils/config.py binaryTag)
-    # Detector/v0-patches is a dummy, so no point in testing it
+    - bash utils/ci-utils/test-cmake.sh Gaudi/build.$PLATFORM
     - make LHCb/configure
-    - bash utils/ci-utils/test-cmake.sh LHCb/build.$(utils/config.py binaryTag)
+    - bash utils/ci-utils/test-cmake.sh LHCb/build.$PLATFORM
   cache:
     key: "$CI_JOB_NAME"
     paths:

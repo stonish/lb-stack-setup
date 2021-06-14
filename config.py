@@ -187,9 +187,24 @@ def query_update(config, path, value):
     return config
 
 
-def format_value(x):
-    """Return json except for strings, which are printed unquoted."""
-    return x if isinstance(x, str) else json.dumps(x)
+def format_value(x, shell=False):
+    """Return json except for strings, which are printed unquoted.
+
+    When shell=True, strings are quoted, list of strings are returned as
+    arrays and any other types are not supported.
+
+    """
+    if isinstance(x, bool):
+        return 'true' if x else 'false'
+    if isinstance(x, (int, float)):
+        return str(x)
+    if isinstance(x, str):
+        return ("'" + x + "'") if shell else x
+    elif shell and isinstance(x, list) and all(isinstance(i, str) for i in x):
+        s = " ".join(("'" + i + "'") for i in x)
+        return '(' + s + ')'
+    else:
+        return json.dumps(x) if not shell else "'NOT-SUPPORTED'"
 
 
 if __name__ == '__main__':
@@ -217,7 +232,7 @@ if __name__ == '__main__':
     if args.sh:
         for key in args.sh:
             value = query(config, key.split('.'))
-            print('{}="{}"'.format(key, format_value(value)))
+            print("{}={}".format(key, format_value(value, shell=True)))
     elif not args.key:
         # print entire config
         print(json.dumps(config, indent=4))

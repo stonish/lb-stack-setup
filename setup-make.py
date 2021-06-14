@@ -15,6 +15,7 @@ from utils import setup_logging, run, run_nb, topo_sorted
 from vscode import write_vscode_settings
 
 DATA_PACKAGE_DIRS = ["DBASE", "PARAM"]
+SPECIAL_TARGETS = ["update"]
 MAKE_TARGET_RE = re.compile(
     r'^(?P<fast>fast/)?(?P<project>[A-Z]\w+)(/(?P<target>.*))?$')
 
@@ -23,11 +24,19 @@ log = None
 
 
 def data_package_container(name):
-    param_packages = [
-        "BcVegPyData", "ChargedProtoANNPIDParam", "Geant4Files", "GenXiccData",
-        "MCatNLOData", "MIBData", "ParamFiles", "QMTestFiles", "TMVAWeights"
-    ]
-    return "PARAM" if name in param_packages else "DBASE"
+    parts = name.split('/', 1)
+    if len(parts) > 1:
+        if parts[0] in DATA_PACKAGE_DIRS:
+            container, package = parts
+    else:
+        param_packages = [
+            "BcVegPyData", "ChargedProtoANNPIDParam", "Geant4Files",
+            "GenXiccData", "MCatNLOData", "MIBData", "ParamFiles",
+            "QMTestFiles", "TMVAWeights"
+        ]
+        package = name
+        container = "PARAM" if name in param_packages else "DBASE"
+    return container, package
 
 
 class NotCMakeProjectError(RuntimeError):
@@ -47,12 +56,20 @@ def symlink(src, dst):
     os.symlink(src, dst)
 
 
-def git_url_branch(project, try_read_only=False):
-    url = config['gitUrl'].get(project)
+def git_url_branch(repo, try_read_only=False):
+    # TODO for data packages we may look up 'DBASE/PRConfig' or 'PRConfig' in
+    #      gitUrl and gitGroup.
+    url = config['gitUrl'].get(repo)
     if not url:
         group = config['gitGroup']
-        group = group.get(project, group['default'])
-        url = '{}/{}/{}.git'.format(config['gitBase'], group, project)
+        path_parts = pathlib.PurePath(repo).parts
+        if path_parts[0] not in DATA_PACKAGE_DIRS:
+            group = group.get(repo, group['default'])
+            url = '{}/{}/{}.git'.format(config['gitBase'], group, repo)
+        else:
+            group = group.get(repo, group['defaultDataPackages'])
+            url = '{}/{}/{}.git'.format(config['gitBase'], group,
+                                        os.path.join(*path_parts[1:]))
     if try_read_only:
         # Swap out the base for the read-only base
         for base in GITLAB_BASE_URLS:
@@ -60,7 +77,7 @@ def git_url_branch(project, try_read_only=False):
                 url = GITLAB_READONLY_URL + url[len(base):]
                 break
     branch = config['gitBranch']
-    branch = branch.get(project, branch['default'])
+    branch = branch.get(repo, branch['default'])
     return url, branch
 
 
@@ -72,7 +89,7 @@ def cmake_name(project):
     return m.group('name')
 
 
-def cmake_deps(project):
+def old_cmake_deps(project):
     cmake_path = os.path.join(project, 'CMakeLists.txt')
     try:
         with open(cmake_path) as f:
@@ -97,6 +114,25 @@ def cmake_deps(project):
     return deps[::2]
 
 
+def find_project_deps(project):
+    """Return the direct dependencies of a project."""
+    IGNORED_DEPENDENCIES = ["LCG", "DBASE", "PARAM"]
+    metadata_path = os.path.join(project, 'lhcbproject.yml')
+    try:
+        with open(metadata_path) as f:
+            metadata = f.read()
+        m = re.search(r'(\n|^)dependencies:\s(?P<deps>(\s+-\s+\w+\n)+)',
+                      metadata)
+        if not m:
+            raise RuntimeError(f'dependencies not found in {metadata_path}')
+        deps = [s.strip(' -') for s in m.group('deps').splitlines()]
+        deps = [d for d in deps if d not in IGNORED_DEPENDENCIES]
+    except IOError:
+        # Fall back to old-style cmake
+        deps = old_cmake_deps(project)
+    return deps + config['extraDependencies'].get(project, [])
+
+
 def clone_cmake_project(project):
     """Clone project and return canonical name.
 
@@ -109,6 +145,7 @@ def clone_cmake_project(project):
     assert len(m) <= 1, 'Multiple directories for project: ' + str(m)
     if not m:
         url, branch = git_url_branch(project)
+        log.info(f'Cloning {project}...')
         run(['git', 'clone', url, project])
         run(['git', 'checkout', branch], cwd=project)
         run(['git', 'submodule', 'update', '--init', '--recursive'],
@@ -136,6 +173,7 @@ def clone_package(name, path):
 
     full_path = os.path.join(path, name)
     if not os.path.isdir(full_path):
+        log.info(f'Cloning {name}...')
         run([
             os.path.join(DIR, 'build-env'),
             os.path.join(config['lbenvPath'], 'bin/git-lb-clone-pkg'), name
@@ -147,10 +185,17 @@ def clone_package(name, path):
     return full_path
 
 
-def list_repos(path=''):
-    """Return all git repositories under the directory path."""
-    paths = [p[:-5] for p in glob.glob(os.path.join(path, '*/.git'))]
-    return sorted(p for p in paths if os.path.abspath(p) != DIR)
+def list_repos(dirs=['']):
+    """Return all git repositories under the given directories.
+
+    Excludes the `utils` directory.
+
+    """
+    all_paths = []
+    for d in dirs:
+        paths = [p[:-5] for p in glob.glob(os.path.join(d, '*/.git'))]
+        all_paths += sorted(p for p in paths if os.path.abspath(p) != DIR)
+    return all_paths
 
 
 def _mtime_or_zero(path):
@@ -210,6 +255,58 @@ def check_staleness(repos):
             log.warning('Failed to get status of ' + path)
 
 
+def update_repos():
+    log.info("Updating projects and data packages...")
+    root_repos = list_repos()
+    dp_repos = list_repos(DATA_PACKAGE_DIRS)
+    # find the LHCb projects
+    projects = list(find_all_deps(root_repos, {}).keys())
+    repos = projects + dp_repos
+
+    # Skip repos where the tracking branch does not match the config
+    # or nothing is tracked (e.g. a tag is checked out).
+    not_tracking = []
+    ps = [
+        run_nb(['git', 'rev-parse', '--abbrev-ref', 'HEAD@{upstream}'],
+               cwd=repo,
+               check=False) for repo in repos
+    ]
+    for repo, get_result in zip(repos, ps):
+        res = get_result()
+        if res.returncode == 0:
+            _, branch = git_url_branch(repo, try_read_only=True)
+            tracking_branch = res.stdout.strip().split('/', 1)[1]
+            if branch != tracking_branch:
+                not_tracking.append(repo)  # tracking a non
+        else:
+            not_tracking.append(repo)
+    repos = [r for r in repos if r not in not_tracking]
+    log.info("Skipped repos not tracking the default branch: "
+             f"{', '.join(not_tracking)}.")
+
+    ps = []
+    for repo in repos:
+        url, branch = git_url_branch(repo, try_read_only=True)
+        ps.append(
+            run_nb([
+                'git', '-c', 'color.ui=always', 'pull', '--ff-only', url,
+                branch
+            ],
+                   cwd=repo,
+                   check=False))
+    up_to_date = []
+    for repo, get_result in zip(repos, ps):
+        res = get_result()
+        if res.returncode == 0:
+            if 'Already up to date.' in res.stdout:
+                up_to_date.append(repo)
+            else:
+                log.info(f"{repo}: {res.stdout.strip()}\n")
+        else:
+            log.warning(f'{repo}: FAIL\n\n{res.stderr.strip()}\n')
+    log.info(f"Up to date: {', '.join(up_to_date)}.")
+
+
 def checkout(projects, data_packages):
     """Clone projects and data packages, and return make configuration.
 
@@ -221,7 +318,7 @@ def checkout(projects, data_packages):
     while to_checkout:
         p = to_checkout.pop(0)
         p = clone_cmake_project(p)
-        deps = cmake_deps(p) + config['extraDependencies'].get(p, [])
+        deps = find_project_deps(p)
         to_checkout.extend(sorted(set(deps).difference(project_deps)))
         project_deps[p] = deps
 
@@ -229,8 +326,8 @@ def checkout(projects, data_packages):
     assert set().union(*project_deps.values()).issubset(project_deps)
 
     dp_repos = []
-    for name in data_packages:
-        container = data_package_container(name)
+    for spec in data_packages:
+        container, name = data_package_container(spec)
         mkdir_p(container)
         dp_repos.append(clone_package(name, container))
 
@@ -239,13 +336,12 @@ def checkout(projects, data_packages):
     return project_deps
 
 
-def find_project_deps(repos, project_deps={}):
+def find_all_deps(repos, project_deps={}):
     project_deps = project_deps.copy()
     for r in repos:
         if r not in project_deps:
             try:
-                project_deps[r] = (
-                    cmake_deps(r) + config['extraDependencies'].get(r, []))
+                project_deps[r] = find_project_deps(r)
             except NotCMakeProjectError:
                 pass
     return project_deps
@@ -269,6 +365,20 @@ def main(targets):
     with open(os.path.join(output_path, 'host.env'), 'w') as f:
         for name, value in sorted(os.environ.items()):
             print(name + "=" + value, file=f)
+
+    # Separate out special targets
+    special_targets = [t for t in SPECIAL_TARGETS if t in targets]
+    targets = [t for t in targets if t not in SPECIAL_TARGETS]
+
+    # Handle special targets
+    if special_targets:
+        if len(special_targets) > 1:
+            exit(f"expected at most one special target, got {special_targets}")
+        if targets:
+            exit(f"expected only special targets, also got {targets}")
+        if 'update' in special_targets:
+            update_repos()
+        return
 
     # collect top level projects to be cloned
     projects = []
@@ -306,11 +416,11 @@ def main(targets):
 
         # After we cloned the minimum necessary, check for other repos
         repos = list_repos()
-        dp_repos = sum((list_repos(d) for d in DATA_PACKAGE_DIRS), [])
+        dp_repos = list_repos(DATA_PACKAGE_DIRS)
 
         # Find cloned projects that we won't build but that may be
         # dependent on those to build.
-        project_deps = find_project_deps(repos, project_deps)
+        project_deps = find_all_deps(repos, project_deps)
 
         # Order repos according to dependencies
         project_order = topo_sorted(project_deps) + repos
@@ -319,7 +429,6 @@ def main(targets):
         makefile_config = [
             "BINARY_TAG := {}".format(config["binaryTag"]),
             "PROJECTS := " + " ".join(sorted(project_deps)),
-            "DATA_PACKAGES := " + " ".join(sorted(data_packages)),
         ]
         for p, deps in sorted(project_deps.items()):
             makefile_config += [

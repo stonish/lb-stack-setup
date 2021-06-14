@@ -107,6 +107,7 @@ The `Makefile` provided features the following targets.
   - `all` (or `build`): builds the default projects (this is the default target),
   - `clean`: remove build products for all cloned projects (keeping the sources and CMake cache),
   - `purge`: similar to `clean`, but also remove the CMake temporary files,
+  - `update`: pull remote updates for repos which are on the default branch,
   - `help`: print a list of available targets,
   - `for-each CMD="do-something"`: run a command in each git repository (projects, data packages or other).
 - Project targets
@@ -145,6 +146,8 @@ Depending on what and where you build there are different recommendations.
   Currently 80 virtual cores are available for parallel compilation.
   You need a valid kerberos token and connectivity to lxplus (or to be inside the CERN network).
   Be aware that these are shared resources, set it to `false` if your local cluster is powerful.
+- `forwardEnv (list)`: A list of environment variables that should be propagated
+  to the build and runtime environment. You may use it for variables such as `GITCONDDBPATH`.
 - `vscodeWorkspaceSettings`: include custom VSCode settings in the `.code-workspace` file.
   For example, one can customize the color of the window title bar with
 
@@ -168,7 +171,7 @@ The platform set in your shell when running `make` or `run-env` is irrelevant.
 In order to change the platform used to compile and run, do the following
 
 ```sh
-utils/config.py binaryTag x86_64-centos7-gcc9-opt+g
+utils/config.py binaryTag x86_64_v3-centos7-gcc10-opt
 ```
 
 or edit the file `utils/config.json` directly.
@@ -197,13 +200,6 @@ For example, in order to use the `dev4` nightly build from Tuesday, it is enough
 ```sh
 utils/config.py lcgVersion dev4
 utils/config.py cmakePrefixPath '$CMAKE_PREFIX_PATH:/cvmfs/sft-nightlies.cern.ch/lcg/nightlies/dev4/Tue'
-```
-
-In order to use a Python 3 build of LCG, there is no need to select a Python 3 LCG
-build explicitly, but it is sufficient to set the platform in the following way
-
-```sh
-utils/config.py binaryTag x86_64-centos7-gcc9+py3-opt
 ```
 
 ### Pass flags to CMake
