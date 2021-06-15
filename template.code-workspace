@@ -25,12 +25,12 @@
         "C_Cpp.default.cStandard": "c11",
         // compileCommands is set per folder (.vscode/c_cpp_properties.json)
         "C_Cpp.default.compileCommands": "",
-        "C_Cpp.default.compilerPath": "<placeholder: build at least gaudi for intellisense to work>",
+        "C_Cpp.default.compilerPath": "$compilerPath",
         "C_Cpp.default.cppStandard": "c++17",
         "C_Cpp.default.defines": [],
         // includePath is set per folder
         "C_Cpp.default.includePath": [],
-        "C_Cpp.default.intelliSenseMode": "clang-x64",
+        "C_Cpp.default.intelliSenseMode": "$compilerType",
         "cSpell.dictionaryDefinitions": [
             {
                 "name": "lhcb",
@@ -57,20 +57,20 @@
         "files.trimTrailingWhitespace": true,
         // python.envFile is set per folder (.vscode/settings.json)
         "python.formatting.provider": "yapf",
-        "python.formatting.yapfPath": "{outputPath}/yapf",
+        "python.formatting.yapfPath": "$outputPath/yapf",
         "python.languageServer": "Pylance",
         "python.linting.enabled": true,
         "python.linting.flake8Args": [
             "--select=F,E71,E9,W1,W6"
         ],
         "python.linting.flake8Enabled": true,
-        "python.linting.flake8Path": "{outputPath}/flake8",
+        "python.linting.flake8Path": "$outputPath/flake8",
         "python.linting.pylintEnabled": false,
-        "python.pythonPath": "<placeholder: build at least gaudi for intellisense to work>",
+        "python.pythonPath": "$pythonPath",
         "restructuredtext.confPath": " ${workspaceFolder}/doc/conf.py",
         "restructuredtext.languageServer.disabled": true,
         "restructuredtext.linter.run": "off",
-        "restructuredtext.sphinxBuildPath": "{lbenvPath}/bin/sphinx-build",
+        "restructuredtext.sphinxBuildPath": "$lbenvPath/bin/sphinx-build",
         "telemetry.enableCrashReporter": false,
         "telemetry.enableTelemetry": false,
         "window.title": "${dirty}${activeEditorShort}${separator}${rootPath}"
