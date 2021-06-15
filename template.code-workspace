@@ -74,5 +74,52 @@
         "telemetry.enableCrashReporter": false,
         "telemetry.enableTelemetry": false,
         "window.title": "${dirty}${activeEditorShort}${separator}${rootPath}"
+    },
+    "launch": {
+        "version": "0.2.0",
+        "configurations": [
+            {
+                "name": "GDB: gaudirun.py",
+                "type": "cppdbg",
+                "request": "launch",
+                "program": "$pythonPath",
+                "args": [
+                    "${workspaceFolder:Gaudi}/Gaudi/scripts/gaudirun.py",
+                    "${file}"
+                ],
+                // TODO CWD needs to be magically set to the qmtest directory to emulate
+                // what happens when running qmt tests.
+                "cwd": "$projectPath",
+                "externalConsole": false,
+                "MIMode": "gdb",
+                "miDebuggerPath": "${fileWorkspaceFolder}/gdb",
+                "miDebuggerArgs": "-ix ${workspaceFolder:utils}/gdbinit",
+                "setupCommands": [
+                    {
+                        "description": "Enable pretty-printing for gdb",
+                        "text": "-enable-pretty-printing",
+                        "ignoreFailures": true
+                    }
+                ]
+            },
+            {
+                "name": "GDB: attach",
+                "type": "cppdbg",
+                "request": "attach",
+                "program": "$pythonPath",
+                "processId": "${command:pickProcess}",
+                "MIMode": "gdb",
+                // When attaching, we can make do with any gdb (but we still
+                // need some minimal environment).
+                "miDebuggerPath": "${workspaceFolder:Gaudi}/gdb",
+                "setupCommands": [
+                    {
+                        "description": "Enable pretty-printing for gdb",
+                        "text": "-enable-pretty-printing",
+                        "ignoreFailures": true
+                    }
+                ]
+            }
+        ]
     }
 }
