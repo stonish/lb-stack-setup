@@ -79,6 +79,28 @@
         "version": "0.2.0",
         "configurations": [
             {
+                "name": "Python: gaudirun.py",
+                "type": "python",
+                "request": "launch",
+                // TODO a better way to locate gaudirun.py?
+                "program": "${workspaceFolder:Gaudi}/Gaudi/scripts/gaudirun.py",
+                "args": [
+                    "-n",
+                    "${file}"
+                ],
+                // TODO CWD needs to be magically set to the qmtest directory to emulate
+                // what happens when running qmt tests.
+                "cwd": "$projectPath",
+                // ${workspaceFolderBasename} does not work in "launch" and there
+                // is no ${fileWorkspaceFolderBasename}, so work around that:
+                "envFile": "${fileWorkspaceFolder}/.env",
+                // TODO make envFile depend on $binaryTag, in which case we need to
+                // re-generate the .code-workspace every time the config has changed?
+                // OK when you use utils/config.py binaryTag ... but it won't work
+                // with manual editting.
+                "console": "integratedTerminal"
+            },
+            {
                 "name": "GDB: gaudirun.py",
                 "type": "cppdbg",
                 "request": "launch",
