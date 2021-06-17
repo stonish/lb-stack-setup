@@ -52,6 +52,9 @@ The following features are supported for both C++ and Python.
     Execution stops on uncaught exceptions or  You need to set breakpoins before starting.
     The `-n` flag is passed to `gaudirun.py` (i.e. only the python
     configuration is run but not the actual application).
+  - `GDB: gaudirun.py` configuration: The same as above, except runs
+    with GDB (and of course it runs the application).
+  - `GDB: attach` configuration: Use this to attach to a running process.
 
 > __Note:__ these features have only been tested in a setup where
 > VSCode is installed on a Linux desktop and the stack workspace resides
