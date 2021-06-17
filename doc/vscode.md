@@ -48,7 +48,7 @@ The following features are supported for both C++ and Python.
 
 > __Note:__ these features have only been tested in a setup where
 > VSCode is installed on a Linux desktop and the stack workspace resides
-> on a CentOS 7 machine, which is access with the Remote - SSH extension.
+> on a CentOS 7 machine, which is accessed with the Remote - SSH extension.
 
 ### Desired features
 
@@ -65,54 +65,10 @@ We need an extension that allows us to
 
 ### Proxied passwordless login
 
-The `Remote - SSH` extension requires that you define a host in your
-ssh `config` file.
-If the host is only reachable through a gateway, you need to use the
-`ProxyJump` directive.
-
-Here is an example of a minimal `config` file, in the case where you want to
-reach a (virtual) machine `my-openstack-vm.cern.ch` in the CERN network, and
-you need to go via `lxplus`.
-It works independently of whether you are in the CERN network or outside.
-
-```ssh_config
-Host lxplus
-    HostName lxplus.cern.ch
-    User jdoe
-    GSSAPIDelegateCredentials yes
-    GSSAPIAuthentication yes
-
-Host vm
-    HostName my-openstack-vm.cern.ch
-    User jdoe
-    GSSAPIDelegateCredentials yes
-    GSSAPIAuthentication yes
-
-Match host !lxplus*.cern.ch,*.cern.ch exec "! nc --send-only --wait 0.1 %h %p </dev/null 2>/dev/null"
-    ProxyJump lxplus
-```
-
-Put the lines above in your `~/.ssh/config` on Linux/Mac and `??` on Windows.
-Then, get a kerberos ticket, and try to login.
-
-```sh
-kinit jdoe@CERN.CH
-ssh vm
-```
-
-If you succeed, good, that's it! Either your machine supports login with kerberos credentials (GSSAPI) or you've already setup public key authentication.
-
-If you get a password prompt, hit `Ctrl+C` and let's set up public key authentication.
-
-```sh
-cat ~/.ssh/id_rsa.pub | ssh vm \
-    "mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys"
-# jdoe@my-openstack-vm.cern.ch's password: ******
-ssh vm
-```
-
-If any of the above does not work for you, or you want to learn more,
-check the tips in [ssh.md](ssh.md).
+The Remote - SSH extension requires that you define a host in your
+ssh `config` file. A convenient way to to do it is described at
+[ssh.md](ssh.md). For more related tips and tricks see the
+[official docs](https://code.visualstudio.com/docs/remote/troubleshooting).
 
 ### Open a remote workspace/folder from the command line
 

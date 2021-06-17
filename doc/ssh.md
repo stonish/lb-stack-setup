@@ -10,7 +10,15 @@ In particular, check out
 
 Below you have some extracts and specific examples.
 
-## Automatic jump proxy to hosts inside the CERN network
+## Automatic paswordless login to hosts behind a gateway
+
+If your machine is only reachable through a gateway, you need to use the
+`ProxyJump` directive.
+
+Here is an example of a minimal `config` file, in the case where you want to
+reach a (virtual) machine `my-openstack-vm.cern.ch` in the CERN network, and
+you need to go via `lxplus`.
+It works independently of whether you are in the CERN network or outside.
 
 ```sh
 Host lxplus
@@ -29,8 +37,10 @@ Host vm
 # (put section after short hostname definitions)
 Match host !lxplus*.cern.ch,*.cern.ch exec "! nc --send-only --wait 0.1 %h %p </dev/null 2>/dev/null"
     ProxyJump lxplus
-    # - use ProxyCommand instead of ProxyJump with OpenSSH older than 7.3
-    # ProxyCommand ssh lxplus -W %h:%p
+# If this does not work (old version of OpenSSH), you can proxy unconditionally
+# and use ProxyCommand instead of ProxyJump.
+# Host vm
+#     ProxyCommand ssh lxplus -W %h:%p
 
 Host *
     GSSAPIAuthentication yes
@@ -38,6 +48,24 @@ Host *
     # PubkeyAuthentication no
     # - disable password prompts with
     # BatchMode yes
+```
+
+Put the lines above in your `~/.ssh/config` on Linux/Mac and `??` on Windows.
+Then, get a kerberos ticket, and try to login.
+
+```sh
+kinit jdoe@CERN.CH
+ssh vm
+```
+
+If you succeed, good, that's it! Either your machine supports login with kerberos credentials (GSSAPI) or you've already setup public key authentication.
+
+If you get a password prompt, hit `Ctrl+C` and let's set up public key authentication.
+
+```sh
+ssh-copy-id vm
+# jdoe@my-openstack-vm.cern.ch's password: ******
+ssh vm
 ```
 
 ## LXPLUS and known_hosts
