@@ -5,6 +5,7 @@ import json
 import os
 from collections import OrderedDict
 from copy import copy, deepcopy
+from string import Template
 
 DIR = os.path.dirname(__file__)
 DEFAULT_CONFIG = os.path.join(DIR, 'default-config.json')
@@ -26,14 +27,7 @@ def cpu_count():
 
 def rinterp(obj, mapping):
     """Recursively interpolate object with a dict of values."""
-
-    class Default(dict):
-        """{xyz} is not replaced when xyz is not in dict."""
-
-        def __missing__(self, key):
-            return "{" + key + "}"
-
-    return _rinterp(obj, Default(mapping))
+    return _rinterp(obj, mapping)
 
 
 def _rinterp(obj, mapping):
@@ -42,8 +36,8 @@ def _rinterp(obj, mapping):
     except AttributeError:
         pass
     try:
-        return obj.format_map(mapping)
-    except AttributeError:
+        return Template(obj).safe_substitute(mapping)
+    except TypeError:
         pass
     try:
         return [_rinterp(v, mapping) for v in obj]
@@ -110,18 +104,24 @@ def recursive_update(obj, updates):
             obj[key] = update
 
 
+def _read_json_config(path):
+    with open(path) as f:
+        data = json.load(f, object_pairs_hook=OrderedDict)
+    # filter out "comments" (keys starting with "_")
+    data = {k: v for k, v in data.items() if not k.startswith("_")}
+    return data
+
+
 def read_config(original=False,
                 default_config=DEFAULT_CONFIG,
                 config_in=CONFIG,
                 config_out=None):
-    with open(default_config) as f:
-        defaults = json.load(f, object_pairs_hook=OrderedDict)
+    defaults = _read_json_config(default_config)
 
     overrides = {}
     if config_in:
         try:
-            with open(config_in) as f:
-                overrides = json.load(f, object_pairs_hook=OrderedDict)
+            overrides = _read_json_config(config_in)
         except IOError as e:
             if e.errno != errno.ENOENT:
                 raise
@@ -160,7 +160,7 @@ def read_config(original=False,
             value = expand_path(value)
         config[key] = value
 
-    # Interpolate self-references like "{projectPath}/some/path"
+    # Interpolate self-references like "$projectPath/some/path"
     config = rinterp(config, config)
 
     return (config, defaults, overrides) if original else config

@@ -238,6 +238,7 @@ compile_commands_src="$PROJECT/build.$BINARY_TAG/compile_commands.json"
 compile_commands_dst="$OUTPUT/compile_commands-$PROJECT.json"
 runtime_env_src="$PROJECT/build.$BINARY_TAG/python.env"
 runtime_env_dst="$OUTPUT/runtime-$PROJECT.env"
+runtime_env_dst2="$PROJECT/.env"  # needed for Python debugging config
 
 # Check build-env to see why we set CMAKE_PREFIX_PATH here.
 export CMAKE_PREFIX_PATH="$cmakePrefixPath"
@@ -270,8 +271,11 @@ if [ -f $run_cmd ]; then
   # Filter out PYTHONHOME to workaround an issue in the VSCode python extension,
   # where the python interpreter is run in the wrong .env and causes a SIGABRT.
   if ( $run_cmd env 2>/dev/null | grep -v '^PYTHONHOME=' >"$runtime_env_src" ) ; then
-    cmp --silent "$runtime_env_src" "$runtime_env_dst" \
-      || cp -f "$runtime_env_src" "$runtime_env_dst" 2>/dev/null \
-      || true
+    if ! cmp --silent "$runtime_env_src" "$runtime_env_dst" ; then
+      cp -f "$runtime_env_src" "$runtime_env_dst" 2>/dev/null || true
+    fi
+    if ! cmp --silent "$runtime_env_src" "$runtime_env_dst2" ; then
+      cp -f "$runtime_env_src" "$runtime_env_dst2" 2>/dev/null || true
+    fi
   fi
 fi

@@ -22,6 +22,7 @@ fi
 # Expand any variables in the command to run (e.g. $BINARY_TAG from run-env)
 cmd=$(eval echo "$1")
 cmd=${cmd:-printenv}  # if no command is given, print environment
+shift
 
 if [ "$USE_DOCKER" != true ]; then
     # If using a native build, just check the OS
@@ -104,7 +105,7 @@ if [ "$USE_DOCKER" = true ]; then
     done
     # if KRB5CCNAME is empty, don't try to forward the kerberos token
     test -z ${KRB5CCNAME} || args+=(--kerberos)
-    "${DIR}/lb-docker-run" "${args[@]}" ${LB_DOCKER_RUN_FLAGS} "$cmd" "${@:2}"
+    "${DIR}/lb-docker-run" "${args[@]}" ${LB_DOCKER_RUN_FLAGS} "$cmd" "$@"
     # TODO lbenvPath is not respected in the docker case
 else
     # Start a clean LbEnv a la lb-docker-run
@@ -133,5 +134,5 @@ else
             exit 1
         fi
     fi
-    exec env -i bash -c ". '$cache'; exec \"\$@\"" bash "$cmd" "${@:2}"
+    exec env -i bash -c ". '$cache'; exec \"\$@\"" bash "$cmd" "$@"
 fi

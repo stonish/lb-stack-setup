@@ -132,7 +132,15 @@ def write_workspace_settings(repos,
         s = f.read()
     s = re.sub(r'^\s*//.*$', '', s, flags=re.MULTILINE)
     template = json.loads(s)
-    settings = rinterp(template, dict(config, utilsPath=DIR))
+    settings = rinterp(
+        template,
+        dict(
+            config,
+            utilsPath=DIR,
+            pythonPath=toolchain['python'],
+            compilerPath=toolchain['cxx'],
+            compilerType=toolchain['cxx-type'],
+        ))
 
     folder_paths = OrderedDict()  # use that as an "ordered set"
     # first collect stack projects
@@ -141,10 +149,6 @@ def write_workspace_settings(repos,
         folder_paths[path] = None  # None is a dummy value
     settings['folders'] = list({'path': p} for p in folder_paths)
 
-    settings['settings']['python.pythonPath'] = toolchain['python']
-    settings['settings']['C_Cpp.default.compilerPath'] = toolchain['cxx']
-    settings['settings']['C_Cpp.default.intelliSenseMode'] = toolchain[
-        'cxx-type']
     settings['settings'].update(config['vscodeWorkspaceSettings'])
 
     output = "// DO NOT EDIT: this file is auto-generated from {}\n{}".format(
