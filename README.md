@@ -124,13 +124,15 @@ The `Makefile` provided features the following targets.
 
 ### Visual Studio Code
 
-There is experimental VS Code support via an auto-generated
-configuration files (`stack.code-workspace` and `Project/.vscode/settings.json`) for a
-[multi-root workspace](https://code.visualstudio.com/docs/editor/multi-root-workspaces).
-The file is updated every time you run `make`.
-Currently, only intellisense for C++ and Python are supported and there are no
-other integrations such as building and testing from within VS Code.
-See [doc/vscode.md](doc/vscode.md) for more information.
+There is VS Code support via an auto-generated
+[multi-root workspace](https://code.visualstudio.com/docs/editor/multi-root-workspaces)
+configuration file (`stack.code-workspace`)
+and per-project configuration files (`Project/.vscode/settings.json`).
+The file is updated every time you run `make` and you can force an update
+with `make stack.code-workspace` (e.g. in case you modified `template.code-workspace`).
+Currently, intellisense for C++ and Python, and debugging configurations are supported.
+There are no other integrations such as building and testing from within VS Code.
+See [doc/vscode.md](doc/vscode.md) for more information, including some demos.
 
 ## Configuration settings
 

@@ -45,6 +45,13 @@ The following features are supported for both C++ and Python.
   - Following Python imports always leads to sources (except for generated modules).
 - Formatting with the LHCb styles with `Ctrl(Cmd)+Shift+I` (Format Document).
   - Automatic formatting can be enabled with the `editor.formatOnSave` setting.
+- [Debugging](https://code.visualstudio.com/docs/editor/debugging).
+  See some demos [below](#debug-gaudirunpy-applications).
+  - `Python: gaudirun.py` configuration: Use this on an options file,
+    or most often a `.qmt` file, which chains multiple options together.
+    Execution stops on uncaught exceptions or  You need to set breakpoins before starting.
+    The `-n` flag is passed to `gaudirun.py` (i.e. only the python
+    configuration is run but not the actual application).
 
 > __Note:__ these features have only been tested in a setup where
 > VSCode is installed on a Linux desktop and the stack workspace resides
@@ -88,9 +95,52 @@ code --folder-uri "vscode-remote://ssh-remote+vm/home/jdoe/some/folder"
 
 Now go ahead and make an alias for your favourite workspace :sunglasses:.
 
+### Debug `gaudirun.py` applications
+
+![Debugging with Python: gaudirun.py](media/vscode-debug-python.mp4)
+[(mp4)](media/vscode-debug-python.mp4) [(webm)](media/vscode-debug-python.webm)
+
+---
+
+![Debugging with GDB: gaudirun.py](media/vscode-debug-gdb.mp4)
+[(mp4)](media/vscode-debug-gdb.mp4) [(webm)](media/vscode-debug-gdb.webm)
+
+---
+
 ### Local test dashboard
+
 1. Install the [Live Server](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer) extension.
 2. Start the server: `Ctrl+Shift+P` -> `Live Server: Open with Live Server`, select a workspace when prompted. The port is `5500` by default.
 3. If using Remote, forward the port: `Ctrl+Shift+P` -> `Forward a Port` (use the port from above).
 4. Open the local port, e.g. [http://localhost:5500]() and navigate to the test results, e.g. [http://localhost:5500/build.x86_64-centos7-gcc9-opt/html/]().
 5. To change project, use the `Live Server: Change Live Server workspace` command.
+
+### Recording screencasts in Gnome
+
+1. Enable screencast mode with `F1` -> `Developer: Toggle Screencast Mode`.
+2. Set a consistent window size/position and possibly use a solid desktop background.
+
+    ```console
+    window=$(xdotool search --onlyvisible --name code-workspace)
+    xdotool windowsize $window 1200 750
+    xdotool windowmove $window 2500 500
+    # gsettings set org.gnome.desktop.background picture-uri ''
+    # gsettings set org.gnome.desktop.background primary-color '#fff'
+    ```
+
+3. Use Gnome's built-in recording by pressing `Ctrl+Alt+Shift+R` for starting and stopping it.
+    - Increase the recording length if needed.
+
+      ```console
+      gsettings set org.gnome.settings-daemon.plugins.media-keys max-screencast-length 300
+      ```
+
+    - Crop and cut the recording as necessary and convert to mp4.
+
+        ```console
+        ffmpeg -i input.webm -filter:v "crop=1200:750:2500:500" cropped.webm
+        ffmpeg -ss 00:00:01 -i cropped.webm -t 68 -c copy output.webm
+        ffmpeg -i output.webm -r 24 output.mp4
+        ```
+
+4. Alternatively, install and use [Kooha](https://github.com/SeaDve/Kooha) or similar software.
