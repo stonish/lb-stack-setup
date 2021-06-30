@@ -22,15 +22,30 @@
         "C_Cpp.clang_format_path": "/cvmfs/lhcb.cern.ch/lib/bin/x86_64-centos7/lcg-clang-format-8.0.0",
         "C_Cpp.clang_format_style": "file",
         "C_Cpp.configurationWarnings": "Disabled",
+        "C_Cpp.default.browse.path": [],
         "C_Cpp.default.cStandard": "c11",
-        // compileCommands is set per folder (.vscode/c_cpp_properties.json)
+        // compileCommands/compilerPath is set per folder (.vscode/c_cpp_properties.json)
         "C_Cpp.default.compileCommands": "",
-        "C_Cpp.default.compilerPath": "$compilerPath",
+        "C_Cpp.default.compilerPath": "",
         "C_Cpp.default.cppStandard": "c++17",
         "C_Cpp.default.defines": [],
         // includePath is set per folder
         "C_Cpp.default.includePath": [],
         "C_Cpp.default.intelliSenseMode": "$compilerType",
+        // Have a common DB per binary tag in a local directory (instead of per project and in ~/).
+        "C_Cpp.default.browse.databaseFilename": "$projectPath/.vscode-cpptools/$binaryTag/browse.VC.db",
+        "C_Cpp.files.exclude": {
+            "**/.vscode": true,
+            "**/build.*": true,
+            "**/InstallArea": true,
+            "/cvmfs": true,
+            "/usr" : true
+        },
+        "C_Cpp.intelliSenseCachePath": "$projectPath/.vscode-cpptools/$binaryTag",
+        // Disable precompiled header caches (ipch). They are too big at 0.1-1 GB per file
+        // and are constantly being recreated for a sensible limit of 5 GB.
+        "C_Cpp.intelliSenseCacheSize": 0,
+        "C_Cpp.workspaceParsingPriority": "low",
         "cSpell.dictionaryDefinitions": [
             {
                 "name": "lhcb",
