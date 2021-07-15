@@ -24,6 +24,44 @@ Install the `distcc-server` package, which provides `distccd`.
 yum install -y distcc-server
 ```
 
+### Alternatively, install from source
+
+```sh
+cd $HOME/build
+curl -L https://github.com/distcc/distcc/releases/download/v3.4/distcc-3.4.tar.gz | tar -xz
+cd distcc-3.4
+./configure --disable-pump-mode --with-auth --without-libiberty --without-avahi
+make
+make check
+
+# manually install the minimum possible
+sudo install -c distccd /usr/local/bin
+# sudo make install  # installs under /usr/local
+
+# remove the cern package
+sudo yum remove distcc-server
+```
+
+Write the service file (adjust the path to distccd).
+
+```sh
+cat >/usr/lib/systemd/system/distccd.service <<EOF
+[Unit]
+Description=Distccd A Distributed Compilation Server
+After=network.target
+
+[Service]
+User=distcc
+RuntimeDirectory=distccd
+EnvironmentFile=-/etc/sysconfig/distccd
+ExecStart=/usr/local/bin/distccd --no-detach --daemon \$OPTIONS
+
+[Install]
+WantedBy=multi-user.target
+EOF
+systemctl daemon-reload
+```
+
 ## Setup Kerberos authentication
 
 ### Create a service principal for distcc
@@ -68,14 +106,6 @@ Create a system user and group called `distcc`.
 useradd --system --user-group distcc
 ```
 
-Tell the distcc service to use the new user.
-
-```sh
-mkdir -p /etc/systemd/system/distccd.service.d
-echo -e "[Service]\nUser=distcc" | sudo tee /etc/systemd/system/distccd.service.d/10-user.conf
-systemctl daemon-reload
-```
-
 Create a log file with correct owner and permissions and setup log rotation.
 
 ```sh
@@ -83,15 +113,17 @@ Create a log file with correct owner and permissions and setup log rotation.
     log=/var/log/distccd.log
     touch $log && chown distcc:distcc $log && chmod 0644 $log
     cat >/etc/logrotate.d/distccd <<EOF
-# logrotate.d configuration for distcc
 $log {
+    size 100M
+    rotate 5
     missingok
-    copytruncate
-    notifempty
-    rotate 3
-    minsize 100M
 }
 EOF
+    # logrotate uses crontab, so changes take effect from next run
+    cat >/etc/rsyslog.d/distccd.conf <<EOF
+if \$programname == 'distccd' then $log
+EOF
+    systemctl restart rsyslog  # rsyslog needs restarting...
 )
 ```
 
@@ -107,15 +139,25 @@ Write the environment configuration in the file pointed to by the systemd unit
 
 ```sh
 cat >/etc/sysconfig/distccd <<EOF
-#DISTCC_CMDLIST=/etc/distcc/commands.allow
-#DISTCC_CMDLIST_NUMWORDS=1
-DISTCCD_PATH=/cvmfs/lhcb.cern.ch/lib/bin/x86_64-centos7:/usr/bin
-# TODO ^ needed if full path to lcg-*?
+DISTCC_CMDLIST=/etc/distcc/commands.allow
+DISTCC_CMDLIST_NUMWORDS=1
+DISTCCD_PATH=/cvmfs/lhcb.cern.ch/lib/bin/x86_64-centos7:/etc/distcc/compilers:/usr/bin
 DISTCCD_PRINCIPAL="distccd@$(hostname --fqdn)"
 KRB5_KTNAME=/etc/krb5.keytab.distccd
-OPTIONS="--log-file /var/log/distccd.log --allow 0.0.0.0/0 --auth --whitelist /etc/distcc/whitelist"
+TMPDIR=/run/distccd
+OPTIONS="--allow 0.0.0.0/0 --auth --whitelist /etc/distcc/whitelist"
 EOF
 ```
+
+Install compiler wrappers.
+
+```sh
+mkdir -p /usr/lib/distcc/bin
+python3 create_distcc_wrappers.py /usr/lib/distcc/bin
+ls -1 /cvmfs/lhcb.cern.ch/lib/bin/x86_64-centos7/lcg-* /usr/lib/distcc/bin/* > /etc/distcc/commands.allow
+```
+
+__TODO__: do the above and the LDAP user list automatically on service start using `ExecStartPre=`
 
 ## Start the service
 
@@ -123,11 +165,47 @@ Enable the service such that it starts on reboot and start it immediatelly.
 
 ```sh
 systemctl enable distccd
-systemctl start distccd
+systemctl restart distccd
 ```
 
 Check for issues with
 
 ```sh
 systemctl status distccd
+journalctl -r
+```
+
+## Debugging the server interactively
+
+Clone and build.
+
+```sh
+git clone https://github.com/distcc/distcc.git
+cd distcc
+bash -c "
+. /cvmfs/sft.cern.ch/lcg/views/LCG_97apython3/x86_64-centos7-gcc9-opt/setup.sh
+./autogen.sh
+./configure --with-auth --without-libiberty
+make
+make check
+"
+```
+
+```sh
+id -un > whitelist
+rm -f start.sh
+cat >start.sh <<EOF
+set -euxo pipefail
+export DISTCCD_PATH=/cvmfs/lhcb.cern.ch/lib/bin/x86_64-centos7:/usr/bin
+export DISTCCD_PRINCIPAL="distccd@$(hostname --fqdn)"
+export KRB5_KTNAME=/etc/krb5.keytab.distccd
+export DISTCC_SAVE_TEMPS=1
+export TMPDIR=/tmp/distccd
+mkdir -p \$TMPDIR
+distccd --allow 0.0.0.0/0 --auth --whitelist $(realpath whitelist) \
+  --stats --stats-port 5505 \
+  --jobs 1 --log-level=debug --no-detach --log-stderr --daemon
+EOF
+
+sudo -u distcc bash start.sh
 ```

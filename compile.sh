@@ -1,13 +1,11 @@
 #!/bin/bash
 
-# if compiler is not on cvmfs, ignore distcc
-if [[ "$1" != "/cvmfs"* ]]; then
+if [[ "$PWD" == *"/CMakeFiles/CMakeTmp" ]]; then
+    # disable distcc for the calls during CMake configure
     if [[ "$COMPILER_PREFIX" == *"distcc" ]]; then
         unset COMPILER_PREFIX
-        echo Cannot use distcc with $1 >&2
     elif [[ "$CCACHE_PREFIX" == *"distcc" ]]; then
         unset CCACHE_PREFIX
-        echo Cannot use distcc with $1 >&2
     fi
 fi
 

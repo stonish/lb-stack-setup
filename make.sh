@@ -216,13 +216,6 @@ if [ "$USE_DISTCC" = true -a "$DEBUG_DISTCC" != true ]; then
   fi
 fi
 
-# Disable distcc for Gaudi
-# TODO remove once we can deal with the new wrappers
-if [ "$USE_DISTCC" = true ] && [ "$PROJECT" = Gaudi ]; then
-  log WARNING "distcc is not supported for Gaudi"
-  USE_DISTCC=false
-fi
-
 [ "$USE_CCACHE" = true ] && setup_ccache
 [ "$USE_DISTCC" = true ] && setup_distcc
 
