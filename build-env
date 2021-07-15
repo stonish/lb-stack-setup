@@ -108,31 +108,38 @@ if [ "$USE_DOCKER" = true ]; then
     "${DIR}/lb-docker-run" "${args[@]}" ${LB_DOCKER_RUN_FLAGS} "$cmd" "$@"
     # TODO lbenvPath is not respected in the docker case
 else
-    # Start a clean LbEnv a la lb-docker-run
-    args=(
+    # Start a clean LbEnv similarly to lb-docker-run.
+    # `host_vars` (and nothing else) are set before sourcing LbEnv.
+    # The resulting environment is cached and reused in subsequent runs.
+    # The variables in `vars` are only set within the LbEnv environment
+    # and are not cached.
+    host_vars=(
         "HOSTNAME=${HOSTNAME}"
         "HOME=${HOME}"
         "USER=${USER}"
         "TERM=${TERM}"
-        "BINARY_TAG=${BINARY_TAG}"
-        )
-    args+=( "${vars[@]}" )
-    test -z ${KRB5CCNAME} || args+=("KRB5CCNAME=${KRB5CCNAME}")
-    test -z ${TMPDIR} || args+=("TMPDIR=${TMPDIR}")
-    test -z ${XDG_RUNTIME_DIR} || args+=("XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR}")
+    )
+    vars+=( "BINARY_TAG=${BINARY_TAG}" )
+    test -z ${KRB5CCNAME} || vars+=("KRB5CCNAME=${KRB5CCNAME}")
+    test -z ${TMPDIR} || vars+=("TMPDIR=${TMPDIR}")
+    test -z ${XDG_RUNTIME_DIR} || vars+=("XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR}")
 
-    args_hash=$(cksum <<<"${args[@]}")
-    cache="${OUTPUT}/lbenv-cache-${args_hash// /_}.sh"
-    if [[ !( -f "$cache" ) || \
-          ( "${DIR}/config.json" -nt "$cache" ) || \
-          ( "${DIR}/default-config.json" -nt "$cache" ) || \
-          ( "${DIR}/native-env.sh" -nt "$cache" ) || \
-          ( "${DIR}/build-env" -nt "$cache" ) ]]; then
-        if ! env -i "${args[@]}" bash "${DIR}/native-env.sh" "$lbenvPath" > "$cache"; then
+    cache_key=$(
+        {
+            echo "${host_vars[@]}" ${lbenvPath} ;
+            cat "${DIR}/native-env.sh" "${DIR}/build-env" ;
+        } | cksum
+    )
+    cache="${OUTPUT}/lbenv-cache-${cache_key// /-}.env"
+    if [[ !( -f "$cache" ) ]]; then
+        log INFO "Recreating environment cache: ${cache}"
+        if ! env -i "${host_vars[@]}" bash "${DIR}/native-env.sh" "$lbenvPath" > "$cache"; then
             log ERROR "Check 'lbenvPath' configuration setting"
             rm -f "$cache"
             exit 1
         fi
+    else
+        log DEBUG "Using environment cache: ${cache}"
     fi
-    exec env -i bash -c ". '$cache'; exec \"\$@\"" bash "$cmd" "$@"
+    exec env -i $(<$cache) env "${vars[@]}" "$cmd" "$@"
 fi
