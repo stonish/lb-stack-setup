@@ -220,6 +220,15 @@ utils/config.py -- cmakeFlags.Moore '-DLOKI_BUILD_FUNCTOR_CACHE=OFF'
 
 or use `cmakeFlags.default` to affect all projects.
 
+### Pass options to Ninja
+
+To pass command line options to Ninja, you can pass the `BUILDFLAGS` variable to `make`.
+For example, to override the default number of concurrent compilations to 2, run
+
+```sh
+make Rec BUILDFLAGS='-j 2'
+```
+
 ### Use DD4hep, Detector and Gaussino
 
 To use DD4hep and the new [Detector](https://gitlab.cern.ch/lhcb/Detector) project,

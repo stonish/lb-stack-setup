@@ -150,7 +150,9 @@ setup_distcc_hosts() {
   fi
   eval $distcc_env
   local ndistcc=$(echo "$("$CONTRIB/bin/distcc" -j) * 5/4" | bc)
-  export NINJAFLAGS="$NINJAFLAGS -j$ndistcc"
+  # Note that the following has no effect when BUILDFLAGS is passed to make.
+  # In that case the variable goes via MAKEFLAGS.
+  export BUILDFLAGS="$BUILDFLAGS -j$ndistcc"
 }
 
 
@@ -180,7 +182,7 @@ setup_distcc() {
       export DISTCC_BACKOFF_PERIOD=0  # disable backoff
       # stop on include server failure rather than preprocess locally
       # export DISTCC_TESTING_INCLUDE_SERVER=1  # undocumented variable
-      export NINJAFLAGS="$NINJAFLAGS -j1"  # one job at a time
+      export BUILDFLAGS="$BUILDFLAGS -j1"  # one job at a time
     fi
   else
     log ERROR "Failed to set up hosts for distcc"
@@ -244,7 +246,7 @@ runtime_env_dst2="$PROJECT/.env"  # needed for Python debugging config
 export CMAKE_PREFIX_PATH="$cmakePrefixPath"
 printenv | sort > "$OUTPUT/project.mk.env"
 make -f "$DIR/project.mk" -C "$PROJECT" "$@"
-# cd "$PROJECT/build.$BINARY_TAG" && ninja $NINJAFLAGS "$@" && cd -
+# cd "$PROJECT/build.$BINARY_TAG" && ninja $BUILDFLAGS "$@" && cd -
 # TODO catch CTRL-C during make here and do the clean up, see
 #      https://unix.stackexchange.com/questions/163561/control-which-process-gets-cancelled-by-ctrlc
 

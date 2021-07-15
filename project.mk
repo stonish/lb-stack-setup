@@ -93,7 +93,6 @@ ifneq ($(USE_NINJA),)
   # enable Ninja
   override CMAKEFLAGS += -GNinja
   BUILD_CONF_FILE := build.ninja
-  BUILDFLAGS := $(NINJAFLAGS)
   # no need to pass -v as cmake --build does it when VERBOSE is set
 else
   BUILD_CONF_FILE := Makefile
