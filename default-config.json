@@ -52,11 +52,13 @@
 	"distccHosts": [
 		{
 			"spec": "lbquantaperf01.cern.ch/30,cpp,lzo,auth",
+			"networkProbe": "lbgw.cern.ch",
 			"gateway": "lxplus.cern.ch",
 			"localPort": 36321
 		},
 		{
 			"spec": "lbquantaperf02.cern.ch/30,cpp,lzo,auth",
+			"networkProbe": "lbgw.cern.ch",
 			"gateway": "lxplus.cern.ch",
 			"localPort": 36322
 		}

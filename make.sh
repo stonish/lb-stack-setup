@@ -149,10 +149,6 @@ setup_distcc_hosts() {
     return 1
   fi
   eval $distcc_env
-  local ndistcc=$(echo "$("$CONTRIB/bin/distcc" -j) * 5/4" | bc)
-  # Note that the following has no effect when BUILDFLAGS is passed to make.
-  # In that case the variable goes via MAKEFLAGS.
-  export BUILDFLAGS="$BUILDFLAGS -j$ndistcc"
 }
 
 
