@@ -92,8 +92,9 @@ make-legacy:
 
 check-formatting:
   stage: setup
-  image: gitlab-registry.cern.ch/lhcb-docker/style-checker
+  image: gitlab-registry.cern.ch/ci-tools/ci-worker:cc7
   script:
+    - . /cvmfs/lhcb.cern.ch/lib/LbEnv
     - curl -o lb-format "https://gitlab.cern.ch/lhcb-core/LbDevTools/raw/master/LbDevTools/SourceTools.py?inline=false"
     - python lb-format --format-patch apply-formatting.patch origin/master
   artifacts:
