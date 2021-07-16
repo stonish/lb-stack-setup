@@ -91,8 +91,8 @@ def assert_git_version():
     git_ver = LooseVersion(git_ver_str.split()[2])
     if git_ver < LooseVersion('1.8'):
         sys.exit(
-            'Old unspported git version {} detected. See doc/prerequisites.md'.
-            format(git_ver))
+            'Old unsupported git version {} detected. See doc/prerequisites.md'
+            .format(git_ver))
 
 
 def git(*args, **kwargs):

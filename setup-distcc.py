@@ -55,7 +55,7 @@ def reachable(host, port=None, timeout=0.2):
         return is_port_open(host, port, timeout=timeout)
     else:
         # If port is not given, check that the host is up and reachable.
-        # We don't theck the distcc port since it's possible that the
+        # We don't check the distcc port since it's possible that the
         # host is up but the distcc server is down.
         return run(
             ['timeout', str(timeout), 'ping', '-c1', '-q', host],
