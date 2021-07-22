@@ -8,8 +8,6 @@
 	"extraDependencies": {},
 	"gitBranch": {
 		"Gaudi": "master",
-		"Detector": "v0-patches",
-		"Geant4": "master",
 		"default": "master"
 	},
 	"lcgVersion": "100",
