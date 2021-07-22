@@ -277,12 +277,10 @@ def update_repos():
             _, branch = git_url_branch(repo, try_read_only=True)
             tracking_branch = res.stdout.strip().split('/', 1)[1]
             if branch != tracking_branch:
-                not_tracking.append(repo)  # tracking a non
+                not_tracking.append(repo)  # tracking a non-default branch
         else:
             not_tracking.append(repo)
     repos = [r for r in repos if r not in not_tracking]
-    log.info("Skipped repos not tracking the default branch: "
-             f"{', '.join(not_tracking)}.")
 
     ps = []
     for repo in repos:
@@ -305,6 +303,8 @@ def update_repos():
         else:
             log.warning(f'{repo}: FAIL\n\n{res.stderr.strip()}\n')
     log.info(f"Up to date: {', '.join(up_to_date)}.")
+    log.warning("Skipped repos not tracking the default branch: "
+                f"{', '.join(not_tracking)}.")
 
 
 def checkout(projects, data_packages):
