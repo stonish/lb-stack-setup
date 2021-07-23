@@ -61,6 +61,8 @@ def symlink(src, dst):
 def git_url_branch(repo, try_read_only=False):
     # TODO for data packages we may look up 'DBASE/PRConfig' or 'PRConfig' in
     #      gitUrl and gitGroup.
+    if repo == 'utils':
+        return None, 'master'
     url = config['gitUrl'].get(repo)
     if not url:
         group = config['gitGroup']
@@ -230,6 +232,8 @@ def _mtime_or_zero(path):
 
 def check_staleness(repos):
     FETCH_TTL = 3600  # seconds
+    # TODO here we assume that having FETCH_HEAD also fetched our branch
+    # from our remote. See todo below for FETCH_HEAD.
     to_fetch = [
         p for p in repos if time.time() -
         _mtime_or_zero(os.path.join(p, '.git', 'FETCH_HEAD')) > FETCH_TTL
@@ -241,7 +245,7 @@ def check_staleness(repos):
                      cwd=path,
                      check=False)
         origin_url = result.stdout.strip()
-        if result.returncode == 0 and origin_url == url:
+        if result.returncode == 0 and (url is None or origin_url == url):
             # fetch origin if its URL matches the config's URL
             fetch_args = ['origin']
             # TODO add +refs/merge-requests/*/head:refs/remotes/origin/mr/* ?
@@ -369,7 +373,7 @@ def checkout(projects, data_packages):
         mkdir_p(container)
         dp_repos.append(clone_package(name, container))
 
-    check_staleness(list(project_deps.keys()) + dp_repos)
+    check_staleness(list(project_deps.keys()) + dp_repos + ['utils'])
 
     return project_deps
 
