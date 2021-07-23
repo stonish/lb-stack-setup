@@ -11,6 +11,7 @@ from subprocess import CalledProcessError
 import traceback
 import shutil
 import sys
+from concurrent.futures.thread import ThreadPoolExecutor
 from config import read_config, DIR, GITLAB_READONLY_URL, GITLAB_BASE_URLS
 from utils import setup_logging, run, run_nb, topo_sorted
 from vscode import write_vscode_settings
@@ -233,31 +234,44 @@ def check_staleness(repos):
         p for p in repos if time.time() -
         _mtime_or_zero(os.path.join(p, '.git', 'FETCH_HEAD')) > FETCH_TTL
     ]
+
+    def fetch_repo(path):
+        url, branch = git_url_branch(path)
+        result = run(['git', 'remote', 'get-url', 'origin'],
+                     cwd=path,
+                     check=False)
+        origin_url = result.stdout.strip()
+        if result.returncode == 0 and origin_url == url:
+            # fetch origin if its URL matches the config's URL
+            fetch_args = ['origin']
+            # TODO add +refs/merge-requests/*/head:refs/remotes/origin/mr/* ?
+        else:
+            # otherwise, fetch the URL directly:
+            # url, branch = git_url_branch(path, try_read_only=True)
+            # fetch_args = [url, branch]
+            log.warning(f"Failed to fetch {path} "
+                        f"as origin ({origin_url}) is not {url}")
+            return
+            # TODO in this case we might be tempted to use FETCH_HEAD as
+            # the reference below. However, this is a problem if a fetch
+            # was made from somewhere else (e.g. manually or by VSCode).
+            # We need to find a way to store our ref somewhere.
+        result = run(['git', 'fetch'] + fetch_args, cwd=path, check=False)
+        if result.returncode != 0:
+            log.warning(f"Failed to fetch {path}")
+
     if to_fetch:
         log.info("Fetching {}".format(', '.join(to_fetch)))
-        ps = []
-        for p in to_fetch:
-            url, branch = git_url_branch(p, try_read_only=True)
-            ps.append(
-                # TODO: fetch origin if its URL matches the config's URL,
-                # otherwise, fetch the URL directly:
-                # run_nb(['git', 'fetch', url, branch], cwd=p, check=False))
-                # NOT WORKING because DPs trying to
-                # 'git' 'fetch' 'https://gitlab.cern.ch/lhcb/DBASE/AppConfig.git' 'master'
-                run_nb(['git', 'fetch', 'origin', branch], cwd=p, check=False))
-            #  +refs/merge-requests/*/head:refs/remotes/origin/mr/*
-        # wait for all fetching to finish
-        rcs = [result().returncode for result in ps]
-        failed = [p for p, rc in zip(to_fetch, rcs) if rc != 0]
-        if failed:
-            log.warning("Failed to fetch " + ", ".join(failed))
+        with ThreadPoolExecutor(max_workers=64) as executor:
+            executor.map(fetch_repo, repos)
 
-    targets = ['origin/' + git_url_branch(p)[1] for p in repos]
-    diff_cmd = ['git', 'rev-list', '--count', '--left-right', 'FETCH_HEAD...']
-    ps = [run_nb(diff_cmd, cwd=p, check=False) for p in repos]
-    for path, target, result in zip(repos, targets, ps):
+    def compare_head(path):
+        target = 'origin/' + git_url_branch(path)[1]
         try:
-            res = result()
+            res = run(
+                ['git', 'rev-list', '--count', '--left-right', f'{target}...'],
+                cwd=path,
+                check=False)
             n_behind, n_ahead = map(int, res.stdout.split())
             if n_behind:
                 ref_names = run(['git', 'log', '-n1', '--pretty=%D'],
@@ -274,6 +288,9 @@ def check_staleness(repos):
                     path, n_ahead, target))
         except (CalledProcessError, ValueError):
             log.warning('Failed to get status of ' + path)
+
+    with ThreadPoolExecutor(max_workers=64) as executor:
+        executor.map(compare_head, repos)
 
 
 def update_repos():
