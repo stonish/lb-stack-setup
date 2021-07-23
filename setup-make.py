@@ -9,6 +9,7 @@ import re
 import time
 from subprocess import CalledProcessError
 import traceback
+import shutil
 import sys
 from config import read_config, DIR, GITLAB_READONLY_URL, GITLAB_BASE_URLS
 from utils import setup_logging, run, run_nb, topo_sorted
@@ -51,7 +52,7 @@ def symlink(src, dst):
     """Create a symlink only if not already existing and equivalent."""
     if os.path.realpath(dst) == src:
         return
-    if os.path.isfile(dst):
+    if os.path.isfile(dst) or os.path.islink(dst):
         os.remove(dst)
     os.symlink(src, dst)
 
@@ -164,6 +165,19 @@ def clone_cmake_project(project):
     return project
 
 
+def package_major_version(path):
+    """Return the major part (v3) of a data package version."""
+    try:
+        with open(os.path.join(path, 'cmt/requirements')) as f:
+            requirements = f.read()
+    except FileNotFoundError:
+        return None
+
+    m = re.search(
+        r'^\s*version\s+(v[0-9]+)r[0-9]+', requirements, flags=re.MULTILINE)
+    return m.group(1) if m else None
+
+
 def clone_package(name, path):
     # TODO remove warning in one year (November 2021)
     if path != 'DBASE' and os.path.isdir(os.path.join('DBASE', name)):
@@ -174,14 +188,21 @@ def clone_package(name, path):
     full_path = os.path.join(path, name)
     if not os.path.isdir(full_path):
         log.info(f'Cloning {name}...')
-        run([
-            os.path.join(DIR, 'build-env'),
-            os.path.join(config['lbenvPath'], 'bin/git-lb-clone-pkg'), name
-        ],
-            stdout=None,
-            stderr=None,
-            stdin=None,
-            cwd=path)
+        url, branch = git_url_branch(full_path)
+        run(['git', 'clone', url, full_path])
+        run(['git', 'checkout', branch], cwd=full_path)
+
+    # Create symlinks instead of the usual subdirectory as the new CMake
+    # has some issue with locating them as created by git-lb-clone-pkg.
+    major_version = package_major_version(full_path)
+    version_symlinks = ([major_version + 'r999']
+                        if major_version else []) + ['v999r999']
+    for v in version_symlinks:
+        full_path_v = os.path.join(full_path, v)
+        # the next line fixes the case when old clones are lying around
+        shutil.rmtree(full_path_v, ignore_errors=True)
+        symlink('.', full_path_v)
+
     return full_path
 
 
