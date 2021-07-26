@@ -12,7 +12,7 @@ setup_output() {
 gitc() { pushd "$1" >/dev/null && git "${@:2}" && popd >/dev/null; }
 
 log() {
-    if [ "$level" != DEBUG ]; then
+    if [ "$1" != DEBUG ]; then
         printf "%-8s %s\n" "$1" "$2" >&2
     fi
     local ts=

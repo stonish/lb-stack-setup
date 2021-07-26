@@ -39,31 +39,56 @@
             "**/build.*": true,
             "**/InstallArea": true,
             "/cvmfs": true,
-            "/usr" : true
+            "/usr": true
         },
         "C_Cpp.intelliSenseCachePath": "$projectPath/.vscode-cpptools/$binaryTag",
         // Disable precompiled header caches (ipch). They are too big at 0.1-1 GB per file
         // and are constantly being recreated for a sensible limit of 5 GB.
         "C_Cpp.intelliSenseCacheSize": 0,
         "C_Cpp.workspaceParsingPriority": "low",
+        "cSpell.customWorkspaceDictionaries": [
+            "lhcb"
+        ],
+        "cSpell.diagnosticLevel": "Hint",
         "cSpell.dictionaryDefinitions": [
             {
                 "name": "lhcb",
-                "path": "{utilsPath}/dictionary.txt"
+                "path": "$utilsPath/dictionary.txt"
             }
         ],
-        "cSpell.diagnosticLevel": "Hint",
-        // List of dictionaries to use when checking files.
-        "cSpell.dictionaries": [
-            "lhcb"
-        ],
-        "cSpell.includeRegExpList": [
-            "string",
-            "(\"\"\"|''')[^\\1]*\\1",
-            "CStyleComment",
-            "#.*"
+        "cSpell.enabledLanguageIds": [
+            "c",
+            "cpp",
+            "markdown",
+            "python",
+            "restructuredtext",
+            "text"
         ],
         "cSpell.language": "en,en-GB",
+        "cSpell.languageSettings": [
+            {
+                "languageId": "python",
+                "includeRegExpList": [
+                    "/#.*/",
+                    "/('''|\"\"\")[^\\1]+?\\1/g",
+                    "strings"
+                ]
+            },
+            {
+                "languageId": "cpp,c",
+                // Turn off compound words, because it is only checking strings.
+                "allowCompoundWords": false,
+                // Only check comments and strings
+                "includeRegExpList": [
+                    "CStyleComment",
+                    "string"
+                ],
+                // Exclude includes, because they are also strings.
+                "ignoreRegExpList": [
+                    "/#include.*/"
+                ]
+            }
+        ],
         "cSpell.showStatus": false,
         "files.associations": {
             "*.C": "cpp",

@@ -7,3 +7,9 @@ configurable
 configurables
 velo
 selreports
+distcc
+klist
+noqa
+centos
+cvmfs
+lhcbdev

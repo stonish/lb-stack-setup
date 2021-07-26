@@ -2,6 +2,7 @@
 from __future__ import print_function
 import os
 import re
+import socket
 from collections import defaultdict
 from config import read_config
 from utils import setup_logging, run, DEVNULL
@@ -31,15 +32,34 @@ def write_spec(spec):
     return s if not spec['options'] else (s + ',' + ','.join(spec['options']))
 
 
-def reachable(host, port=None):
+def is_port_open(host, port, test_distcc=False, timeout=0.2):
+    """Check if we can open a port on a host.
+
+    Optionally, try to do a handshake with a distcc server.
+
+    """
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.settimeout(timeout)
+            sock.connect((host, port))
+            if test_distcc:
+                sock.sendall(b'*')
+                return sock.recv(1) == b'*'
+    except (ConnectionError, socket.timeout):
+        return False
+    return True
+
+
+def reachable(host, port=None, timeout=0.2):
     if port is not None:
-        code = run(['nc', '--send-only', '--wait', '0.2', host,
-                    str(port)],
-                   check=False).returncode
+        return is_port_open(host, port, timeout=timeout)
     else:
-        code = run(['timeout', '0.2', 'ping', '-c1', '-q', host],
-                   check=False).returncode
-    return code == 0
+        # If port is not given, check that the host is up and reachable.
+        # We don't check the distcc port since it's possible that the
+        # host is up but the distcc server is down.
+        return run(
+            ['timeout', str(timeout), 'ping', '-c1', '-q', host],
+            check=False).returncode == 0
 
 
 def have_valid_ticket():
@@ -51,7 +71,7 @@ def have_valid_ticket():
         return have_valid_ticket.cache
 
 
-found_hosts = []
+found_hosts = {}
 proxied_hosts = defaultdict(list)
 for host in config['distccHosts']:
     spec = parse_spec(host['spec'])
@@ -60,9 +80,13 @@ for host in config['distccHosts']:
             log.warning('No valid kerberos ticket, disabling distcc host ' +
                         host['spec'])
             continue
-    if reachable(spec['hostid']):
+    # Check the "networkProbe" if defined, otherwise check the host directly.
+    # The latter has the disadvantage that if the host down but we're on the
+    # right network, we'll (unsuccessfully) try to proxy it.
+    if reachable(host.get('networkProbe', spec['hostid'])):
         # The host is directly reachable
-        found_hosts.append(host['spec'])
+        # if is_port_open(spec['hostid'], spec["port"], test_distcc=True):
+        found_hosts[host['spec']] = spec['limit']
     else:
         # The host needs to be proxied
         new_spec = {
@@ -79,16 +103,17 @@ for host in config['distccHosts']:
             ]
         }
         if reachable(new_spec['hostid'], new_spec['port']):
-            found_hosts.append(write_spec(new_spec))
+            log.debug(f"distcc server {spec['hostid']} is already proxied")
+            found_hosts[write_spec(new_spec)] = spec['limit']
         else:
             # collect hosts to proxy
             proxied_hosts[host['gateway']].append(
                 (write_spec(new_spec), host['spec'], host['localPort'],
-                 spec['hostid'], spec['port']))
+                 spec['hostid'], spec['port'], spec['limit']))
 
 if proxied_hosts:
     kerberos_user = run(
-        "klist | grep -oP 'Default principal: \K.+(?=@)'",
+        "klist | grep -oP 'Default principal: \\K.+(?=@)'",
         shell=True).stdout.strip()
 
 for gateway, hosts in proxied_hosts.items():
@@ -111,12 +136,14 @@ for gateway, hosts in proxied_hosts.items():
         capture_stderr=False,
         check=False).returncode
     if code == 0:
-        found_hosts.extend(h[0] for h in hosts)
+        for h in hosts:
+            found_hosts[h[0]] = h[5]
         log.info('...done.')
     else:
-        log.error('Failed to forward ports.'.format(gateway))
+        log.error(f'Failed to forward ports via {gateway}.')
 
-found_hosts.sort()
+n_slots = sum(found_hosts.values())
+found_hosts = sorted(found_hosts.keys())
 if not found_hosts:
     log.error("No distcc hosts found!")
     exit(1)
@@ -133,10 +160,15 @@ found_hosts.append('--localslots_cpp={}'.format(n_localslots_cpp))
 if config['distccRandomize']:
     found_hosts.append('--randomize')
 
-print('export DISTCC_HOSTS="{}"'.format(' '.join(found_hosts)))
-print('export DISTCC_PRINCIPAL="{}"'.format(config['distccPrincipal']))
-print('export DISTCC_SKIP_LOCAL_RETRY=1')
-print('export DISTCC_IO_TIMEOUT=300')
+print(f"""
+export DISTCC_HOSTS="{' '.join(found_hosts)}"
+export DISTCC_PRINCIPAL="{config['distccPrincipal']}"
+export DISTCC_SKIP_LOCAL_RETRY=1
+export DISTCC_IO_TIMEOUT=300
+export BUILDFLAGS="$BUILDFLAGS -j{n_slots*5//4}"
+""")
+# Note that the last line has no effect when BUILDFLAGS is passed to make.
+# In that case the variable goes via MAKEFLAGS.
 
 # TODO add cpp conditionally on USE_DISTCC_PUMP? Does non-pump work now?
 # TODO what if you're compiling from one of the distcc hosts?

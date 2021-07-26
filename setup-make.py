@@ -9,7 +9,9 @@ import re
 import time
 from subprocess import CalledProcessError
 import traceback
+import shutil
 import sys
+from concurrent.futures.thread import ThreadPoolExecutor
 from config import read_config, DIR, GITLAB_READONLY_URL, GITLAB_BASE_URLS
 from utils import setup_logging, run, run_nb, topo_sorted
 from vscode import write_vscode_settings
@@ -51,7 +53,7 @@ def symlink(src, dst):
     """Create a symlink only if not already existing and equivalent."""
     if os.path.realpath(dst) == src:
         return
-    if os.path.isfile(dst):
+    if os.path.isfile(dst) or os.path.islink(dst):
         os.remove(dst)
     os.symlink(src, dst)
 
@@ -59,6 +61,8 @@ def symlink(src, dst):
 def git_url_branch(repo, try_read_only=False):
     # TODO for data packages we may look up 'DBASE/PRConfig' or 'PRConfig' in
     #      gitUrl and gitGroup.
+    if repo == 'utils':
+        return None, 'master'
     url = config['gitUrl'].get(repo)
     if not url:
         group = config['gitGroup']
@@ -164,6 +168,19 @@ def clone_cmake_project(project):
     return project
 
 
+def package_major_version(path):
+    """Return the major part (v3) of a data package version."""
+    try:
+        with open(os.path.join(path, 'cmt/requirements')) as f:
+            requirements = f.read()
+    except FileNotFoundError:
+        return None
+
+    m = re.search(
+        r'^\s*version\s+(v[0-9]+)r[0-9]+', requirements, flags=re.MULTILINE)
+    return m.group(1) if m else None
+
+
 def clone_package(name, path):
     # TODO remove warning in one year (November 2021)
     if path != 'DBASE' and os.path.isdir(os.path.join('DBASE', name)):
@@ -174,14 +191,21 @@ def clone_package(name, path):
     full_path = os.path.join(path, name)
     if not os.path.isdir(full_path):
         log.info(f'Cloning {name}...')
-        run([
-            os.path.join(DIR, 'build-env'),
-            os.path.join(config['lbenvPath'], 'bin/git-lb-clone-pkg'), name
-        ],
-            stdout=None,
-            stderr=None,
-            stdin=None,
-            cwd=path)
+        url, branch = git_url_branch(full_path)
+        run(['git', 'clone', url, full_path])
+        run(['git', 'checkout', branch], cwd=full_path)
+
+    # Create symlinks instead of the usual subdirectory as the new CMake
+    # has some issue with locating them as created by git-lb-clone-pkg.
+    major_version = package_major_version(full_path)
+    version_symlinks = ([major_version + 'r999']
+                        if major_version else []) + ['v999r999']
+    for v in version_symlinks:
+        full_path_v = os.path.join(full_path, v)
+        # the next line fixes the case when old clones are lying around
+        shutil.rmtree(full_path_v, ignore_errors=True)
+        symlink('.', full_path_v)
+
     return full_path
 
 
@@ -208,35 +232,50 @@ def _mtime_or_zero(path):
 
 def check_staleness(repos):
     FETCH_TTL = 3600  # seconds
+    # TODO here we assume that having FETCH_HEAD also fetched our branch
+    # from our remote. See todo below for FETCH_HEAD.
     to_fetch = [
         p for p in repos if time.time() -
         _mtime_or_zero(os.path.join(p, '.git', 'FETCH_HEAD')) > FETCH_TTL
     ]
+
+    def fetch_repo(path):
+        url, branch = git_url_branch(path)
+        result = run(['git', 'remote', 'get-url', 'origin'],
+                     cwd=path,
+                     check=False)
+        origin_url = result.stdout.strip()
+        if result.returncode == 0 and (url is None or origin_url == url):
+            # fetch origin if its URL matches the config's URL
+            fetch_args = ['origin']
+            # TODO add +refs/merge-requests/*/head:refs/remotes/origin/mr/* ?
+        else:
+            # otherwise, fetch the URL directly:
+            # url, branch = git_url_branch(path, try_read_only=True)
+            # fetch_args = [url, branch]
+            log.warning(f"Failed to fetch {path} "
+                        f"as origin ({origin_url}) is not {url}")
+            return
+            # TODO in this case we might be tempted to use FETCH_HEAD as
+            # the reference below. However, this is a problem if a fetch
+            # was made from somewhere else (e.g. manually or by VSCode).
+            # We need to find a way to store our ref somewhere.
+        result = run(['git', 'fetch'] + fetch_args, cwd=path, check=False)
+        if result.returncode != 0:
+            log.warning(f"Failed to fetch {path}")
+
     if to_fetch:
         log.info("Fetching {}".format(', '.join(to_fetch)))
-        ps = []
-        for p in to_fetch:
-            url, branch = git_url_branch(p, try_read_only=True)
-            ps.append(
-                # TODO: fetch origin if its URL matches the config's URL,
-                # otherwise, fetch the URL directly:
-                # run_nb(['git', 'fetch', url, branch], cwd=p, check=False))
-                # NOT WORKING because DPs trying to
-                # 'git' 'fetch' 'https://gitlab.cern.ch/lhcb/DBASE/AppConfig.git' 'master'
-                run_nb(['git', 'fetch', 'origin', branch], cwd=p, check=False))
-            #  +refs/merge-requests/*/head:refs/remotes/origin/mr/*
-        # wait for all fetching to finish
-        rcs = [result().returncode for result in ps]
-        failed = [p for p, rc in zip(to_fetch, rcs) if rc != 0]
-        if failed:
-            log.warning("Failed to fetch " + ", ".join(failed))
+        with ThreadPoolExecutor(max_workers=64) as executor:
+            executor.map(fetch_repo, repos)
 
-    targets = ['origin/' + git_url_branch(p)[1] for p in repos]
-    diff_cmd = ['git', 'rev-list', '--count', '--left-right', 'FETCH_HEAD...']
-    ps = [run_nb(diff_cmd, cwd=p, check=False) for p in repos]
-    for path, target, result in zip(repos, targets, ps):
+    def compare_head(path):
+        target = 'origin/' + git_url_branch(path)[1]
         try:
-            res = result()
+            res = run(
+                ['git', 'rev-list', '--count', '--left-right', f'{target}...'],
+                cwd=path,
+                check=False)
             n_behind, n_ahead = map(int, res.stdout.split())
             if n_behind:
                 ref_names = run(['git', 'log', '-n1', '--pretty=%D'],
@@ -253,6 +292,9 @@ def check_staleness(repos):
                     path, n_ahead, target))
         except (CalledProcessError, ValueError):
             log.warning('Failed to get status of ' + path)
+
+    with ThreadPoolExecutor(max_workers=64) as executor:
+        executor.map(compare_head, repos)
 
 
 def update_repos():
@@ -277,12 +319,10 @@ def update_repos():
             _, branch = git_url_branch(repo, try_read_only=True)
             tracking_branch = res.stdout.strip().split('/', 1)[1]
             if branch != tracking_branch:
-                not_tracking.append(repo)  # tracking a non
+                not_tracking.append(repo)  # tracking a non-default branch
         else:
             not_tracking.append(repo)
     repos = [r for r in repos if r not in not_tracking]
-    log.info("Skipped repos not tracking the default branch: "
-             f"{', '.join(not_tracking)}.")
 
     ps = []
     for repo in repos:
@@ -305,6 +345,8 @@ def update_repos():
         else:
             log.warning(f'{repo}: FAIL\n\n{res.stderr.strip()}\n')
     log.info(f"Up to date: {', '.join(up_to_date)}.")
+    log.warning("Skipped repos not tracking the default branch: "
+                f"{', '.join(not_tracking)}.")
 
 
 def checkout(projects, data_packages):
@@ -331,7 +373,7 @@ def checkout(projects, data_packages):
         mkdir_p(container)
         dp_repos.append(clone_package(name, container))
 
-    check_staleness(list(project_deps.keys()) + dp_repos)
+    check_staleness(list(project_deps.keys()) + dp_repos + ['utils'])
 
     return project_deps
 

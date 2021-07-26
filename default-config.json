@@ -8,8 +8,6 @@
 	"extraDependencies": {},
 	"gitBranch": {
 		"Gaudi": "master",
-		"Detector": "v0-patches",
-		"Geant4": "master",
 		"default": "master"
 	},
 	"lcgVersion": "100",
@@ -43,7 +41,7 @@
 	"useDocker": false,
 	"useCcache": true,
 	"useDistcc": null,
-	"lbenvPath": "/cvmfs/lhcb.cern.ch/lib/var/lib/LbEnv/2090/stable/linux-64",
+	"lbenvPath": "/cvmfs/lhcb.cern.ch/lib/var/lib/LbEnv/2129/stable/linux-64",
 	"projectPath": "..",
 	"contribPath": "../contrib",
 	"ccachePath": "../.ccache/$BINARY_TAG",
@@ -52,11 +50,13 @@
 	"distccHosts": [
 		{
 			"spec": "lbquantaperf01.cern.ch/30,cpp,lzo,auth",
+			"networkProbe": "lbgw.cern.ch",
 			"gateway": "lxplus.cern.ch",
 			"localPort": 36321
 		},
 		{
 			"spec": "lbquantaperf02.cern.ch/30,cpp,lzo,auth",
+			"networkProbe": "lbgw.cern.ch",
 			"gateway": "lxplus.cern.ch",
 			"localPort": 36322
 		}

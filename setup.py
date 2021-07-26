@@ -72,7 +72,6 @@ def assert_os_or_docker():
     use_docker = False
     if host_os == 'x86_64-centos7':
         # test native setup
-        # TODO check if required software is installed: nc, bc, ...?
         pass
     else:
         logging.info('Platform {!s} is not supported natively, '
@@ -92,8 +91,8 @@ def assert_git_version():
     git_ver = LooseVersion(git_ver_str.split()[2])
     if git_ver < LooseVersion('1.8'):
         sys.exit(
-            'Old unspported git version {} detected. See doc/prerequisites.md'.
-            format(git_ver))
+            'Old unsupported git version {} detected. See doc/prerequisites.md'
+            .format(git_ver))
 
 
 def git(*args, **kwargs):

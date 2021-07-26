@@ -1,3 +1,4 @@
+include_guard(GLOBAL)
 CMAKE_MINIMUM_REQUIRED(VERSION 3.18)
 
 # Use our wrapper script to launch compilations (directly, via ccache and/or distcc)
@@ -89,5 +90,21 @@ if(NOT CMAKE_SOURCE_DIR MATCHES "CMakeTmp")
     else()
       message(FATAL_ERROR "Cannot find default toolchain.cmake (from LbDevTools)")
     endif()
+  endif()
+
+  # Support distcc for new cmake where the compiler wrapper is not on /cvmfs.
+  # A symlink to the local compiler wrapper is created. The symlink name fully
+  # identifies the compiler, which allows the distcc server to match based on name.
+  # The corresponding compiler wrappers on the distcc servers need to be premade,
+  # see doc/distcc-server.md for more information.
+  if(NOT CMAKE_CXX_COMPILER MATCHES "^/cvmfs/.*")
+    if (NOT DEFAULT_CMAKE_CXX_COMPILER)
+      set(DEFAULT_CMAKE_CXX_COMPILER ${CMAKE_CXX_COMPILER} CACHE FILEPATH "Default path to C++ compiler")
+    endif()
+    set(_cxx_compiler "${DEFAULT_CMAKE_CXX_COMPILER}-${LCG_COMPILER_VERSION}-${LCG_BINUTILS_VERSION}")
+    execute_process(COMMAND ln -s -f -r ${DEFAULT_CMAKE_CXX_COMPILER} ${_cxx_compiler})
+    execute_process(COMMAND touch -h --reference=${DEFAULT_CMAKE_CXX_COMPILER} ${_cxx_compiler})
+    message(STATUS "Using ${_cxx_compiler} for compatibility with distcc")
+    set(CMAKE_CXX_COMPILER ${_cxx_compiler} CACHE FILEPATH "Path to C++ compiler" FORCE)
   endif()
 endif()

@@ -51,6 +51,7 @@ setup:
     # TODO test Detector when we switch to master
     - make LHCb/configure
     - bash utils/ci-utils/test-cmake.sh LHCb/build.$PLATFORM
+    - bash utils/ci-utils/test-misc.sh
   cache:
     key: "$CI_JOB_NAME"
     paths:
@@ -83,6 +84,7 @@ make-legacy:
     - bash utils/ci-utils/test-cmake.sh Gaudi/build.$PLATFORM
     - make LHCb/configure
     - bash utils/ci-utils/test-cmake.sh LHCb/build.$PLATFORM
+    - bash utils/ci-utils/test-misc.sh
   cache:
     key: "$CI_JOB_NAME"
     paths:
@@ -90,8 +92,9 @@ make-legacy:
 
 check-formatting:
   stage: setup
-  image: gitlab-registry.cern.ch/lhcb-docker/style-checker
+  image: gitlab-registry.cern.ch/ci-tools/ci-worker:cc7
   script:
+    - . /cvmfs/lhcb.cern.ch/lib/LbEnv
     - curl -o lb-format "https://gitlab.cern.ch/lhcb-core/LbDevTools/raw/master/LbDevTools/SourceTools.py?inline=false"
     - python lb-format --format-patch apply-formatting.patch origin/master
   artifacts:

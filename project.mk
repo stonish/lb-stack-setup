@@ -93,7 +93,6 @@ ifneq ($(USE_NINJA),)
   # enable Ninja
   override CMAKEFLAGS += -GNinja
   BUILD_CONF_FILE := build.ninja
-  BUILDFLAGS := $(NINJAFLAGS)
   # no need to pass -v as cmake --build does it when VERBOSE is set
 else
   BUILD_CONF_FILE := Makefile
@@ -118,7 +117,9 @@ endif
 # This wrapping around the test target is used to ensure the generation of
 # the XML output from ctest.
 test: $(BUILDDIR)/$(BUILD_CONF_FILE)
-	$(RM) -r $(BUILDDIR)/Testing
+# Here we need to keep just some of the files under Testing/Temporary:
+#   CTestCheckpoint.txt, CTestCostData.txt and LastTestsFailed_*.log
+	$(RM) -r $(BUILDDIR)/Testing/TAG $(BUILDDIR)/Testing/20*-* $(BUILDDIR)/Testing/Temporary/LastTest_*
 	-cd $(BUILDDIR) && $(CTEST) -T test $(value ARGS)
 	$(RM) -r $(BUILDDIR)/html
 	+@cd $(BUILDDIR) && $(CMAKE) -P $(DIR)/CTestXML2HTML.cmake
