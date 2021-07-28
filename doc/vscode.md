@@ -118,6 +118,35 @@ Now go ahead and make an alias for your favourite workspace :sunglasses:.
 4. Open the local port, e.g. [http://localhost:5500] and navigate to the test results, e.g. [http://localhost:5500/build.x86_64-centos7-gcc9-opt/html/].
 5. To change project, use the `Live Server: Change Live Server workspace` command.
 
+### Using Remote with a server in a restricted network
+
+When using Remote - SSH to connect to a server in a restricted network
+(such as LHCb Online), it is necessary to configure a proxy so that extensions
+can be installed (see [README](../README.md) for the Online network case).
+
+Even when a proxy is configured, the C/C++ extension (and possibly others)
+fail to install with a message such as:
+
+```log
+Updating C/C++ dependencies...
+
+Downloading package 'C/C++ language components (Linux / x86_64)'  Failed. Retrying... Failed. Retrying... Failed. Retrying...Waiting 8 seconds... Failed. Retrying...Waiting 16 seconds... Failed to download https://go.microsoft.com/fwlink/?linkid=2167520
+Failed at stage: downloadPackages
+Error: connect ETIMEDOUT 23.33.10.189:443
+    at TCPConnectWrap.afterConnect [as oncomplete] (net.js:1146:16)
+
+If you work in an offline environment or repeatedly see this error, try downloading a version of the extension with all the dependencies pre-included from https://github.com/microsoft/vscode-cpptools/releases, then use the "Install from VSIX" command in VS Code to install it.
+```
+
+To overcome this, follow the instructions above and do the following (on the server)
+
+```sh
+cd ~
+curl -O -L https://github.com/microsoft/vscode-cpptools/releases/latest/download/cpptools-linux.vsix
+```
+
+Then use the "Install from VSIX" command (from the command palette `Ctrl+Shift+P`) to install it.
+
 ### Recording screencasts in Gnome
 
 1. Enable screencast mode with `F1` -> `Developer: Toggle Screencast Mode`.

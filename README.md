@@ -26,6 +26,8 @@ curl https://gitlab.cern.ch/rmatev/lb-stack-setup/raw/master/setup.py | python3 
 > **Note:** If you are working in the LHCb Online network, set up git with
 > `git config --global 'http.https://github.com/.proxy' lbproxy01:8080`
 > to use the proxy to access GitHub.
+> If you use VSCode with Remote - SSH , see also
+> [doc/vscode.md](doc/vscode.md#using-remote-with-a-server-in-a-restricted-network)
 
 The script will first check that all prerequisites are met. If it fails, check
 [doc/prerequisites.md](doc/prerequisites.md) for more information.
