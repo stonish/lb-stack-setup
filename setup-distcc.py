@@ -120,7 +120,7 @@ for gateway, hosts in proxied_hosts.items():
     log.info('Starting ssh port forwarding for distcc hosts {}...'.format(
         ' '.join(h[1] for h in hosts)))
     forwards = sum((['-L', '{}:{}:{}'.format(local, host, port)]
-                    for _, _, local, host, port in hosts), [])
+                    for _, _, local, host, port, _ in hosts), [])
     cmd = [
         'ssh', '-f', '-N', '-F', SSH_CONFIG, '-o', 'BatchMode=yes', '-o',
         'ExitOnForwardFailure=yes', '-o', 'UserKnownHostsFile=' + KNOWN_HOSTS,
