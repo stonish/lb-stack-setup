@@ -17,5 +17,10 @@ then
     error 'Using $ inside ARGS= is not working'
 fi
 
+if ! LHCb/run python -c 'import PRConfig; assert "v999r999" in PRConfig.__file__'
+then
+    error 'PRConfig is not picked up from the local clone'
+fi
+
 echo -en $problems >&2
 exit $retcode
