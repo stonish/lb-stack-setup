@@ -345,8 +345,9 @@ def update_repos():
         else:
             log.warning(f'{repo}: FAIL\n\n{res.stderr.strip()}\n')
     log.info(f"Up to date: {', '.join(up_to_date)}.")
-    log.warning("Skipped repos not tracking the default branch: "
-                f"{', '.join(not_tracking)}.")
+    if not_tracking:
+        log.warning("Skipped repos not tracking the default branch: "
+                    f"{', '.join(not_tracking)}.")
 
 
 def checkout(projects, data_packages):
