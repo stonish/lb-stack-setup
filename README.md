@@ -208,7 +208,7 @@ utils/config.py cmakePrefixPath '$CMAKE_PREFIX_PATH:/cvmfs/sft-nightlies.cern.ch
 ```
 To use the nightly builds of LCG you need to pass the appropriate toolchain locations, e. g.
 ```
-CMAKEFLAGS='-DLCG_EXTERNALS_FILE=/cvmfs/sft-nightlies.cern.ch/lcg/nightlies/dev4/Mon/LCG_externals_{$BINARY_TAG}.txt -DCMAKE_TOOLCHAIN_FILE=/opt/lcg-toolchains/special/lcg-nightly.cmake' make Project/configure
+CMAKEFLAGS='-DLCG_EXTERNALS_FILE=/cvmfs/sft-nightlies.cern.ch/lcg/nightlies/dev4/Mon/LCG_externals_{$BINARY_TAG}.txt make Project/configure
 ```
 
 ### Pass flags to CMake
