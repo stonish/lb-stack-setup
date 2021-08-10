@@ -206,9 +206,9 @@ For example, in order to use the `dev4` nightly build from Tuesday, it is enough
 utils/config.py lcgVersion dev4
 utils/config.py cmakePrefixPath '$CMAKE_PREFIX_PATH:/cvmfs/sft-nightlies.cern.ch/lcg/nightlies/dev4/Tue'
 ```
-To use the nightly builds of LCG you need to pass the appropriate toolchain locations, e. g.
+To use the nightly builds of LCG you need to pass the appropriate toolchain locations:
 ```
-CMAKEFLAGS='-DLCG_EXTERNALS_FILE=/cvmfs/sft-nightlies.cern.ch/lcg/nightlies/dev4/Mon/LCG_externals_{$BINARY_TAG}.txt make Project/configure
+utils/config.py -- cmakeFlags.defaults '-DLCG_EXTERNALS_FILE=/cvmfs/sft-nightlies.cern.ch/lcg/nightlies/dev4/Mon/LCG_externals_{$BINARY_TAG}.txt'
 ```
 
 ### Pass flags to CMake
