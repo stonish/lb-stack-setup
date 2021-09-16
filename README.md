@@ -224,6 +224,21 @@ utils/config.py -- cmakeFlags.Moore '-DLOKI_BUILD_FUNCTOR_CACHE=OFF'
 
 or use `cmakeFlags.default` to affect all projects.
 
+### Build Moore without the dependency on Allen
+
+For (some) development purposes you might want to build Moore without the
+dependency on Allen. Obviously, some functionality will be unavailable.
+Tests depending on Allen (directly or not) are disabled as much as possible.
+
+To do it, just remove Allen from `Moore/lhcbproject.yml`, set the CMake cache
+variable `Moore_WITH_Allen` to `OFF` and purge.
+
+```sh
+sed -i '/Allen/d' Moore/lhcbproject.yml
+utils/config.py -- cmakeFlags.Moore '-DMoore_WITH_Allen=OFF'
+make Moore/purge
+```
+
 ### Pass options to Ninja
 
 To pass command line options to Ninja, you can pass the `BUILDFLAGS` variable to `make`.
