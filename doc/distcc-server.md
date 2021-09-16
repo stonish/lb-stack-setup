@@ -141,7 +141,7 @@ Write the environment configuration in the file pointed to by the systemd unit
 cat >/etc/sysconfig/distccd <<EOF
 DISTCC_CMDLIST=/etc/distcc/commands.allow
 DISTCC_CMDLIST_NUMWORDS=1
-DISTCCD_PATH=/cvmfs/lhcb.cern.ch/lib/bin/x86_64-centos7:/etc/distcc/compilers:/usr/bin
+DISTCCD_PATH=
 DISTCCD_PRINCIPAL="distccd@$(hostname --fqdn)"
 KRB5_KTNAME=/etc/krb5.keytab.distccd
 TMPDIR=/run/distccd
@@ -172,7 +172,8 @@ Check for issues with
 
 ```sh
 systemctl status distccd
-journalctl -r
+journalctl -u distccd -r  # recent messages
+journalctl -u distccd -f  # follow messages
 ```
 
 ## Debugging the server interactively
