@@ -203,7 +203,8 @@ The EP-SFT groups provides cvmfs installations of
 For example, in order to use the `dev4` nightly build from Tuesday, it is enough to do
 
 ```sh
-utils/config.py lcgVersion dev4
+git -C Detector switch v0-patches  # master requires GitCondDB which is not available in the toolchain
+utils/config.py lcgVersion dev4/Tue
 utils/config.py cmakePrefixPath '$CMAKE_PREFIX_PATH:/cvmfs/sft-nightlies.cern.ch/lcg/nightlies/dev4/Tue'
 ```
 
