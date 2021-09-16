@@ -8,6 +8,7 @@
             "ms-vsliveshare.vsliveshare",
             "twxs.cmake",
             "lextudio.restructuredtext",
+            "trond-snekvik.simple-rst",
             "davidanson.vscode-markdownlint",
             "streetsidesoftware.code-spell-checker"
         ]
