@@ -8,6 +8,7 @@
             "ms-vsliveshare.vsliveshare",
             "twxs.cmake",
             "lextudio.restructuredtext",
+            "trond-snekvik.simple-rst",
             "davidanson.vscode-markdownlint",
             "streetsidesoftware.code-spell-checker"
         ]
@@ -24,6 +25,8 @@
         "C_Cpp.configurationWarnings": "Disabled",
         "C_Cpp.default.browse.path": [],
         "C_Cpp.default.cStandard": "c11",
+        // fix nagging "to auto-configure IntelliSense for the ... folder" in non-cpp folders
+        "C_Cpp.default.configurationProvider": "nonexistent.extension",
         // compileCommands/compilerPath is set per folder (.vscode/c_cpp_properties.json)
         "C_Cpp.default.compileCommands": "",
         "C_Cpp.default.compilerPath": "",

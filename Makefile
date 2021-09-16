@@ -48,7 +48,7 @@ $(1)/run: $(DIR)/project-run.sh
 	@grep -Fxq "run" $(1)/.git/info/exclude || ( mkdir -p $(1)/.git/info ; echo "run" >> $(1)/.git/info/exclude )
 $(1)/gdb: $(DIR)/project-gdb.sh
 	@ln -sf $(DIR)/project-gdb.sh $(1)/gdb
-	@grep -Fxq "gdb" $(1)/.git/info/exclude || ( mkdir -p $(1)/.git/info ; echo "run" >> $(1)/.git/info/exclude )
+	@grep -Fxq "gdb" $(1)/.git/info/exclude || ( mkdir -p $(1)/.git/info ; echo "gdb" >> $(1)/.git/info/exclude )
 # generic build target
 $(1)/%: $$($(1)_DEPS) fast/$(1)/% ;
 fast/$(1)/%: $(1)/run $(1)/gdb $(CONTRIB_DEPS)
