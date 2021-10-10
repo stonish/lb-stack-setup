@@ -43,18 +43,12 @@ ALL_TARGETS = all build clean purge contrib update
 ALL_TARGETS += $(foreach p,$(PROJECTS),$(p) $(p)/ $(p)-clean fast/$(p) fast/$(p)-clean)
 
 define PROJECT_settings
-$(1)/run: $(DIR)/project-run.sh
-	@ln -sf $(DIR)/project-run.sh $(1)/run
-	@grep -Fxq "run" $(1)/.git/info/exclude || ( mkdir -p $(1)/.git/info ; echo "run" >> $(1)/.git/info/exclude )
-$(1)/gdb: $(DIR)/project-gdb.sh
-	@ln -sf $(DIR)/project-gdb.sh $(1)/gdb
-	@grep -Fxq "gdb" $(1)/.git/info/exclude || ( mkdir -p $(1)/.git/info ; echo "gdb" >> $(1)/.git/info/exclude )
 # generic build target
 $(1)/%: $$($(1)_DEPS) fast/$(1)/% ;
-fast/$(1)/%: $(1)/run $(1)/gdb $(CONTRIB_DEPS)
+fast/$(1)/%: $(CONTRIB_DEPS)
 	@$(DIR)/build-env $(DIR)/make.sh $(1) $$*
 # check kerberos token when running tests
-fast/$(1)/test: $(1)/run $(1)/gdb $(CONTRIB_DEPS)
+fast/$(1)/test: $(CONTRIB_DEPS)
 	@$(DIR)/build-env --check-kerberos $(DIR)/make.sh $(1) test
 # special checkout targets (noop here, as checkout is done in setup-make.py)
 fast/$(1)/checkout: ;@# noop

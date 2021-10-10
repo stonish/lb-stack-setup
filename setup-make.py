@@ -165,6 +165,19 @@ def clone_cmake_project(project):
             raise RuntimeError('Project {} already cloned under '
                                'non-canonical name {}'.format(
                                    canonical_name, project))
+
+    # Create runtime wrappers and hide them from git
+    for wrapper in ["run", "gdb"]:
+        target = os.path.join(project, wrapper)
+        symlink(os.path.join(DIR, f'project-{wrapper}.sh'), target)
+        if os.path.isdir(os.path.join(project, '.git')):
+            mkdir_p(os.path.join(project, '.git', 'info'))
+            exclude = os.path.join(project, '.git', 'info', 'exclude')
+            with open(exclude, 'a+') as f:
+                f.seek(0)
+                if wrapper not in f.read().splitlines():
+                    f.write(wrapper + '\n')
+
     return project
 
 
