@@ -381,6 +381,10 @@ def checkout(projects, data_packages):
     # Check that all dependencies are also keys
     assert set().union(*project_deps.values()).issubset(project_deps)
 
+    if not projects:
+        # do not checkout any data packages if no projects are needed
+        data_packages = []
+
     dp_repos = []
     for spec in data_packages:
         container, name = data_package_container(spec)
