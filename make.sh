@@ -63,8 +63,11 @@ setup_ccache() {
   export CCACHE_SLOPPINESS="locale,system_headers"
 
   # Increase hit rate by
-  # - rewriting absolute paths into relative paths using a base directory
-  export CCACHE_BASEDIR="$PWD/$PROJECT"
+  # - rewriting absolute paths that start with $PWD into relative ones
+  #   So a compilation unit in LHCb which for example includes -I /full_path_to_lb_stack_folder/Gaudi/InstallArea/...
+  #   willl have it's path rewritten to one that is relative to the current working directory, before ccache hashes
+  #   This means that I can share a cache between different lb-stack setups :)
+  export CCACHE_BASEDIR="$PWD"
   # - not including CWD in hash (debug info might be incorrect)
   export CCACHE_NOHASHDIR=1
   # see https://ccache.dev/manual/latest.html#_compiling_in_different_directories
@@ -80,8 +83,9 @@ setup_ccache() {
   rm -f "$CCACHE_LOGFILE"  # clear logfile
 
   if [ "$DEBUG_CCACHE" = true ]; then
-    CCACHE_DEBUG=1
-    CCACHE_READONLY=1
+    export CCACHE_DEBUG=1
+    export CCACHE_READONLY=1
+    export CCACHE_DEBUGDIR="$CCACHE_TEMPDIR/debug/$PROJECT/"
   fi
 }
 
