@@ -60,7 +60,10 @@ setup_ccache() {
   #   This allows ccache to only check non-system headers, but will also cause
   #   it to return stale cache hits if such system headers have been changed.
   export LANG=C LC_ALL=C LC_CTYPE=C LC_MESSAGES=C
-  export CCACHE_SLOPPINESS="locale,system_headers"
+  # export CCACHE_SLOPPINESS="locale,system_headers"
+  export CCACHE_SLOPPINESS="locale"
+  # FIXME: system headers are cannot be ignored at present because upstream
+  #        projects are included as -isystem .
 
   # Increase hit rate by
   # - rewriting absolute paths that start with $PWD into relative ones
