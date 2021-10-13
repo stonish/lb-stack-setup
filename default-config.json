@@ -8,7 +8,8 @@
 	"extraDependencies": {},
 	"gitBranch": {
 		"Gaudi": "master",
-		"default": "master"
+		"default": "master",
+		"defaultDataPackages": "master"
 	},
 	"lcgVersion": "100",
 	"cmakePrefixPath": "$CMAKE_PREFIX_PATH:/cvmfs/sft.cern.ch/lcg/releases",

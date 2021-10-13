@@ -59,21 +59,21 @@ def symlink(src, dst):
 
 
 def git_url_branch(repo, try_read_only=False):
-    # TODO for data packages we may look up 'DBASE/PRConfig' or 'PRConfig' in
-    #      gitUrl and gitGroup.
     if repo == 'utils':
         return None, 'master'
+    path_parts = pathlib.PurePath(repo).parts
+    is_data_package = path_parts[0] in DATA_PACKAGE_DIRS
+    default_key = 'defaultDataPackages' if is_data_package else 'default'
+    if is_data_package:
+        # For data packages we only look up e.g. 'AppConfig' in the
+        # gitUrl, gitGroup, gitBranch settings and not 'DBASE/AppConfig'
+        repo = os.path.join(*path_parts[1:])
+
     url = config['gitUrl'].get(repo)
     if not url:
         group = config['gitGroup']
-        path_parts = pathlib.PurePath(repo).parts
-        if path_parts[0] not in DATA_PACKAGE_DIRS:
-            group = group.get(repo, group['default'])
-            url = '{}/{}/{}.git'.format(config['gitBase'], group, repo)
-        else:
-            group = group.get(repo, group['defaultDataPackages'])
-            url = '{}/{}/{}.git'.format(config['gitBase'], group,
-                                        os.path.join(*path_parts[1:]))
+        group = group.get(repo, group[default_key])
+        url = '{}/{}/{}.git'.format(config['gitBase'], group, repo)
     if try_read_only:
         # Swap out the base for the read-only base
         for base in GITLAB_BASE_URLS:
@@ -81,7 +81,7 @@ def git_url_branch(repo, try_read_only=False):
                 url = GITLAB_READONLY_URL + url[len(base):]
                 break
     branch = config['gitBranch']
-    branch = branch.get(repo, branch['default'])
+    branch = branch.get(repo, branch[default_key])
     return url, branch
 
 
