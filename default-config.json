@@ -1,5 +1,5 @@
 {
-	"binaryTag": "x86_64_v2-centos7-gcc10-opt",
+	"binaryTag": "x86_64_v2-centos7-gcc11-opt",
 	"defaultProjects": [
 		"Alignment",
 		"Brunel",
@@ -8,9 +8,11 @@
 	"extraDependencies": {},
 	"gitBranch": {
 		"Gaudi": "master",
-		"default": "master"
+		"Detector": "v0-patches",
+		"default": "master",
+		"defaultDataPackages": "master"
 	},
-	"lcgVersion": "100",
+	"lcgVersion": "101",
 	"cmakePrefixPath": "$CMAKE_PREFIX_PATH:/cvmfs/sft.cern.ch/lcg/releases",
 	"cmakeFlags": {
 		"default": "-Wno-dev",

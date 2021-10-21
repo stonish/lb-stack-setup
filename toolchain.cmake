@@ -32,7 +32,9 @@ set(ENV{HEPTOOLS_VERSION} $ENV{LCG_VERSION})
 set(heptools_version $ENV{LCG_VERSION})
 
 # Force our version of ninja (envvar set in make.sh)
-set(CMAKE_MAKE_PROGRAM "$ENV{CMAKE_MAKE_PROGRAM}" CACHE FILEPATH "lb-stack-setup override")
+if (DEFINED ENV{CMAKE_MAKE_PROGRAM})
+  set(CMAKE_MAKE_PROGRAM "$ENV{CMAKE_MAKE_PROGRAM}" CACHE FILEPATH "lb-stack-setup override")
+endif()
 
 set(GAUDI_USE_INTELAMPLIFIER OFF CACHE BOOL "lb-stack-setup override")
 set(GAUDI_LEGACY_CMAKE_SUPPORT ON CACHE BOOL "lb-stack-setup override")
@@ -97,8 +99,8 @@ if(NOT CMAKE_SOURCE_DIR MATCHES "CMakeTmp")
   # identifies the compiler, which allows the distcc server to match based on name.
   # The corresponding compiler wrappers on the distcc servers need to be premade,
   # see doc/distcc-server.md for more information.
-  if(NOT CMAKE_CXX_COMPILER MATCHES "^/cvmfs/.*")
-    if (NOT DEFAULT_CMAKE_CXX_COMPILER)
+  if(CMAKE_CXX_COMPILER AND NOT CMAKE_CXX_COMPILER MATCHES "^/cvmfs/.*")
+    if(NOT DEFAULT_CMAKE_CXX_COMPILER)
       set(DEFAULT_CMAKE_CXX_COMPILER ${CMAKE_CXX_COMPILER} CACHE FILEPATH "Default path to C++ compiler")
     endif()
     set(_cxx_compiler "${DEFAULT_CMAKE_CXX_COMPILER}-${LCG_COMPILER_VERSION}-${LCG_BINUTILS_VERSION}")

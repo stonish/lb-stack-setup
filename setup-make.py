@@ -59,21 +59,21 @@ def symlink(src, dst):
 
 
 def git_url_branch(repo, try_read_only=False):
-    # TODO for data packages we may look up 'DBASE/PRConfig' or 'PRConfig' in
-    #      gitUrl and gitGroup.
     if repo == 'utils':
         return None, 'master'
+    path_parts = pathlib.PurePath(repo).parts
+    is_data_package = path_parts[0] in DATA_PACKAGE_DIRS
+    default_key = 'defaultDataPackages' if is_data_package else 'default'
+    if is_data_package:
+        # For data packages we only look up e.g. 'AppConfig' in the
+        # gitUrl, gitGroup, gitBranch settings and not 'DBASE/AppConfig'
+        repo = os.path.join(*path_parts[1:])
+
     url = config['gitUrl'].get(repo)
     if not url:
         group = config['gitGroup']
-        path_parts = pathlib.PurePath(repo).parts
-        if path_parts[0] not in DATA_PACKAGE_DIRS:
-            group = group.get(repo, group['default'])
-            url = '{}/{}/{}.git'.format(config['gitBase'], group, repo)
-        else:
-            group = group.get(repo, group['defaultDataPackages'])
-            url = '{}/{}/{}.git'.format(config['gitBase'], group,
-                                        os.path.join(*path_parts[1:]))
+        group = group.get(repo, group[default_key])
+        url = '{}/{}/{}.git'.format(config['gitBase'], group, repo)
     if try_read_only:
         # Swap out the base for the read-only base
         for base in GITLAB_BASE_URLS:
@@ -81,7 +81,7 @@ def git_url_branch(repo, try_read_only=False):
                 url = GITLAB_READONLY_URL + url[len(base):]
                 break
     branch = config['gitBranch']
-    branch = branch.get(repo, branch['default'])
+    branch = branch.get(repo, branch[default_key])
     return url, branch
 
 
@@ -165,6 +165,19 @@ def clone_cmake_project(project):
             raise RuntimeError('Project {} already cloned under '
                                'non-canonical name {}'.format(
                                    canonical_name, project))
+
+    # Create runtime wrappers and hide them from git
+    for wrapper in ["run", "gdb"]:
+        target = os.path.join(project, wrapper)
+        symlink(os.path.join(DIR, f'project-{wrapper}.sh'), target)
+        if os.path.isdir(os.path.join(project, '.git')):
+            mkdir_p(os.path.join(project, '.git', 'info'))
+            exclude = os.path.join(project, '.git', 'info', 'exclude')
+            with open(exclude, 'a+') as f:
+                f.seek(0)
+                if wrapper not in f.read().splitlines():
+                    f.write(wrapper + '\n')
+
     return project
 
 
@@ -367,6 +380,10 @@ def checkout(projects, data_packages):
 
     # Check that all dependencies are also keys
     assert set().union(*project_deps.values()).issubset(project_deps)
+
+    if not projects:
+        # do not checkout any data packages if no projects are needed
+        data_packages = []
 
     dp_repos = []
     for spec in data_packages:

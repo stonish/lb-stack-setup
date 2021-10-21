@@ -153,6 +153,7 @@ Install compiler wrappers.
 
 ```sh
 mkdir -p /usr/lib/distcc/bin
+curl -L -O https://gitlab.cern.ch/rmatev/lb-stack-setup/-/raw/master/create_distcc_wrappers.py
 python3 create_distcc_wrappers.py /usr/lib/distcc/bin
 ls -1 /cvmfs/lhcb.cern.ch/lib/bin/x86_64-centos7/lcg-* /usr/lib/distcc/bin/* > /etc/distcc/commands.allow
 ```
