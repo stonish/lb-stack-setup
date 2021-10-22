@@ -71,6 +71,11 @@ if (_project STREQUAL "Project")
   get_filename_component(_project ${CMAKE_SOURCE_DIR} NAME)
 endif()
 
+if(_project STREQUAL "Geant4")
+  set(GAUDI_OLD_STYLE_PROJECT ON CACHE BOOL "lb-stack-setup override")
+elseif(_project STREQUAL "Gauss")
+  # add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
+endif()
 
 # this check is needed because the toolchain is called when checking the
 # compiler (without the proper cache). We need it here to support Gaudi

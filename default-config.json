@@ -8,7 +8,6 @@
 	"extraDependencies": {},
 	"gitBranch": {
 		"Gaudi": "master",
-		"Detector": "v0-patches",
 		"default": "master",
 		"defaultDataPackages": "master"
 	},
@@ -23,7 +22,8 @@
 	"forwardEnv": [
 		"DISPLAY",
 		"SSH_AUTH_SOCK",
-		"SSH_AGENT_PID"
+		"SSH_AGENT_PID",
+		"GITCONDDBPATH"
 	],
 	"gitGroup": {
 		"Gaudi": "gaudi",
