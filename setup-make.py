@@ -348,6 +348,7 @@ def update_repos():
                    cwd=repo,
                    check=False))
     up_to_date = []
+    update_failed = []
     for repo, get_result in zip(repos, ps):
         res = get_result()
         if res.returncode == 0:
@@ -357,10 +358,13 @@ def update_repos():
                 log.info(f"{repo}: {res.stdout.strip()}\n")
         else:
             log.warning(f'{repo}: FAIL\n\n{res.stderr.strip()}\n')
+            update_failed.append(repo)
     log.info(f"Up to date: {', '.join(up_to_date)}.")
     if not_tracking:
         log.warning("Skipped repos not tracking the default branch: "
                     f"{', '.join(not_tracking)}.")
+    if update_failed:
+        log.warning(f"Update failed for: {', '.join(update_failed)}.")
 
 
 def checkout(projects, data_packages):
