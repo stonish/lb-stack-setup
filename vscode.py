@@ -5,7 +5,7 @@ import re
 import shutil
 import stat
 from collections import OrderedDict
-from utils import setup_logging, write_file_if_different, topo_sorted
+from utils import setup_logging, write_file_if_different, topo_sorted, add_file_to_git_exclude
 from config import rinterp
 
 DIR = os.path.dirname(__file__)
@@ -207,6 +207,15 @@ def write_project_settings(repos, project_deps, config, toolchain):
     log.debug('Potentially updating project settings for {}'.format(
         ', '.join(project_repos)))
     for project, repo_path in project_repos.items():
+        # tell clangd where to find compile_commands.json
+        # this is useful for people that don't use vscode
+        with open(os.path.join(repo_path, ".clangd"), 'w') as f:
+            f.write("# DO NOT EDIT (auto generated file)\n"
+                    "CompileFlags:\n"
+                    f"\tCompilationDatabase: ./../.output/{project}")
+
+        add_file_to_git_exclude(project, ".clangd")
+
         env_file = os.path.join(config['outputPath'],
                                 '{}/runtime.env'.format(project))
         compile_commands = os.path.join(
