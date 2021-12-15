@@ -90,7 +90,7 @@ def get_toolchain(config):
         'cxx': '',
         'cxx-type': '',
     }
-    runtime_env_path = os.path.join(config['outputPath'], 'runtime-Gaudi.env')
+    runtime_env_path = os.path.join(config['outputPath'], 'Gaudi/runtime.env')
     path = get_runtime_var(runtime_env_path, 'PATH')
     if not path:
         log.debug(
@@ -180,7 +180,8 @@ def write_project_settings(repos, project_deps, config, toolchain):
         os.makedirs(os.path.join(repo_path, '.vscode'), exist_ok=True)
 
         runtime_env_path = os.path.join(config['outputPath'],
-                                        'runtime-{}.env'.format(project))
+                                        '{}/runtime.env'.format(project))
+
         paths = get_runtime_var(runtime_env_path, 'PYTHONPATH')
         if paths:
             paths = paths.split(':')
@@ -207,9 +208,9 @@ def write_project_settings(repos, project_deps, config, toolchain):
         ', '.join(project_repos)))
     for project, repo_path in project_repos.items():
         env_file = os.path.join(config['outputPath'],
-                                'runtime-{}.env'.format(project))
+                                '{}/runtime.env'.format(project))
         compile_commands = os.path.join(
-            config['outputPath'], 'compile_commands-{}.json'.format(project))
+            config['outputPath'], '{}/compile_commands.json'.format(project))
         deps = topo_sorted(project_deps, [project])
 
         python_extra_paths = sum(
@@ -225,6 +226,7 @@ def write_project_settings(repos, project_deps, config, toolchain):
             # Create a file with an empty list so VSCode does not
             # complain about projects that are not yet built and
             # projects that have no compilation targets (e.g. MooreAnalysis).
+            os.makedirs(os.path.dirname(compile_commands), exist_ok=True)
             with open(compile_commands, 'w') as f:
                 f.write("[]")
             # NOTE: we don't want to set it to "" (the default), as the
