@@ -147,3 +147,19 @@ def topo_sorted(deps, start=None):
                     for p in sorted(projects) if p not in seen), [])
 
     return walk(start or deps, set())
+
+
+def add_file_to_git_exclude(root_dir, filename):
+    """Adds `filename` as exclude pattern to `root_dir`/.git/info/exclude
+
+    If `root_dir` doesn't contain a .git folder this function is a silent noop
+
+    """
+
+    if os.path.isdir(os.path.join(root_dir, '.git')):
+        os.makedirs(os.path.join(root_dir, '.git', 'info'), exist_ok=True)
+        exclude = os.path.join(root_dir, '.git', 'info', 'exclude')
+        with open(exclude, 'a+') as f:
+            f.seek(0)
+            if filename not in f.read().splitlines():
+                f.write(filename + '\n')

@@ -13,7 +13,7 @@ import shutil
 import sys
 from concurrent.futures.thread import ThreadPoolExecutor
 from config import read_config, DIR, GITLAB_READONLY_URL, GITLAB_BASE_URLS
-from utils import setup_logging, run, run_nb, topo_sorted
+from utils import setup_logging, run, run_nb, topo_sorted, add_file_to_git_exclude
 from vscode import write_vscode_settings
 
 DATA_PACKAGE_DIRS = ["DBASE", "PARAM"]
@@ -170,13 +170,7 @@ def clone_cmake_project(project):
     for wrapper in ["run", "gdb"]:
         target = os.path.join(project, wrapper)
         symlink(os.path.join(DIR, f'project-{wrapper}.sh'), target)
-        if os.path.isdir(os.path.join(project, '.git')):
-            mkdir_p(os.path.join(project, '.git', 'info'))
-            exclude = os.path.join(project, '.git', 'info', 'exclude')
-            with open(exclude, 'a+') as f:
-                f.seek(0)
-                if wrapper not in f.read().splitlines():
-                    f.write(wrapper + '\n')
+        add_file_to_git_exclude(project, wrapper)
 
     return project
 
