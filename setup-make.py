@@ -45,10 +45,6 @@ class NotCMakeProjectError(RuntimeError):
     pass
 
 
-def mkdir_p(path):
-    pathlib.Path(path).mkdir(parents=True, exist_ok=True)
-
-
 def symlink(src, dst):
     """Create a symlink only if not already existing and equivalent."""
     if os.path.realpath(dst) == src:
@@ -386,7 +382,7 @@ def checkout(projects, data_packages):
     dp_repos = []
     for spec in data_packages:
         container, name = data_package_container(spec)
-        mkdir_p(container)
+        os.makedirs(container, exist_ok=True)
         dp_repos.append(clone_package(name, container))
 
     check_staleness(list(project_deps.keys()) + dp_repos + ['utils'])
@@ -419,7 +415,7 @@ def main(targets):
 
     # save the host environment where we're executed
     output_path = config['outputPath']
-    mkdir_p(output_path)
+    os.makedirs(output_path, exist_ok=True)
     with open(os.path.join(output_path, 'host.env'), 'w') as f:
         for name, value in sorted(os.environ.items()):
             print(name + "=" + value, file=f)
@@ -456,7 +452,7 @@ def main(targets):
 
     # Install symlinks to external software such that CMake doesn't cache them
     LBENV_BINARIES = ['cmake', 'ctest', 'ninja', 'ccache']
-    mkdir_p(os.path.join(config['contribPath'], 'bin'))
+    os.makedirs(os.path.join(config['contribPath'], 'bin'), exist_ok=True)
     for fn in LBENV_BINARIES:
         symlink(
             os.path.join(config['lbenvPath'], 'bin', fn),
