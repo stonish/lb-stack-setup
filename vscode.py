@@ -7,6 +7,7 @@ import stat
 from collections import OrderedDict
 from utils import setup_logging, write_file_if_different, topo_sorted, add_file_to_git_exclude
 from config import rinterp
+from itertools import chain
 
 DIR = os.path.dirname(__file__)
 TEMPLATE = os.path.join(DIR, 'template.code-workspace')
@@ -226,6 +227,13 @@ def write_project_settings(repos, project_deps, config, toolchain):
 
     log.debug('Potentially updating project settings for {}'.format(
         ', '.join(project_repos)))
+
+    update_json(
+        'pyrightconfig.json',
+        dict_update({
+            'extraPaths': list(sorted(set(chain(*python_paths.values()))))
+        }))
+
     for project, repo_path in project_repos.items():
         # tell clangd where to find compile_commands.json
         # this is useful for people that don't use vscode
