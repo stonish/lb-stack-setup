@@ -6,7 +6,7 @@ setup_output() {
     if [ -z "$OUTPUT" ]; then
         OUTPUT="${OUTPUT:-$(config outputPath)}"
     fi
-    mkdir -p "$OUTPUT"
+    mkdir -p "$OUTPUT/$PROJECT"
 }
 
 gitc() { pushd "$1" >/dev/null && git "${@:2}" && popd >/dev/null; }

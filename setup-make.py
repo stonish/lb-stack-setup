@@ -13,7 +13,7 @@ import shutil
 import sys
 from concurrent.futures.thread import ThreadPoolExecutor
 from config import read_config, DIR, GITLAB_READONLY_URL, GITLAB_BASE_URLS
-from utils import setup_logging, run, run_nb, topo_sorted
+from utils import setup_logging, run, run_nb, topo_sorted, add_file_to_git_exclude
 from vscode import write_vscode_settings
 
 DATA_PACKAGE_DIRS = ["DBASE", "PARAM"]
@@ -43,10 +43,6 @@ def data_package_container(name):
 
 class NotCMakeProjectError(RuntimeError):
     pass
-
-
-def mkdir_p(path):
-    pathlib.Path(path).mkdir(parents=True, exist_ok=True)
 
 
 def symlink(src, dst):
@@ -170,13 +166,7 @@ def clone_cmake_project(project):
     for wrapper in ["run", "gdb"]:
         target = os.path.join(project, wrapper)
         symlink(os.path.join(DIR, f'project-{wrapper}.sh'), target)
-        if os.path.isdir(os.path.join(project, '.git')):
-            mkdir_p(os.path.join(project, '.git', 'info'))
-            exclude = os.path.join(project, '.git', 'info', 'exclude')
-            with open(exclude, 'a+') as f:
-                f.seek(0)
-                if wrapper not in f.read().splitlines():
-                    f.write(wrapper + '\n')
+        add_file_to_git_exclude(project, wrapper)
 
     return project
 
@@ -392,7 +382,7 @@ def checkout(projects, data_packages):
     dp_repos = []
     for spec in data_packages:
         container, name = data_package_container(spec)
-        mkdir_p(container)
+        os.makedirs(container, exist_ok=True)
         dp_repos.append(clone_package(name, container))
 
     check_staleness(list(project_deps.keys()) + dp_repos + ['utils'])
@@ -425,7 +415,7 @@ def main(targets):
 
     # save the host environment where we're executed
     output_path = config['outputPath']
-    mkdir_p(output_path)
+    os.makedirs(output_path, exist_ok=True)
     with open(os.path.join(output_path, 'host.env'), 'w') as f:
         for name, value in sorted(os.environ.items()):
             print(name + "=" + value, file=f)
@@ -462,7 +452,7 @@ def main(targets):
 
     # Install symlinks to external software such that CMake doesn't cache them
     LBENV_BINARIES = ['cmake', 'ctest', 'ninja', 'ccache']
-    mkdir_p(os.path.join(config['contribPath'], 'bin'))
+    os.makedirs(os.path.join(config['contribPath'], 'bin'), exist_ok=True)
     for fn in LBENV_BINARIES:
         symlink(
             os.path.join(config['lbenvPath'], 'bin', fn),
