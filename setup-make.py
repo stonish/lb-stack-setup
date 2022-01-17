@@ -185,12 +185,6 @@ def package_major_version(path):
 
 
 def clone_package(name, path):
-    # TODO remove warning in one year (November 2021)
-    if path != 'DBASE' and os.path.isdir(os.path.join('DBASE', name)):
-        log.warning(
-            'Please move package {} from {} to {} and `make purge`'.format(
-                name, 'DBASE', path))
-
     full_path = os.path.join(path, name)
     if not os.path.isdir(full_path):
         log.info(f'Cloning {name}...')
@@ -208,6 +202,13 @@ def clone_package(name, path):
         # the next line fixes the case when old clones are lying around
         shutil.rmtree(full_path_v, ignore_errors=True)
         symlink('.', full_path_v)
+    # Remove obsolete symlinks if needed
+    for v in os.listdir(full_path):
+        if v in version_symlinks:
+            continue
+        full_path_v = os.path.join(full_path, v)
+        if re.match("^v[0-9]+r[0-9]+$", v) and os.path.islink(full_path_v):
+            os.remove(full_path_v)
 
     return full_path
 
