@@ -185,12 +185,6 @@ def package_major_version(path):
 
 
 def clone_package(name, path):
-    # TODO remove warning in one year (November 2021)
-    if path != 'DBASE' and os.path.isdir(os.path.join('DBASE', name)):
-        log.warning(
-            'Please move package {} from {} to {} and `make purge`'.format(
-                name, 'DBASE', path))
-
     full_path = os.path.join(path, name)
     if not os.path.isdir(full_path):
         log.info(f'Cloning {name}...')
