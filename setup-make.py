@@ -18,6 +18,7 @@ from utils import (
     run_nb,
     topo_sorted,
     add_file_to_git_exclude,
+    write_file_if_different,
     is_file_too_old,
     is_file_older_than_ref,
 )
@@ -168,14 +169,6 @@ def clone_cmake_project(project):
             raise RuntimeError('Project {} already cloned under '
                                'non-canonical name {}'.format(
                                    canonical_name, project))
-
-    # Create runtime wrappers and hide them from git
-    for wrapper in ["run", "gdb"]:
-        target = os.path.join(project, wrapper)
-        symlink(os.path.join(DIR, f'project-{wrapper}.sh'), target)
-        add_file_to_git_exclude(project, wrapper)
-    # Also hide .env files
-    add_file_to_git_exclude(project, ".env")
 
     return project
 
@@ -427,13 +420,24 @@ def install_contrib(config):
             run([os.path.join(DIR, "build-env"), "bash", script])
 
 
+def error(config_path, *args):
+    log.error(*args)
+    with open(config_path, "w") as f:
+        f.write('$(error an error occurred)\n')
+    print(config_path)
+    exit()
+
+
 def main(targets):
     global config, log
     config = read_config()
     log = setup_logging(config['outputPath'])
+    output_path = config['outputPath']
+    config_path = os.path.join(output_path, "configuration.mk")
+    is_mono_build = config['monoBuild']
 
     # save the host environment where we're executed
-    output_path = config['outputPath']
+
     os.makedirs(output_path, exist_ok=True)
     with open(os.path.join(output_path, 'host.env'), 'w') as f:
         for name, value in sorted(os.environ.items()):
@@ -446,9 +450,12 @@ def main(targets):
     # Handle special targets
     if special_targets:
         if len(special_targets) > 1:
-            exit(f"expected at most one special target, got {special_targets}")
+            error(
+                config_path,
+                f"expected at most one special target, got {special_targets}")
         if targets:
-            exit(f"expected only special targets, also got {targets}")
+            error(config_path,
+                  f"expected only special targets, also got {targets}")
         if 'update' in special_targets:
             update_repos()
         return
@@ -471,6 +478,18 @@ def main(targets):
 
     install_contrib(config)
 
+    if is_mono_build:
+        # mono build links
+        os.makedirs("mono", exist_ok=True)
+        symlink(
+            os.path.join(DIR, 'CMakeLists.txt'),
+            os.path.join("mono", "CMakeLists.txt"))
+        for wrapper in ["run", "gdb"]:
+            target = os.path.join("mono", wrapper)
+            symlink(os.path.join(DIR, f'project-{wrapper}.sh'), target)
+        write_file_if_different(
+            os.path.join("mono", ".ignore"), "# ripgrep ignore\n*\n")
+
     try:
         # Clone projects without following their dependencies and without
         # making any real target, e.g. `make fast/Moore/checkout`.
@@ -479,9 +498,27 @@ def main(targets):
 
         # Clone data packages and projects to build with dependencies.
         data_packages = config['dataPackages']
-        project_deps = checkout(projects, data_packages)
+        if not is_mono_build:
+            project_deps = checkout(projects, data_packages)
+        else:
+            project_deps = checkout(config['defaultProjects'], data_packages)
+            other_projects = list(set(projects) - set(project_deps))
+            if other_projects:
+                error(
+                    config_path,
+                    "When monoBuild is true, you must add all necessary " +
+                    f"projects to defaultProjects. Missing: {other_projects}")
 
         projects_sorted = topo_sorted(project_deps)
+
+        for project in projects:
+            # Create runtime wrappers and hide them from git
+            for wrapper in ["run", "gdb"]:
+                target = os.path.join(project, wrapper)
+                symlink(os.path.join(DIR, f'project-{wrapper}.sh'), target)
+                add_file_to_git_exclude(project, wrapper)
+            # Also hide .env files
+            add_file_to_git_exclude(project, ".env")
 
         # After we cloned the minimum necessary, check for other repos
         repos = list_repos()
@@ -496,6 +533,7 @@ def main(targets):
         repos.sort(key=lambda x: project_order.index(x))
 
         makefile_config = [
+            "MONO_BUILD := " + str(int(is_mono_build)),
             "BINARY_TAG := {}".format(config["binaryTag"]),
             "PROJECTS := " + " ".join(projects_sorted),
             "ALL_PROJECTS := " + " ".join(sorted(project_deps)),
@@ -525,7 +563,6 @@ def main(targets):
                 '$(warning Error occurred in updating VSCode settings)'
             ]
 
-    config_path = os.path.join(output_path, "configuration.mk")
     with open(config_path, "w") as f:
         f.write('\n'.join(makefile_config) + '\n')
     # Print path so that the generated file can be included in one go

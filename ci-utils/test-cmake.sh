@@ -1,8 +1,13 @@
 set -xo pipefail
 
+### TODO
+# - check that we don't lookup released projects from cvmfs
+
+
 build="${1:-.}"
 build_ninja="$build/build.ninja"
 rules_ninja="$build/CMakeFiles/rules.ninja"
+CMAKE=contrib/bin/cmake
 retcode=0
 
 error() {
@@ -10,25 +15,25 @@ error() {
     retcode=1
 }
 
-if ! cmake -LA -N $build | \
+if ! $CMAKE -LA -N $build | \
     grep '^CMAKE_MAKE_PROGRAM:' | grep "contrib/bin/ninja"
 then
     error 'Generator is not ninja'
 fi
 
-if ! cmake -LA -N $build | \
+if ! $CMAKE -LA -N $build | \
     grep '^CMAKE_BUILD_TYPE:STRING=Release'
 then
     error 'CMake build type is not Release'
 fi
 
-if ! cmake -LA -N $build | \
+if ! $CMAKE -LA -N $build | \
     grep '^CMAKE_CXX_COMPILER_LAUNCHER:' | grep "utils/compile.sh"
 then
     error 'Compiler launcher is not compile.sh'
 fi
 
-if ! cmake -LA -N $build | \
+if ! $CMAKE -LA -N $build | \
     grep '^CMAKE_EXPORT_COMPILE_COMMANDS:BOOL=ON'
 then
     error 'compile_commands.json is not generated'

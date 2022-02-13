@@ -1,5 +1,11 @@
 set -xo pipefail
 
+LHCb_run=LHCb/run
+if [ -x mono/run ]
+then
+    LHCb_run=mono/run
+fi
+
 retcode=0
 
 error() {
@@ -17,7 +23,7 @@ then
     error 'Using $ inside ARGS= is not working'
 fi
 
-if ! LHCb/run python -c 'import PRConfig; assert "v999r999" in PRConfig.__file__'
+if ! $LHCb_run python -c 'import PRConfig; assert "v999r999" in PRConfig.__file__'
 then
     error 'PRConfig is not picked up from the local clone'
 fi

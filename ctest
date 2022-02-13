@@ -1,0 +1,6 @@
+#!/bin/bash
+# A wrapper that runs ctest in the build environment
+set -eo pipefail
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+cmd=$(basename "${BASH_SOURCE[0]}")
+exec $DIR/build-env $cmd "$@"

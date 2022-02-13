@@ -1,5 +1,6 @@
 {
 	"binaryTag": "x86_64_v2-centos7-gcc11-opt",
+	"monoBuild": false,
 	"defaultProjects": [
 		"Alignment",
 		"Moore"

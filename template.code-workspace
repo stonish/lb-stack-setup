@@ -49,6 +49,7 @@
         // and are constantly being recreated for a sensible limit of 5 GB.
         "C_Cpp.intelliSenseCacheSize": 0,
         "C_Cpp.workspaceParsingPriority": "low",
+        "cmake.cmakePath": "${workspaceFolder:utils}/cmake",
         "cSpell.customWorkspaceDictionaries": [
             "lhcb"
         ],
@@ -136,7 +137,7 @@
                 // what happens when running qmt tests.
                 "cwd": "$projectPath",
                 // ${workspaceFolderBasename} does not work in "launch" and there
-                // is no ${fileWorkspaceFolderBasename}, so work around that:
+                // is no ${fileWorkspaceFolderBasename}, so work around that.
                 "envFile": "${fileWorkspaceFolder}/.env",
                 // TODO make envFile depend on $binaryTag, in which case we need to
                 // re-generate the .code-workspace every time the config has changed?

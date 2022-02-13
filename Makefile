@@ -18,21 +18,51 @@ CMD = true
 for-each:
 	@for p in $(REPOS) ; do if [[ -d $$p && ! " $(EXCLUDE) " == *" $$p "*  ]] ; then ( cd $$p && pwd && $(CMD) ) ; fi ; done
 
-clean: $(patsubst %,%-clean,$(ALL_PROJECTS))
-purge: $(patsubst %,%/purge,$(ALL_PROJECTS))
-
 help:
-	@for t in $(ALL_TARGETS) ; do echo .. $$t ; done
+	@for t in $(sort $(ALL_TARGETS)) ; do echo .. $$t ; done
 
 # public targets: main targets
 ALL_TARGETS = all build clean purge update
+
+ifneq ($(MONO_BUILD),1)
+
+clean: $(patsubst %,%-clean,$(ALL_PROJECTS))
+purge: $(patsubst %,%/purge,$(ALL_PROJECTS))
+
+else
+
+# A literal space.
+empty :=
+space := $(empty) $(empty)
+MONO_CMAKEFLAGS := "-DPROJECTS=$(subst $(space),;,$(PROJECTS))"
+
+clean:
+	@$(DIR)/build-env $(DIR)/make.sh mono clean
+purge:
+	$(RM) -r mono/build.$(BINARY_TAG) mono/InstallArea/$(BINARY_TAG)
+	find mono "(" -name "InstallArea" -prune -o -name "*.pyc" ")" -a -type f -exec $(RM) -v \{} \;
+build: MAKEFLAGS += MONO_CMAKEFLAGS=$(MONO_CMAKEFLAGS)
+build:
+	@$(DIR)/build-env --require-kerberos-distcc $(DIR)/make.sh mono all
+configure: MAKEFLAGS += MONO_CMAKEFLAGS=$(MONO_CMAKEFLAGS)
+configure:
+	@$(DIR)/build-env $(DIR)/make.sh mono configure
+test:
+	@$(DIR)/build-env --check-kerberos $(DIR)/make.sh mono test
+
+ALL_TARGETS += configure test
+
+endif
+
 
 # ----------------------
 # implementation details
 # ----------------------
 
-# public targets: project targets
-ALL_TARGETS += $(foreach p,$(PROJECTS),$(p) $(p)/ fast/$(p))
+ifneq ($(MONO_BUILD),1)
+
+# use ALL_PROJECTS since these are all possible targets
+ALL_TARGETS += $(foreach p,$(ALL_PROJECTS),$(p) $(p)/ $(p)/test fast/$(p) fast/$(p)/test)
 
 define PROJECT_settings
 # generic build target
@@ -42,6 +72,7 @@ fast/$(1)/%:
 # check kerberos token when running tests
 fast/$(1)/test:
 	@$(DIR)/build-env --check-kerberos $(DIR)/make.sh $(1) test
+$(1)/test: $$($(1)_DEPS) fast/$(1)/test ;
 # special checkout targets (noop here, as checkout is done in setup-make.py)
 fast/$(1)/checkout: ;@# noop
 $(1)/checkout: fast/$(1)/checkout ;
@@ -52,7 +83,27 @@ $(1): $(1)/install
 $(1)/: $(1)/install
 fast/$(1): fast/$(1)/install
 endef
+
+else  # mono build
+
+ALL_TARGETS += $(foreach p,$(PROJECTS),$(p) $(p)/ $(p)/test)
+
+define PROJECT_settings
+$(1)/%:
+	@$(DIR)/build-env --require-kerberos-distcc $(DIR)/make.sh mono $(1)/$$*
+$(1) $(1)/: MAKEFLAGS += MONO_CMAKEFLAGS=$(MONO_CMAKEFLAGS)
+$(1) $(1)/:
+	@$(DIR)/build-env --require-kerberos-distcc $(DIR)/make.sh mono $(1)/all
+$(1)/test: MAKEFLAGS += MONO_ARGS=-L\ '^$(1)$$$$$$$$'
+$(1)/test:
+	@$(DIR)/build-env --check-kerberos $(DIR)/make.sh mono test
+endef
+
+endif
+
 $(foreach proj,$(PROJECTS),$(eval $(call PROJECT_settings,$(proj))))
+
+ifneq ($(MONO_BUILD),1)
 
 define PROJECT_settings_clean
 # exception for purge: always do fast/Project/purge
@@ -69,6 +120,8 @@ fast/$(1)-clean:
 endef
 $(foreach proj,$(ALL_PROJECTS),$(eval $(call PROJECT_settings_clean,$(proj))))
 ALL_TARGETS += $(foreach p,$(ALL_PROJECTS),$(p)-clean fast/$(p)-clean)
+
+endif
 
 # stack.code-workspace is always remade by setup-make.py, so this is just
 # to avoid the message "Nothing to be done for `stack.code-workspace'"

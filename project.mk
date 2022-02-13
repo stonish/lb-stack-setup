@@ -120,7 +120,7 @@ test: $(BUILDDIR)/$(BUILD_CONF_FILE)
 # Here we need to keep just some of the files under Testing/Temporary:
 #   CTestCheckpoint.txt, CTestCostData.txt and LastTestsFailed_*.log
 	$(RM) -r $(BUILDDIR)/Testing/TAG $(BUILDDIR)/Testing/20*-* $(BUILDDIR)/Testing/Temporary/LastTest_*
-	-cd $(BUILDDIR) && $(CTEST) -T test $(value ARGS)
+	-cd $(BUILDDIR) && $(CTEST) -T test $(value MONO_ARGS) $(value ARGS)
 	$(RM) -r $(BUILDDIR)/html
 	+@cd $(BUILDDIR) && $(CMAKE) -P $(DIR)/CTestXML2HTML.cmake
 
@@ -141,4 +141,4 @@ $(MAKEFILE_LIST):
 # note that we only fully build the CMAKEFLAGS here in order not to slow down other targets
 $(BUILDDIR)/$(BUILD_CONF_FILE):
 	mkdir -p $(BUILDDIR)
-	cd $(BUILDDIR) && $(CMAKE) $(CMAKEFLAGS) $(shell "$(DIR)config.py" cmakeFlags.default --default '') $(shell "$(DIR)config.py" cmakeFlags.$(PROJECT) --default '') $(CURDIR)
+	cd $(BUILDDIR) && $(CMAKE) $(CMAKEFLAGS) $(MONO_CMAKEFLAGS) $(shell "$(DIR)config.py" cmakeFlags.default --default '') $(shell "$(DIR)config.py" cmakeFlags.$(PROJECT) --default '') $(CURDIR)

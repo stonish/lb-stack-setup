@@ -245,7 +245,11 @@ runtime_env_dst2="$PROJECT/.env"  # needed for Python debugging config
 # override things like lcg-toolchains.
 export CMAKE_PREFIX_PATH="$LBENV_CURRENT_WORKSPACE:$cmakePrefixPath"
 printenv | sort > "$OUTPUT/project.mk.env"
-make -f "$DIR/project.mk" -C "$PROJECT" "$@"
+if [ "$PROJECT" = monohack ]; then  # FIXME this is a hack for the cmake wrapper!
+  "$@"
+else
+  make -f "$DIR/project.mk" -C "$PROJECT" "$@"
+fi
 # cd "$PROJECT/build.$BINARY_TAG" && ninja $BUILDFLAGS "$@" && cd -
 # TODO catch CTRL-C during make here and do the clean up, see
 #      https://unix.stackexchange.com/questions/163561/control-which-process-gets-cancelled-by-ctrlc
