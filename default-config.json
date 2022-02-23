@@ -23,7 +23,8 @@
 		"DISPLAY",
 		"SSH_AUTH_SOCK",
 		"SSH_AGENT_PID",
-		"GITCONDDBPATH"
+		"GITCONDDBPATH",
+	        "X509_USER_PROXY"
 	],
 	"gitGroup": {
 		"Gaudi": "gaudi",
