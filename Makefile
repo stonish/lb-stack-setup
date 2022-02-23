@@ -19,11 +19,8 @@ for-each:
 	@for p in $(REPOS) ; do if [[ -d $$p && ! " $(EXCLUDE) " == *" $$p "*  ]] ; then ( cd $$p && pwd && $(CMD) ) ; fi ; done
 
 CONTRIB_DEPS += $(CONTRIB_PATH)/bin/distcc
-CONTRIB_DEPS += $(CONTRIB_PATH)/bin/ninjatracing $(CONTRIB_PATH)/bin/post_build_ninja_summary.py
 contrib: $(CONTRIB_DEPS)
 $(CONTRIB_PATH)/bin/%: $(DIR)/install-%.sh
-	@"${DIR}/build-env" bash "$<"
-$(CONTRIB_PATH)/bin/ninjatracing $(CONTRIB_PATH)/bin/post_build_ninja_summary.py: $(DIR)/install-tools.sh
 	@"${DIR}/build-env" bash "$<"
 
 clean: $(patsubst %,%-clean,$(PROJECTS))
