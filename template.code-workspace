@@ -110,6 +110,7 @@
         "python.linting.flake8Path": "$outputPath/flake8",
         "python.linting.pylintEnabled": false,
         "python.pythonPath": "$pythonPath",
+        "remote.downloadExtensionsLocally": true,
         "restructuredtext.confPath": " ${workspaceFolder}/doc/conf.py",
         "restructuredtext.languageServer.disabled": true,
         "restructuredtext.linter.run": "off",

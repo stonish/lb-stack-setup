@@ -23,8 +23,11 @@ curl https://gitlab.cern.ch/rmatev/lb-stack-setup/raw/master/setup.py | python3 
 > be installed, or simply source the LHCb environment with
 > `source /cvmfs/lhcb.cern.ch/lib/LbEnv` if it is not already sourced.
 
-> **Note:** If you are working in the LHCb Online network, set up git with
-> `git config --global 'http.https://github.com/.proxy' lbproxy01:8080`
+> **Note:** If you are working in the LHCb Online network (e.g. pluscc and __not__ lxplus),
+> set up git with
+> ```
+> hostname --fqdn | grep -q lbdaq.cern.ch && git config --global 'http.https://github.com/.proxy' lbproxy01:8080
+> ```
 > to use the proxy to access GitHub.
 > If you use VSCode with Remote - SSH , see also
 > [doc/vscode.md](doc/vscode.md#using-remote-with-a-server-in-a-restricted-network)
@@ -90,6 +93,10 @@ make fast/Moore/test ARGS='-j 4'
 make fast/Moore/test ARGS='-R hlt1_example$'
 # verbose output showing test (failure) details
 make fast/Moore/test ARGS='-R hlt1_example -V'
+# running the mdf_read automatically runs the dependency mdf_write
+make fast/Moore/test ARGS='-R mdf_read'
+# to ignore all dependencies and only run mdf_read
+make fast/Moore/test ARGS='-R mdf_read -FA .*'
 ```
 
 Using `ARGS` you can pass arbitrary arguments to
@@ -97,10 +104,14 @@ Using `ARGS` you can pass arbitrary arguments to
 Check the documentation for other useful arguments (e.g. `--stop-on-failure`
 and `--rerun-failed`).
 
-Note that changes in python sources are immediatelly "applied" in downstream projects
+Note that changes in python sources are immediately "applied" in downstream projects
 (unlike a "manual" stack setup with `lb-project-init`). For example, after changing a
 `.py` in LHCb, you can do `Moore/run` or `make Moore/test ...` without having to
 `make Moore` first.
+
+> **Warning:** the above feature was broken by the new CMake, so for the time being
+> always run `make Moore` after changes in upstream projects.
+> See https://gitlab.cern.ch/rmatev/lb-stack-setup/-/issues/60
 
 ## Makefile instructions
 
