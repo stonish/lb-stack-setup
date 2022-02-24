@@ -104,10 +104,14 @@ Using `ARGS` you can pass arbitrary arguments to
 Check the documentation for other useful arguments (e.g. `--stop-on-failure`
 and `--rerun-failed`).
 
-Note that changes in python sources are immediatelly "applied" in downstream projects
+Note that changes in python sources are immediately "applied" in downstream projects
 (unlike a "manual" stack setup with `lb-project-init`). For example, after changing a
 `.py` in LHCb, you can do `Moore/run` or `make Moore/test ...` without having to
 `make Moore` first.
+
+> **Warning:** the above feature was broken by the new CMake, so for the time being
+> always run `make Moore` after changes in upstream projects.
+> See https://gitlab.cern.ch/rmatev/lb-stack-setup/-/issues/60
 
 ## Makefile instructions
 
