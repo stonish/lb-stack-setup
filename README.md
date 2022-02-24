@@ -93,6 +93,10 @@ make fast/Moore/test ARGS='-j 4'
 make fast/Moore/test ARGS='-R hlt1_example$'
 # verbose output showing test (failure) details
 make fast/Moore/test ARGS='-R hlt1_example -V'
+# running the mdf_read automatically runs the dependency mdf_write
+make fast/Moore/test ARGS='-R mdf_read'
+# to ignore all dependencies and only run mdf_read
+make fast/Moore/test ARGS='-R mdf_read -FA .*'
 ```
 
 Using `ARGS` you can pass arbitrary arguments to
