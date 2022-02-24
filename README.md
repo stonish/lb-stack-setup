@@ -23,8 +23,11 @@ curl https://gitlab.cern.ch/rmatev/lb-stack-setup/raw/master/setup.py | python3 
 > be installed, or simply source the LHCb environment with
 > `source /cvmfs/lhcb.cern.ch/lib/LbEnv` if it is not already sourced.
 
-> **Note:** If you are working in the LHCb Online network, set up git with
-> `git config --global 'http.https://github.com/.proxy' lbproxy01:8080`
+> **Note:** If you are working in the LHCb Online network (e.g. pluscc and __not__ lxplus),
+> set up git with
+> ```
+> hostname --fqdn | grep -q lbdaq.cern.ch && git config --global 'http.https://github.com/.proxy' lbproxy01:8080
+> ```
 > to use the proxy to access GitHub.
 > If you use VSCode with Remote - SSH , see also
 > [doc/vscode.md](doc/vscode.md#using-remote-with-a-server-in-a-restricted-network)
