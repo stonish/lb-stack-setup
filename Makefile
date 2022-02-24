@@ -18,11 +18,6 @@ CMD = true
 for-each:
 	@for p in $(REPOS) ; do if [[ -d $$p && ! " $(EXCLUDE) " == *" $$p "*  ]] ; then ( cd $$p && pwd && $(CMD) ) ; fi ; done
 
-CONTRIB_DEPS += $(CONTRIB_PATH)/bin/distcc
-contrib: $(CONTRIB_DEPS)
-$(CONTRIB_PATH)/bin/%: $(DIR)/install-%.sh
-	@"${DIR}/build-env" bash "$<"
-
 clean: $(patsubst %,%-clean,$(PROJECTS))
 purge: $(patsubst %,%/purge,$(PROJECTS))
 
@@ -30,7 +25,7 @@ help:
 	@for t in $(ALL_TARGETS) ; do echo .. $$t ; done
 
 # public targets: main targets
-ALL_TARGETS = all build clean purge contrib update
+ALL_TARGETS = all build clean purge update
 
 # ----------------------
 # implementation details
@@ -42,10 +37,10 @@ ALL_TARGETS += $(foreach p,$(PROJECTS),$(p) $(p)/ $(p)-clean fast/$(p) fast/$(p)
 define PROJECT_settings
 # generic build target
 $(1)/%: $$($(1)_DEPS) fast/$(1)/% ;
-fast/$(1)/%: $(CONTRIB_DEPS)
+fast/$(1)/%:
 	@$(DIR)/build-env $(DIR)/make.sh $(1) $$*
 # check kerberos token when running tests
-fast/$(1)/test: $(CONTRIB_DEPS)
+fast/$(1)/test:
 	@$(DIR)/build-env --check-kerberos $(DIR)/make.sh $(1) test
 # special checkout targets (noop here, as checkout is done in setup-make.py)
 fast/$(1)/checkout: ;@# noop

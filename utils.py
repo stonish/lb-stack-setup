@@ -1,6 +1,7 @@
 import logging
 import os
 import textwrap
+import time
 from collections import namedtuple
 from subprocess import Popen, PIPE, CalledProcessError
 try:
@@ -163,3 +164,20 @@ def add_file_to_git_exclude(root_dir, filename):
             f.seek(0)
             if filename not in f.read().splitlines():
                 f.write(filename + '\n')
+
+
+def _mtime_or_zero(path):
+    """Return file mtime or zero if file is not found or is empty."""
+    try:
+        result = os.stat(path)
+        return result.st_mtime if result.st_size > 0 else 0
+    except FileNotFoundError:
+        return 0
+
+
+def is_file_older_than_ref(path, reference):
+    return _mtime_or_zero(path) < _mtime_or_zero(reference)
+
+
+def is_file_too_old(path, age):
+    return time.time() - _mtime_or_zero(path) > age

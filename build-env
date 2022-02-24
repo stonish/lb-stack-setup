@@ -11,12 +11,14 @@ USE_DOCKER="$useDocker"
 USE_DISTCC="$useDistcc"
 setup_output
 
-CHECK_KERBEROS=false
 if [ "$1" = "--check-kerberos" ]; then
     shift
     CHECK_KERBEROS=true
-elif [ "$USE_DISTCC" = true ]; then
-    CHECK_KERBEROS=true
+elif [ "$1" = "--no-check-kerberos" ]; then
+    shift
+    CHECK_KERBEROS=false
+else
+    CHECK_KERBEROS=$USE_DISTCC
 fi
 
 # Expand any variables in the command to run (e.g. $BINARY_TAG from run-env)

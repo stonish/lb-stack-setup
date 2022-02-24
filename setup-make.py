@@ -6,14 +6,21 @@ import itertools
 import os
 import pathlib
 import re
-import time
 from subprocess import CalledProcessError
 import traceback
 import shutil
 import sys
 from concurrent.futures.thread import ThreadPoolExecutor
 from config import read_config, DIR, GITLAB_READONLY_URL, GITLAB_BASE_URLS
-from utils import setup_logging, run, run_nb, topo_sorted, add_file_to_git_exclude
+from utils import (
+    setup_logging,
+    run,
+    run_nb,
+    topo_sorted,
+    add_file_to_git_exclude,
+    is_file_too_old,
+    is_file_older_than_ref,
+)
 from vscode import write_vscode_settings
 
 DATA_PACKAGE_DIRS = ["DBASE", "PARAM"]
@@ -226,21 +233,13 @@ def list_repos(dirs=['']):
     return all_paths
 
 
-def _mtime_or_zero(path):
-    try:
-        result = os.stat(path)
-        return result.st_mtime if result.st_size > 0 else 0
-    except FileNotFoundError:
-        return 0
-
-
 def check_staleness(repos):
     FETCH_TTL = 3600  # seconds
     # TODO here we assume that having FETCH_HEAD also fetched our branch
     # from our remote. See todo below for FETCH_HEAD.
     to_fetch = [
-        p for p in repos if time.time() -
-        _mtime_or_zero(os.path.join(p, '.git', 'FETCH_HEAD')) > FETCH_TTL
+        p for p in repos
+        if is_file_too_old(os.path.join(p, '.git', 'FETCH_HEAD'), FETCH_TTL)
     ]
 
     def fetch_repo(path):
@@ -409,6 +408,26 @@ def inv_dependencies(project_deps):
     }
 
 
+def install_contrib(config):
+    # Install symlinks to external software such that CMake doesn't cache them
+    LBENV_BINARIES = ['cmake', 'ctest', 'ninja', 'ccache']
+    os.makedirs(os.path.join(config['contribPath'], 'bin'), exist_ok=True)
+    for fn in LBENV_BINARIES:
+        symlink(
+            os.path.join(config['lbenvPath'], 'bin', fn),
+            os.path.join(config['contribPath'], 'bin', fn))
+
+    if config['useDistcc']:
+        target = os.path.join(config['contribPath'], 'bin', "distcc")
+        script = os.path.join(DIR, "install-distcc.sh")
+        if is_file_older_than_ref(target, script):
+            log.info("Installing distcc...")
+            run([
+                os.path.join(DIR, "build-env"), "--no-check-kerberos", "bash",
+                script
+            ])
+
+
 def main(targets):
     global config, log
     config = read_config()
@@ -451,13 +470,7 @@ def main(targets):
     else:
         build_target_deps = []
 
-    # Install symlinks to external software such that CMake doesn't cache them
-    LBENV_BINARIES = ['cmake', 'ctest', 'ninja', 'ccache']
-    os.makedirs(os.path.join(config['contribPath'], 'bin'), exist_ok=True)
-    for fn in LBENV_BINARIES:
-        symlink(
-            os.path.join(config['lbenvPath'], 'bin', fn),
-            os.path.join(config['contribPath'], 'bin', fn))
+    install_contrib(config)
 
     try:
         # Clone projects without following their dependencies and without
@@ -494,7 +507,6 @@ def main(targets):
                 "{}_INV_DEPS := {}".format(p, ' '.join(deps)),
             ]
         makefile_config += [
-            "CONTRIB_PATH := " + config["contribPath"],
             "REPOS := " + " ".join(repos + dp_repos),
             "build: " + " ".join(build_target_deps),
         ]
