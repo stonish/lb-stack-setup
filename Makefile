@@ -38,7 +38,7 @@ define PROJECT_settings
 # generic build target
 $(1)/%: $$($(1)_DEPS) fast/$(1)/% ;
 fast/$(1)/%:
-	@$(DIR)/build-env $(DIR)/make.sh $(1) $$*
+	@$(DIR)/build-env --require-kerberos-distcc $(DIR)/make.sh $(1) $$*
 # check kerberos token when running tests
 fast/$(1)/test:
 	@$(DIR)/build-env --check-kerberos $(DIR)/make.sh $(1) test
