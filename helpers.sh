@@ -6,7 +6,11 @@ setup_output() {
     if [ -z "$OUTPUT" ]; then
         OUTPUT="${OUTPUT:-$(config outputPath)}"
     fi
-    mkdir -p "$OUTPUT/$PROJECT"
+    mkdir -p "$OUTPUT/$PROJECT" || true
+    if [ ! -w "$OUTPUT/$PROJECT" ]; then
+        OUTPUT=/tmp/lb-stack-setup-$USER
+        mkdir -p "$OUTPUT/$PROJECT"
+    fi
 }
 
 gitc() { pushd "$1" >/dev/null && git "${@:2}" && popd >/dev/null; }
@@ -21,7 +25,7 @@ log() {
     else
         ts=$(date "+%Y-%m-%dT%H:%M:%S    ")
     fi
-    printf "%s %-15s %-8s %s\n" "$ts" "${logname:-bash}" "$1" "$2" >> "$OUTPUT/log"
+    printf "%s %-15s %-8s %s\n" "$ts" "${logname:-bash}" "$1" "$2" >> "$OUTPUT/log" || true
 }
 
 # TODO log *everything* with https://askubuntu.com/a/1001404/417217
