@@ -18,8 +18,8 @@ CMD = true
 for-each:
 	@for p in $(REPOS) ; do if [[ -d $$p && ! " $(EXCLUDE) " == *" $$p "*  ]] ; then ( cd $$p && pwd && $(CMD) ) ; fi ; done
 
-clean: $(patsubst %,%-clean,$(PROJECTS))
-purge: $(patsubst %,%/purge,$(PROJECTS))
+clean: $(patsubst %,%-clean,$(ALL_PROJECTS))
+purge: $(patsubst %,%/purge,$(ALL_PROJECTS))
 
 help:
 	@for t in $(ALL_TARGETS) ; do echo .. $$t ; done
@@ -32,7 +32,7 @@ ALL_TARGETS = all build clean purge update
 # ----------------------
 
 # public targets: project targets
-ALL_TARGETS += $(foreach p,$(PROJECTS),$(p) $(p)/ $(p)-clean fast/$(p) fast/$(p)-clean)
+ALL_TARGETS += $(foreach p,$(PROJECTS),$(p) $(p)/ fast/$(p))
 
 define PROJECT_settings
 # generic build target
@@ -45,16 +45,21 @@ fast/$(1)/test:
 # special checkout targets (noop here, as checkout is done in setup-make.py)
 fast/$(1)/checkout: ;@# noop
 $(1)/checkout: fast/$(1)/checkout ;
-# exception for purge and clean: always do fast/Project/purge or clean
-$(1)/purge: fast/$(1)/purge ;
-fast/$(1)/purge:
-	$(RM) -r $(1)/build.$(BINARY_TAG) $(1)/InstallArea/$(BINARY_TAG)
-	find $(1) "(" -name "InstallArea" -prune -o -name "*.pyc" ")" -a -type f -exec $(RM) -v \{} \;
+# exception for clean: always do fast/Project/clean
 $(1)/clean: fast/$(1)/clean ;
 # build... delegate to generic target
 $(1): $(1)/install
 $(1)/: $(1)/install
 fast/$(1): fast/$(1)/install
+endef
+$(foreach proj,$(PROJECTS),$(eval $(call PROJECT_settings,$(proj))))
+
+define PROJECT_settings_clean
+# exception for purge: always do fast/Project/purge
+$(1)/purge: fast/$(1)/purge ;
+fast/$(1)/purge:
+	$(RM) -r $(1)/build.$(BINARY_TAG) $(1)/InstallArea/$(BINARY_TAG)
+	find $(1) "(" -name "InstallArea" -prune -o -name "*.pyc" ")" -a -type f -exec $(RM) -v \{} \;
 # clean
 $(1)-clean: $(patsubst %,%-clean,$($(1)_INV_DEPS))
 	$$(MAKE) fast/$(1)-clean
@@ -62,7 +67,8 @@ fast/$(1)-clean:
 	@test -d $(1)/build.$(BINARY_TAG) && $$(MAKE) $(1)/clean || true
 	$(RM) -r $(1)/InstallArea/$(BINARY_TAG)
 endef
-$(foreach proj,$(PROJECTS),$(eval $(call PROJECT_settings,$(proj))))
+$(foreach proj,$(ALL_PROJECTS),$(eval $(call PROJECT_settings_clean,$(proj))))
+ALL_TARGETS += $(foreach p,$(ALL_PROJECTS),$(p)-clean fast/$(p)-clean)
 
 # stack.code-workspace is always remade by setup-make.py, so this is just
 # to avoid the message "Nothing to be done for `stack.code-workspace'"

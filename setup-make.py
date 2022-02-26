@@ -481,6 +481,8 @@ def main(targets):
         data_packages = config['dataPackages']
         project_deps = checkout(projects, data_packages)
 
+        projects_sorted = topo_sorted(project_deps)
+
         # After we cloned the minimum necessary, check for other repos
         repos = list_repos()
         dp_repos = list_repos(DATA_PACKAGE_DIRS)
@@ -495,7 +497,8 @@ def main(targets):
 
         makefile_config = [
             "BINARY_TAG := {}".format(config["binaryTag"]),
-            "PROJECTS := " + " ".join(sorted(project_deps)),
+            "PROJECTS := " + " ".join(projects_sorted),
+            "ALL_PROJECTS := " + " ".join(sorted(project_deps)),
         ]
         for p, deps in sorted(project_deps.items()):
             makefile_config += [
