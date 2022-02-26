@@ -237,7 +237,6 @@ compile_commands_dst="$OUTPUT/$PROJECT/compile_commands.json"
 runtime_env_src="$PROJECT/build.$BINARY_TAG/python.env"
 runtime_env_dst="$OUTPUT/$PROJECT/runtime.env"
 runtime_env_dst2="$PROJECT/.env"  # needed for Python debugging config
-grep -Fxq ".env" $PROJECT/.git/info/exclude || ( mkdir -p $PROJECT/.git/info ; echo ".env" >> $PROJECT/.git/info/exclude )
 
 # Check build-env to see why we set CMAKE_PREFIX_PATH here.
 # LBENV_CURRENT_WORKSPACE is only considered if it's in CMAKE_PREFIX_PATH

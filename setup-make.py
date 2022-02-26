@@ -174,6 +174,8 @@ def clone_cmake_project(project):
         target = os.path.join(project, wrapper)
         symlink(os.path.join(DIR, f'project-{wrapper}.sh'), target)
         add_file_to_git_exclude(project, wrapper)
+    # Also hide .env files
+    add_file_to_git_exclude(project, ".env")
 
     return project
 
