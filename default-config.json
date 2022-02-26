@@ -2,7 +2,6 @@
 	"binaryTag": "x86_64_v2-centos7-gcc11-opt",
 	"defaultProjects": [
 		"Alignment",
-		"Brunel",
 		"Moore"
 	],
 	"extraDependencies": {},
