@@ -3,9 +3,10 @@ set -eo pipefail
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 source "$DIR/helpers.sh"
 logname="build-env"
-eval $(config --sh outputPath binaryTag useDocker useDistcc lbenvPath lcgVersion localPoolDepth projectPath forwardEnv functorJitNJobs)
+eval $(config --sh outputPath buildPath binaryTag useDocker useDistcc lbenvPath lcgVersion localPoolDepth projectPath forwardEnv functorJitNJobs)
 
 OUTPUT="$outputPath"
+BUILD_PATH="$buildPath"
 BINARY_TAG="$binaryTag"
 USE_DOCKER="$useDocker"
 USE_DISTCC="$useDistcc"
@@ -23,7 +24,7 @@ elif [ "$1" = "--require-kerberos-distcc" ]; then
     REQUIRE_KERBEROS=true
 fi
 
-# Expand any variables in the command to run (e.g. $BINARY_TAG from run-env)
+# Expand any variables in the command to run (e.g. $BUILD_PATH and $BINARY_TAG from run-env)
 cmd=$(eval echo "$1")
 cmd=${cmd:-printenv}  # if no command is given, print environment
 shift

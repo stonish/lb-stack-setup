@@ -36,7 +36,7 @@
         "C_Cpp.default.includePath": [],
         "C_Cpp.default.intelliSenseMode": "$compilerType",
         // Have a common DB per binary tag in a local directory (instead of per project and in ~/).
-        "C_Cpp.default.browse.databaseFilename": "$projectPath/.vscode-cpptools/$binaryTag/browse.VC.db",
+        "C_Cpp.default.browse.databaseFilename": "$buildPath/.vscode-cpptools/$binaryTag/browse.VC.db",
         "C_Cpp.files.exclude": {
             "**/.vscode": true,
             "**/build.*": true,
@@ -44,7 +44,7 @@
             "/cvmfs": true,
             "/usr": true
         },
-        "C_Cpp.intelliSenseCachePath": "$projectPath/.vscode-cpptools/$binaryTag",
+        "C_Cpp.intelliSenseCachePath": "$buildPath/.vscode-cpptools/$binaryTag",
         // Disable precompiled header caches (ipch). They are too big at 0.1-1 GB per file
         // and are constantly being recreated for a sensible limit of 5 GB.
         "C_Cpp.intelliSenseCacheSize": 0,

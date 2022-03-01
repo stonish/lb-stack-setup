@@ -11,7 +11,13 @@ DIR = os.path.dirname(__file__)
 DEFAULT_CONFIG = os.path.join(DIR, 'default-config.json')
 CONFIG = os.path.join(DIR, 'config.json')
 # Special variables where paths are expanded
-EXPAND_PATH_VARS = ["projectPath", "contribPath", "ccachePath", "outputPath"]
+EXPAND_PATH_VARS = [
+    "projectPath",
+    "contribPath",
+    "ccachePath",
+    "outputPath",
+    "buildPath",
+]
 GITLAB_READONLY_URL = "https://gitlab.cern.ch"
 GITLAB_BASE_URLS = [
     "ssh://git@gitlab.cern.ch:7999",
@@ -98,10 +104,8 @@ def write_config(config, path=CONFIG):
         json.dump(config, f, indent=4)
 
 
-def expand_path(p):
-    """Expand and normalise a non-absolute path."""
-    p = os.path.expandvars(p)
-    p = os.path.expanduser(p)
+def normalize_path(p):
+    """Normalise a non-absolute path."""
     if not os.path.isabs(p):
         p = os.path.join(DIR, p)
     return os.path.abspath(p)
@@ -168,11 +172,14 @@ def read_config(original=False,
         if isinstance(value, str):
             value = os.path.expandvars(value)
         if key in EXPAND_PATH_VARS:
-            value = expand_path(value)
+            value = os.path.expanduser(value)
+            value = normalize_path(value)
         config[key] = value
 
     # Interpolate self-references like "$projectPath/some/path"
     config = rinterp(config, config)
+    for var in EXPAND_PATH_VARS:
+        config[var] = normalize_path(config[var])
 
     return (config, defaults, overrides) if original else config
 

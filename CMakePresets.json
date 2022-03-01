@@ -14,6 +14,7 @@
             "generator": "Ninja",
             "toolchainFile": "${sourceDir}/utils/toolchain.cmake",
             "binaryDir": "${sourceDir}/mono/build.$env{BINARY_TAG}",
+            "TODO": "the binaryDir must be generated from BUILD_PATH",
             "cacheVariables": {
             }
         },
