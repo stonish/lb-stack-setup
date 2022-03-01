@@ -13,6 +13,11 @@ for example, `$HOME` or `/afs/cern.ch/work/j/jdoe`.
 > volumes (e.g. on CERN OpenStack) is typically slower than on a local disk,
 > especially if the latter is an SSD.
 
+> **Note:** A good hybrid solution is to put the source code (few GiB) in your
+> backed up home (e.g. AFS/NFS) and put the build artifacts in a bigger and faster
+> local storage (that may not be backed up). See below how to do this using
+> the [`buildPath`](#configuration-settings) setting.
+
 Adjust the following command according to how you want the directory containing your stack to be called and then run it (here we use simply "`stack`"):
 
 ```sh
@@ -179,6 +184,15 @@ Depending on what and where you build there are different recommendations.
 
 - `defaultProjects`: Defines which projects are built when `make` is invoked without giving any
   project-specific target (i.e. `make`, `make all` or `make build`).
+- `buildPath` and `ccachePath`: Defines where the build artifacts are stored. By default, they
+  are put under the stack directory (and the respective projects inside). Instead, you can put
+  the artifacts in a separate directory/volume, with something like this:
+
+    ```sh
+    utils/config.py ccachePath '/localdisk1/$USER/ccache/${binaryTag}'
+    utils/config.py buildPath  '/localdisk2/$USER/build/$HOSTNAME/${projectPath}'
+    ```
+
 - `useDocker (true/false)`: Allows running with docker, check
   [doc/prerequisites.md](doc/prerequisites.md) for instructions.
   Defaults to false on CentOS7, otherwise is true.

@@ -53,19 +53,7 @@ make:
   extends: .make
   script:
     - cd stack
-    - PLATFORM=$(utils/config.py binaryTag)  # make sure we don't use BINARY_TAG or CMTCONFIG
-    - utils/config.py  # print config
-    - make Gaudi/configure
-    - bash utils/ci-utils/test-cmake.sh Gaudi/build.$PLATFORM
-    - make Gaudi
-    - make Gaudi/configure  # test a reconfigure
-    - bash utils/ci-utils/test-cmake.sh Gaudi/build.$PLATFORM
-    - make Detector/configure
-    - bash utils/ci-utils/test-cmake.sh Detector/build.$PLATFORM
-    - make LHCb/configure
-    - bash utils/ci-utils/test-cmake.sh LHCb/build.$PLATFORM
-    - bash utils/ci-utils/test-misc.sh
-    - utils/stats
+    - bash utils/ci-utils/make-script.sh
 
 make-mono:
   extends: .make
@@ -74,6 +62,13 @@ make-mono:
     - utils/config.py monoBuild true
     - utils/config.py defaultProjects '["LHCb"]'
     - bash utils/ci-utils/make-mono-script.sh
+
+make-oos:
+  extends: .make
+  script:
+    - cd stack
+    - utils/config.py buildPath $TMPDIR
+    - bash utils/ci-utils/make-script.sh
 
 # Test legacy branches until it's easy to support.
 make-legacy:

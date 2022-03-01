@@ -54,22 +54,15 @@ ifneq ($(wildcard $(CURDIR)/cache_preload.cmake),)
   override CMAKEFLAGS += -C$(CURDIR)/cache_preload.cmake
 endif
 
-ifndef BINARY_TAG
-  ifdef CMAKECONFIG
-    BINARY_TAG := ${CMAKECONFIG}
-  else
-    ifdef CMTCONFIG
-      BINARY_TAG := ${CMTCONFIG}
-    endif
-  endif
+ifeq ($(BUILDDIR),)
+$(error BUILDDIR must be defined)
 endif
 
-ifeq ($(BINARY_TAG)$(BUILDDIR),)
-$(error one of BINARY_TAG, CMTCONFIG or BUILDDIR must be defined)
-endif
-BUILDDIR := $(CURDIR)/build.$(BINARY_TAG)
 # Added by RM
-INSTALLDIR := $(CURDIR)/InstallArea/$(BINARY_TAG)
+ifeq ($(BINARY_TAG),)
+$(error BINARY_TAG must be defined)
+endif
+INSTALLDIR := $(abspath $(BUILDDIR)/../InstallArea/$(BINARY_TAG))
 
 ifneq ($(wildcard $(BUILDDIR)/Makefile),)
   # force the use of GNU Make if the build was using it
@@ -141,4 +134,4 @@ $(MAKEFILE_LIST):
 # note that we only fully build the CMAKEFLAGS here in order not to slow down other targets
 $(BUILDDIR)/$(BUILD_CONF_FILE):
 	mkdir -p $(BUILDDIR)
-	cd $(BUILDDIR) && $(CMAKE) $(CMAKEFLAGS) $(shell "$(DIR)config.py" cmakeFlags.default --default '') $(shell "$(DIR)config.py" cmakeFlags.$(PROJECT) --default '') $(CURDIR)
+	cd $(BUILDDIR) && $(CMAKE) $(CMAKEFLAGS) -DCMAKE_INSTALL_PREFIX=$(INSTALLDIR) $(shell "$(DIR)config.py" cmakeFlags.default --default '') $(shell "$(DIR)config.py" cmakeFlags.$(PROJECT) --default '') $(CURDIR)

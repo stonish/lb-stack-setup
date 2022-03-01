@@ -1,7 +1,7 @@
 set -euxo pipefail
 
 PLATFORM=$(utils/config.py binaryTag)  # make sure we don't use BINARY_TAG or CMTCONFIG
-MONO_BUILD_PATH=mono/build.$PLATFORM
+MONO_BUILD_PATH=$(utils/config.py buildPath)/mono/build.$PLATFORM
 
 utils/config.py  # print config
 make configure
