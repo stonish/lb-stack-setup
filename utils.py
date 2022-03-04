@@ -80,15 +80,17 @@ def run_nb(args,
         **kwargs)
 
     def result():
-        _log.debug('command: ' +
-                   (repr(args) if shell else ' '.join(map(repr, args))))
+        cmd_msg = (repr(args) if shell else ' '.join(map(repr, args)))
+        _log.debug("Running command: " + cmd_msg)
         stdout, stderr = [
             b if b is None else b.decode('utf-8') for b in p.communicate()
         ]
         level = logging.ERROR if check and p.returncode else logging.DEBUG
-        _log.log(level, 'retcode: ' + str(p.returncode))
-        _log.log(level, 'stderr: {}'.format(stderr))
-        _log.log(level, 'stdout: {}'.format(stdout))
+        _log.log(
+            level,
+            (f"Result of command: {cmd_msg}\n" + f'\tretcode: {p.returncode}\n'
+             + '\tstderr: ' + stderr.rstrip("\n") + "\n" + '\tstdout: ' +
+             stdout.rstrip("\n")))
         if check and p.returncode != 0:
             raise CalledProcessError(p.returncode, args)
         return namedtuple('CompletedProcess',
