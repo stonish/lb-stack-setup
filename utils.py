@@ -69,6 +69,7 @@ def run_nb(args,
            capture_stderr=True,
            check=True,
            stdin=DEVNULL,
+           log=True,
            **kwargs):
     """Non-blocking run() that returns a blocking function."""
     p = Popen(
@@ -81,16 +82,17 @@ def run_nb(args,
 
     def result():
         cmd_msg = (repr(args) if shell else ' '.join(map(repr, args)))
-        _log.debug("Running command: " + cmd_msg)
+        if log:
+            _log.debug("Running command: " + cmd_msg)
         stdout, stderr = [
             b if b is None else b.decode('utf-8') for b in p.communicate()
         ]
         level = logging.ERROR if check and p.returncode else logging.DEBUG
-        _log.log(
-            level,
-            (f"Result of command: {cmd_msg}\n" + f'\tretcode: {p.returncode}\n'
-             + '\tstderr: ' + stderr.rstrip("\n") + "\n" + '\tstdout: ' +
-             stdout.rstrip("\n")))
+        if log or level == logging.ERROR:
+            _log.log(level, (f"Result of command: {cmd_msg}\n" +
+                             f'\tretcode: {p.returncode}\n' + '\tstderr: ' +
+                             stderr.rstrip("\n") + "\n" + '\tstdout: ' +
+                             stdout.rstrip("\n")))
         if check and p.returncode != 0:
             raise CalledProcessError(p.returncode, args)
         return namedtuple('CompletedProcess',

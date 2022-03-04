@@ -59,6 +59,7 @@ def symlink(src, dst):
         return
     if os.path.isfile(dst) or os.path.islink(dst):
         os.remove(dst)
+    log.debug(f"Creating symlink {dst} -> {src}")
     os.symlink(src, dst)
 
 
@@ -273,11 +274,13 @@ def check_staleness(repos):
             res = run(
                 ['git', 'rev-list', '--count', '--left-right', f'{target}...'],
                 cwd=path,
-                check=False)
+                check=False,
+                log=False)
             n_behind, n_ahead = map(int, res.stdout.split())
             if n_behind:
                 ref_names = run(['git', 'log', '-n1', '--pretty=%D'],
-                                cwd=path).stdout.strip()
+                                cwd=path,
+                                log=False).stdout.strip()
                 if not n_ahead:
                     log.warning('{} ({}) is {} commits behind {}'.format(
                         path, ref_names, n_behind, target))
