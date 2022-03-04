@@ -121,9 +121,11 @@ else
         "HOSTNAME=${HOSTNAME}"
         "HOME=${HOME}"
         "USER=${USER}"
-        "TERM=${TERM}"
     )
-    vars+=( "BINARY_TAG=${BINARY_TAG}" )
+    vars+=(
+        "TERM=${TERM}"
+        "BINARY_TAG=${BINARY_TAG}"
+    )
     test -z ${KRB5CCNAME} || vars+=("KRB5CCNAME=${KRB5CCNAME}")
     test -z ${TMPDIR} || vars+=("TMPDIR=${TMPDIR}")
     test -z ${XDG_RUNTIME_DIR} || vars+=("XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR}")
