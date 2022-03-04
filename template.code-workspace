@@ -111,8 +111,9 @@
         "python.linting.pylintEnabled": false,
         "python.defaultInterpreterPath": "$pythonPath",
         "remote.downloadExtensionsLocally": true,
-        "restructuredtext.confPath": " ${workspaceFolder}/doc/conf.py",
+        "restructuredtext.confPath": "${workspaceFolder}/doc/conf.py",
         "restructuredtext.languageServer.disabled": true,
+        "restructuredtext.linter.disabled": true,
         "restructuredtext.linter.run": "off",
         "restructuredtext.sphinxBuildPath": "$lbenvPath/bin/sphinx-build",
         "window.title": "${dirty}${activeEditorShort}${separator}${rootPath}"
