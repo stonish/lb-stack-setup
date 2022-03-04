@@ -50,16 +50,15 @@
         "C_Cpp.intelliSenseCacheSize": 0,
         "C_Cpp.workspaceParsingPriority": "low",
         "cmake.cmakePath": "${workspaceFolder:utils}/cmake",
-        "cSpell.customWorkspaceDictionaries": [
-            "lhcb"
-        ],
-        "cSpell.diagnosticLevel": "Hint",
-        "cSpell.dictionaryDefinitions": [
-            {
-                "name": "lhcb",
-                "path": "$utilsPath/dictionary.txt"
+        "cSpell.customDictionaries": {
+            "lhcb": {
+              "name": "lhcb",
+              "path": "${workspaceFolder:utils}/dictionary.txt",
+              "description": "LHCb-specific dictionary",
+              "addWords": true
             }
-        ],
+        },
+        "cSpell.diagnosticLevel": "Hint",
         "cSpell.enabledLanguageIds": [
             "c",
             "cpp",
