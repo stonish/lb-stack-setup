@@ -22,7 +22,7 @@ help:
 	@for t in $(sort $(ALL_TARGETS)) ; do echo .. $$t ; done
 
 # public targets: main targets
-ALL_TARGETS = all build clean purge update
+ALL_TARGETS = all build clean purge update report
 
 ifneq ($(MONO_BUILD),1)
 
@@ -126,7 +126,8 @@ endif
 # stack.code-workspace is always remade by setup-make.py, so this is just
 # to avoid the message "Nothing to be done for `stack.code-workspace'"
 stack.code-workspace: ;@# noop
-update: ;@# noop
+# same for special targets
+update report: ;@# noop
 
 .PHONY: $(ALL_TARGETS) stack.code-workspace
 

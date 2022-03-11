@@ -25,7 +25,7 @@ from utils import (
 from vscode import write_vscode_settings
 
 DATA_PACKAGE_DIRS = ["DBASE", "PARAM"]
-SPECIAL_TARGETS = ["update"]
+SPECIAL_TARGETS = ["update", "report"]
 MAKE_TARGET_RE = re.compile(
     r'^(?P<fast>fast/)?(?P<project>[A-Z]\w+)(/(?P<target>.*))?$')
 
@@ -229,44 +229,30 @@ def list_repos(dirs=['']):
     return all_paths
 
 
-def check_staleness(repos):
+def check_staleness(repos, show=1):
     FETCH_TTL = 3600  # seconds
-    # TODO here we assume that having FETCH_HEAD also fetched our branch
-    # from our remote. See todo below for FETCH_HEAD.
+    # Here we assume that having FETCH_HEAD also fetched our branch
+    # from our remote.
     to_fetch = [
         p for p in repos
         if is_file_too_old(os.path.join(p, '.git', 'FETCH_HEAD'), FETCH_TTL)
     ]
 
     def fetch_repo(path):
-        url, branch = git_url_branch(path)
-        result = run(['git', 'remote', 'get-url', 'origin'],
-                     cwd=path,
-                     check=False)
-        origin_url = result.stdout.strip()
-        if result.returncode == 0 and (url is None or origin_url == url):
-            # fetch origin if its URL matches the config's URL
-            fetch_args = ['origin']
-            # TODO add +refs/merge-requests/*/head:refs/remotes/origin/mr/* ?
-        else:
-            # otherwise, fetch the URL directly:
-            # url, branch = git_url_branch(path, try_read_only=True)
-            # fetch_args = [url, branch]
-            log.warning(f"Failed to fetch {path} "
-                        f"as origin ({origin_url}) is not {url}")
-            return
-            # TODO in this case we might be tempted to use FETCH_HEAD as
-            # the reference below. However, this is a problem if a fetch
-            # was made from somewhere else (e.g. manually or by VSCode).
-            # We need to find a way to store our ref somewhere.
-        result = run(['git', 'fetch'] + fetch_args, cwd=path, check=False)
+        url, branch = git_url_branch(path, try_read_only=True)
+        url = url or "origin"  # for utils
+        fetch_args = [url, f"{branch}:refs/remotes/origin/{branch}"]
+        # TODO add +refs/merge-requests/*/head:refs/remotes/origin/mr/* ?
+        result = run(
+            ['git', 'fetch'] + fetch_args, cwd=path, check=False, log=True)
         if result.returncode != 0:
             log.warning(f"Failed to fetch {path}")
 
     if to_fetch:
         log.info("Fetching {}".format(', '.join(to_fetch)))
         with ThreadPoolExecutor(max_workers=64) as executor:
-            executor.map(fetch_repo, repos)
+            # list() to propagate exceptions
+            list(executor.map(fetch_repo, to_fetch))
 
     def compare_head(path):
         target = 'origin/' + git_url_branch(path)[1]
@@ -277,33 +263,72 @@ def check_staleness(repos):
                 check=False,
                 log=False)
             n_behind, n_ahead = map(int, res.stdout.split())
-            if n_behind:
-                ref_names = run(['git', 'log', '-n1', '--pretty=%D'],
-                                cwd=path,
-                                log=False).stdout.strip()
-                if not n_ahead:
-                    log.warning('{} ({}) is {} commits behind {}'.format(
-                        path, ref_names, n_behind, target))
-                else:
-                    log.warning(
-                        '{} ({}) is {} commits behind ({} ahead) {}'.format(
-                            path, ref_names, n_behind, n_ahead, target))
-            elif n_ahead:
-                log.info('{} is {} commits ahead {}'.format(
-                    path, n_ahead, target))
+
+            target_refs = run(
+                [
+                    'git', 'log', '-n1', '--pretty=%C(auto)%h',
+                    '--color=always', '--abbrev=10', target
+                ],
+                cwd=path,
+                log=False,
+            ).stdout.strip()
+
+            # using %d instead of %D and  -c log.excludeDecoration=...
+            # for backward compatibility with git 1.8
+            local_refs = run(
+                [
+                    'git', '-c', 'log.excludeDecoration=*/HEAD', 'log', '-n1',
+                    '--pretty=%C(auto)%h,%d', '--color=always', '--abbrev=10'
+                ],
+                cwd=path,
+                log=False,
+            ).stdout.strip()
+            local_refs = re.sub(r"HEAD -> |\(|\)", "", local_refs)
+
+            status = None
+            if show >= 2:
+                res = run(
+                    ['git', '-c', 'color.status=always', 'status', '--short'],
+                    cwd=path,
+                    check=False,
+                    log=False)
+                status = res.stdout.rstrip()
+
+            return (path, n_behind, n_ahead, local_refs, target, target_refs,
+                    status)
+
         except (CalledProcessError, ValueError):
             log.warning('Failed to get status of ' + path)
 
     with ThreadPoolExecutor(max_workers=64) as executor:
-        executor.map(compare_head, repos)
+        res = [r for r in executor.map(compare_head, repos) if r is not None]
+
+    res = sorted(res, key=lambda x: repos.index(x[0]))
+    res = [r for r in res if r[1] or (r[2] and show >= 1) or show >= 2]
+    width = max(len(r[0]) for r in res) if res else 0
+    for (path, n_behind, n_ahead, local_refs, target, target_refs,
+         status) in res:
+        import textwrap
+        status = "\n" + textwrap.indent(status, " " *
+                                        (width + 5)) if status else ""
+        if n_behind:
+            msg_n_ahead = "" if not n_ahead else f" ({n_ahead} ahead)"
+            log.warning(
+                f"{path:{width}} ({local_refs}) is \x1b[1m{n_behind} commits "
+                f"behind\x1b[22m{msg_n_ahead} {target} ({target_refs}){status}"
+            )
+        elif n_ahead:
+            log.info(f"{path:{width}} ({local_refs}) is {n_ahead} commits "
+                     f"ahead {target} ({target_refs}){status}")
+        else:
+            log.info(f"{path:{width}} is at {target} ({target_refs}){status}")
 
 
 def update_repos():
     log.info("Updating projects and data packages...")
     root_repos = list_repos()
     dp_repos = list_repos(DATA_PACKAGE_DIRS)
-    # find the LHCb projects
-    projects = list(find_all_deps(root_repos, {}).keys())
+    projects = topo_sorted(find_all_deps(root_repos, {}))
     repos = projects + dp_repos
 
     # Skip repos where the tracking branch does not match the config
@@ -323,21 +348,23 @@ def update_repos():
                 not_tracking.append(repo)  # tracking a non-default branch
         else:
             not_tracking.append(repo)
-    repos = [r for r in repos if r not in not_tracking]
+    tracking = [r for r in repos if r not in not_tracking]
 
     ps = []
-    for repo in repos:
+    for repo in tracking:
         url, branch = git_url_branch(repo, try_read_only=True)
         ps.append(
-            run_nb([
-                'git', '-c', 'color.ui=always', 'pull', '--ff-only', url,
-                branch
-            ],
-                   cwd=repo,
-                   check=False))
+            run_nb(
+                [
+                    'git', '-c', 'color.ui=always', 'pull', '--ff-only', url,
+                    f"{branch}:refs/remotes/origin/{branch}"
+                ],
+                cwd=repo,
+                check=False,
+            ))
     up_to_date = []
     update_failed = []
-    for repo, get_result in zip(repos, ps):
+    for repo, get_result in zip(tracking, ps):
         res = get_result()
         if res.returncode == 0:
             if 'Already up to date.' in res.stdout:
@@ -351,8 +378,22 @@ def update_repos():
     if not_tracking:
         log.warning("Skipped repos not tracking the default branch: "
                     f"{', '.join(not_tracking)}.")
+    check_staleness(not_tracking + update_failed, show=0)
     if update_failed:
         log.warning(f"Update failed for: {', '.join(update_failed)}.")
+
+
+def report_repos():
+    for env_file in ["make.sh.env", "project.mk.env"]:
+        env_path = os.path.join(config['outputPath'], env_file)
+        with open(env_path) as f:
+            log.info(f"Environment from {env_path}\n{f.read().strip()}")
+
+    root_repos = list_repos()
+    dp_repos = list_repos(DATA_PACKAGE_DIRS)
+    projects = topo_sorted(find_all_deps(root_repos, {}))
+    repos = projects + dp_repos + ["utils"]
+    check_staleness(repos, show=2)
 
 
 def checkout(projects, data_packages):
@@ -383,7 +424,7 @@ def checkout(projects, data_packages):
         os.makedirs(container, exist_ok=True)
         dp_repos.append(clone_package(name, container))
 
-    check_staleness(list(project_deps.keys()) + dp_repos + ['utils'])
+    check_staleness(topo_sorted(project_deps) + dp_repos + ['utils'])
 
     return project_deps
 
@@ -459,8 +500,13 @@ def main(targets):
         if targets:
             error(config_path,
                   f"expected only special targets, also got {targets}")
-        if 'update' in special_targets:
+        target, = special_targets
+        if target == "update":
             update_repos()
+        elif target == "report":
+            report_repos()
+        else:
+            raise NotImplementedError(f"unknown special target {target}")
         return
 
     # collect top level projects to be cloned
