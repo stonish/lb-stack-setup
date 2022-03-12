@@ -55,7 +55,9 @@ class NotCMakeProjectError(RuntimeError):
 
 def symlink(src, dst):
     """Create a symlink only if not already existing and equivalent."""
-    if os.path.realpath(dst) == src:
+    src_check = (src if src.startswith('/') else os.path.join(
+        os.path.dirname(dst), src))
+    if os.path.realpath(dst) == os.path.realpath(src_check):
         return
     if os.path.isfile(dst) or os.path.islink(dst):
         os.remove(dst)
