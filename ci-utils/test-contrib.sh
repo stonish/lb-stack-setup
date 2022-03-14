@@ -12,13 +12,13 @@ error() {
     retcode=1
 }
 
-python_version="$($run python -c 'import sys; print(sys.version_info[0:2])')"
-if [ "$python_version" != "(3, 8)" ]; then
-    error "python is not 3.8"
+$run python --version
+if [ ! $run python -c 'import sys; exit(sys.version_info[0:2] >= (3, 9))' ]; then
+    error "python is too old"
 fi
-python3_version="$($run python3 -c 'import sys; print(sys.version_info[0:2])')"
-if [ "$python3_version" != "(3, 8)" ]; then
-    error "python3 is not 3.8"
+$run python3 --version
+if [ ! $run python3 -c 'import sys; exit(sys.version_info[0:2] >= (3, 9))' ]; then
+    error "python3 is too old"
 fi
 
 $run contrib/bin/cmake --version
