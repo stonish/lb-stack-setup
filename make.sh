@@ -18,7 +18,8 @@ PROJECT="$1"
 shift
 
 # steering options
-eval $(config --sh outputPath contribPath ccachePath useCcache useDistcc cmakePrefixPath)
+eval $(config --sh outputPath contribPath ccachePath useCcache useDistcc cmakePrefixPath \
+                   'ccacheHosts=ccacheHosts or ccacheHostsPresets.get(ccacheHostsKey, "")')
 OUTPUT=$outputPath
 CONTRIB=$contribPath
 USE_CCACHE=$useCcache
@@ -64,6 +65,7 @@ setup_ccache() {
   export CCACHE_SLOPPINESS="locale"
   # FIXME: system headers are cannot be ignored at present because upstream
   #        projects are included as -isystem .
+  #        See https://gitlab.cern.ch/lhcb/LHCb/-/issues/191
 
   # Increase hit rate by
   # - rewriting absolute paths that start with $PWD into relative ones
@@ -75,6 +77,9 @@ setup_ccache() {
   export CCACHE_NOHASHDIR=1
   # see https://ccache.dev/manual/latest.html#_compiling_in_different_directories
   # TODO use the -fdebug-prefix-map=old=new
+
+  # Secondary cache
+  export CCACHE_SECONDARY_STORAGE="$ccacheHosts"
 
   # Use generated depenencies instead of the preprocessor, much faster!
   export CCACHE_DEPEND=1

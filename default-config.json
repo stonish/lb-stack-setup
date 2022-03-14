@@ -24,7 +24,7 @@
 		"SSH_AUTH_SOCK",
 		"SSH_AGENT_PID",
 		"GITCONDDBPATH",
-	        "X509_USER_PROXY"
+		"X509_USER_PROXY"
 	],
 	"gitGroup": {
 		"Gaudi": "gaudi",
@@ -50,6 +50,11 @@
 	"ccachePath": "../.ccache/$BINARY_TAG",
 	"outputPath": "../.output",
 	"localPoolDepth": null,
+	"ccacheHosts": null,
+	"ccacheHostsKey": null,
+	"ccacheHostsPresets": {
+		".lbdaq.cern.ch": "redis://swdev*|shards=01,02,03,04"
+	},
 	"distccHosts": [
 		{
 			"spec": "lbquantaperf01.cern.ch/30,cpp,lzo,auth",

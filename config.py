@@ -20,7 +20,7 @@ GITLAB_BASE_URLS = [
 ]
 
 
-def cpu_count():
+def cpu_count(config=None):
     from multiprocessing import cpu_count
     return cpu_count()
 
@@ -45,7 +45,7 @@ def _rinterp(obj, mapping):
         return obj
 
 
-def git_base():
+def git_base(config):
     for base in GITLAB_BASE_URLS:
         code = os.system(
             'git ls-remote {}/gaudi/Gaudi.git HEAD &>/dev/null'.format(base))
@@ -60,12 +60,22 @@ def git_base():
     return ''
 
 
+def ccache_hosts_key(config):
+    """Return the longest matching ccacheHostsPresets key."""
+    from socket import getfqdn
+    fqdn = getfqdn()
+    for key in sorted(config["ccacheHostsPresets"], key=len, reverse=True):
+        if fqdn.endswith(key):
+            return key
+
+
 AUTOMATIC_DEFAULTS = {
     'gitBase': git_base,
-    'localPoolDepth': lambda: 2 * cpu_count(),
+    'localPoolDepth': lambda _: 2 * cpu_count(),
     'distccLocalslots': cpu_count,
-    'distccLocalslotsCpp': lambda: 2 * cpu_count(),
-    'useDistcc': lambda: cpu_count() < 24,
+    'distccLocalslotsCpp': lambda _: 2 * cpu_count(),
+    'useDistcc': lambda _: cpu_count() < 24,
+    'ccacheHostsKey': ccache_hosts_key,
 }
 
 
@@ -145,7 +155,7 @@ def read_config(original=False,
     for key in config:
         if config[key] is None and key in AUTOMATIC_DEFAULTS:
             dirty = True
-            config[key] = overrides[key] = AUTOMATIC_DEFAULTS[key]()
+            config[key] = overrides[key] = AUTOMATIC_DEFAULTS[key](config)
 
     # Write automatic defaults to user config
     if dirty and config_out:
@@ -230,8 +240,12 @@ if __name__ == '__main__':
 
     config, defaults, overrides = read_config(True, config_out=CONFIG)
     if args.sh:
-        for key in args.sh:
-            value = query(config, key.split('.'))
+        for key_expr in args.sh:
+            if "=" not in key_expr:
+                key, value = key_expr, query(config, key_expr.split("."))
+            else:
+                key, expr = key_expr.split("=", 1)
+                value = eval(expr, config)
             print("{}={}".format(key, format_value(value, shell=True)))
     elif not args.key:
         # print entire config
