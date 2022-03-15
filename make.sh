@@ -66,6 +66,11 @@ setup_ccache() {
   # FIXME: system headers are cannot be ignored at present because upstream
   #        projects are included as -isystem .
   #        See https://gitlab.cern.ch/lhcb/LHCb/-/issues/191
+  export CCACHE_COMPILERCHECK="none"
+  # Do not check the compiler as its name is always in the cache key
+  # and it is already unique (e.g. "g++-11.1.0-e80bf-2.36.1-a9696"), see toolchain.cmake
+  # FIXME: We can remove this once the lcg-toolchains wrapper is fixed
+  #        to not depend on PATH and have the wrapper content stable.
 
   # Increase hit rate by
   # - rewriting absolute paths that start with $PWD into relative ones
