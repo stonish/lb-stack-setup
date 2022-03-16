@@ -82,6 +82,7 @@ make-legacy:
   variables:
     GIT_STRATEGY: none
     PLATFORM: x86_64-centos7-gcc62-opt
+    LEGACY: 1
   script:
     - export GAUDI_OLD_STYLE_PROJECT=YES  # FIXME: this shouldn't be needed
     - cd stack

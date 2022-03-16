@@ -1,3 +1,4 @@
 #!/bin/bash
 self=$(target=$0 perl -le 'print readlink $ENV{target}')
-exec $(dirname $self)/run-env $(dirname $0) "$@"
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+exec $(dirname $self)/run-env $(basename "$DIR") "$@"
