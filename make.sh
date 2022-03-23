@@ -18,7 +18,8 @@ PROJECT="$1"
 shift
 
 # steering options
-eval $(config --sh outputPath contribPath ccachePath useCcache useDistcc cmakePrefixPath)
+eval $(config --sh outputPath contribPath ccachePath useCcache useDistcc cmakePrefixPath \
+                   'ccacheHosts=ccacheHosts or ccacheHostsPresets.get(ccacheHostsKey, "")')
 OUTPUT=$outputPath
 CONTRIB=$contribPath
 USE_CCACHE=$useCcache
@@ -64,6 +65,12 @@ setup_ccache() {
   export CCACHE_SLOPPINESS="locale"
   # FIXME: system headers are cannot be ignored at present because upstream
   #        projects are included as -isystem .
+  #        See https://gitlab.cern.ch/lhcb/LHCb/-/issues/191
+  export CCACHE_COMPILERCHECK="none"
+  # Do not check the compiler as its name is always in the cache key
+  # and it is already unique (e.g. "g++-11.1.0-e80bf-2.36.1-a9696"), see toolchain.cmake
+  # FIXME: We can remove this once the lcg-toolchains wrapper is fixed
+  #        to not depend on PATH and have the wrapper content stable.
 
   # Increase hit rate by
   # - rewriting absolute paths that start with $PWD into relative ones
@@ -75,6 +82,9 @@ setup_ccache() {
   export CCACHE_NOHASHDIR=1
   # see https://ccache.dev/manual/latest.html#_compiling_in_different_directories
   # TODO use the -fdebug-prefix-map=old=new
+
+  # Secondary cache
+  export CCACHE_SECONDARY_STORAGE="$ccacheHosts"
 
   # Use generated depenencies instead of the preprocessor, much faster!
   export CCACHE_DEPEND=1
@@ -237,7 +247,6 @@ compile_commands_dst="$OUTPUT/$PROJECT/compile_commands.json"
 runtime_env_src="$PROJECT/build.$BINARY_TAG/python.env"
 runtime_env_dst="$OUTPUT/$PROJECT/runtime.env"
 runtime_env_dst2="$PROJECT/.env"  # needed for Python debugging config
-grep -Fxq ".env" $PROJECT/.git/info/exclude || ( mkdir -p $PROJECT/.git/info ; echo ".env" >> $PROJECT/.git/info/exclude )
 
 # Check build-env to see why we set CMAKE_PREFIX_PATH here.
 # LBENV_CURRENT_WORKSPACE is only considered if it's in CMAKE_PREFIX_PATH
@@ -246,7 +255,11 @@ grep -Fxq ".env" $PROJECT/.git/info/exclude || ( mkdir -p $PROJECT/.git/info ; e
 # override things like lcg-toolchains.
 export CMAKE_PREFIX_PATH="$LBENV_CURRENT_WORKSPACE:$cmakePrefixPath"
 printenv | sort > "$OUTPUT/project.mk.env"
-make -f "$DIR/project.mk" -C "$PROJECT" "$@"
+if [ "$PROJECT" = monohack ]; then  # FIXME this is a hack for the cmake wrapper!
+  "$@"
+else
+  make -f "$DIR/project.mk" -C "$PROJECT" "$@"
+fi
 # cd "$PROJECT/build.$BINARY_TAG" && ninja $BUILDFLAGS "$@" && cd -
 # TODO catch CTRL-C during make here and do the clean up, see
 #      https://unix.stackexchange.com/questions/163561/control-which-process-gets-cancelled-by-ctrlc

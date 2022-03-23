@@ -90,13 +90,18 @@ def get_toolchain(config):
         'cxx': '',
         'cxx-type': '',
     }
-    runtime_env_path = os.path.join(config['outputPath'], 'Gaudi/runtime.env')
+    project = 'mono' if config['monoBuild'] else 'Gaudi'
+    runtime_env_path = os.path.join(config['outputPath'], project,
+                                    'runtime.env')
     path = get_runtime_var(runtime_env_path, 'PATH')
     if not path:
-        log.debug(
-            'Could not get PATH from {}. '
-            'Maybe Gaudi is not yet (fully) built.'.format(runtime_env_path))
-        log.warning('Build at least Gaudi for C++/Python intellisense to work')
+        log.debug(f'Could not get PATH from {runtime_env_path}. ' +
+                  f'Maybe {project} is not yet (fully) built.')
+        if not config['monoBuild']:
+            msg = 'Build at least Gaudi for C++/Python intellisense to work'
+        else:
+            msg = 'Run `make configure` for C++/Python intellisense to work'
+        log.warning(msg)
     else:
         python_cmd = shutil.which('python', path=path)
         if python_cmd:
@@ -151,6 +156,26 @@ def write_workspace_settings(repos,
 
     settings['settings'].update(config['vscodeWorkspaceSettings'])
 
+    if config["monoBuild"]:
+        # FIXME this can be removed once we go away from a multi-project
+        # workspace to a simple project for mono builds
+
+        # fixup the debugging configurations
+        for launch_config in settings["launch"]["configurations"]:
+            if "envFile" in launch_config:
+                launch_config["envFile"] = os.path.join(
+                    config["projectPath"], "mono", ".env")
+            if "miDebuggerPath" in launch_config:
+                launch_config["miDebuggerPath"] = os.path.join(
+                    config["projectPath"], "mono", "gdb")
+
+        # global settings
+        settings['settings']["C_Cpp.default.compileCommands"] = os.path.join(
+            config["outputPath"], "mono", "compile_commands.json")
+        settings['settings']["C_Cpp.default.compilerPath"] = toolchain['cxx']
+        settings["settings"]["python.envFile"] = os.path.join(
+            config["outputPath"], "mono", "runtime.env")
+
     output = "// DO NOT EDIT: this file is auto-generated from {}\n{}".format(
         template_path, json.dumps(settings, indent=4, sort_keys=True))
     old_config = write_file_if_different(output_path, output)
@@ -177,18 +202,13 @@ def write_project_settings(repos, project_deps, config, toolchain):
     install_area_veto = '/InstallArea/'
     python_paths = {}
     for project, repo_path in project_repos.items():
-        os.makedirs(os.path.join(repo_path, '.vscode'), exist_ok=True)
-
-        runtime_env_path = os.path.join(config['outputPath'],
-                                        '{}/runtime.env'.format(project))
-
-        paths = get_runtime_var(runtime_env_path, 'PYTHONPATH')
+        env_path = os.path.join(config['outputPath'], project, 'runtime.env')
+        paths = get_runtime_var(env_path, 'PYTHONPATH')
         if paths:
             paths = paths.split(':')
         else:
-            log.debug('Could not get PYTHONPATH from {}. '
-                      'Maybe {} is not yet built.'.format(
-                          runtime_env_path, repo_path))
+            log.debug('Could not get PYTHONPATH from {env_path}. ' +
+                      f'Maybe {project} is not yet built.')
             continue
 
         # filter out generated python (i.e. genConf) from both build and
@@ -212,14 +232,12 @@ def write_project_settings(repos, project_deps, config, toolchain):
         with open(os.path.join(repo_path, ".clangd"), 'w') as f:
             f.write("# DO NOT EDIT (auto generated file)\n"
                     "CompileFlags:\n"
-                    f"\tCompilationDatabase: ./../.output/{project}")
+                    f"\tCompilationDatabase: {config['outputPath']}/{project}")
+        add_file_to_git_exclude(repo_path, ".clangd")
 
-        add_file_to_git_exclude(project, ".clangd")
-
-        env_file = os.path.join(config['outputPath'],
-                                '{}/runtime.env'.format(project))
-        compile_commands = os.path.join(
-            config['outputPath'], '{}/compile_commands.json'.format(project))
+        project_path = os.path.join(config['outputPath'], project)
+        env_file = os.path.join(project_path, 'runtime.env')
+        compile_commands = os.path.join(project_path, 'compile_commands.json')
         deps = topo_sorted(project_deps, [project])
 
         python_extra_paths = sum(
@@ -243,6 +261,7 @@ def write_project_settings(repos, project_deps, config, toolchain):
             # > would like to configure IntelliSense for the 'Xyz' folder.
             # where no meaningful choice can exist...
 
+        os.makedirs(os.path.join(repo_path, '.vscode'), exist_ok=True)
         update_json(
             os.path.join(repo_path, '.vscode', 'settings.json'),
             dict_update({
@@ -277,6 +296,9 @@ def write_vscode_settings(repos, dp_repos, project_deps, config):
     toolchain = get_toolchain(config)
 
     write_workspace_settings(repos + dp_repos, config, toolchain)
-    write_project_settings(repos, project_deps, config, toolchain)
+    if not config["monoBuild"]:
+        write_project_settings(repos, project_deps, config, toolchain)
+    else:
+        write_project_settings(["mono"], {"mono": []}, config, toolchain)
     create_clang_format(config)
     create_python_tool_wrappers(config)

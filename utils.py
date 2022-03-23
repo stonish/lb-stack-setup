@@ -1,6 +1,7 @@
 import logging
 import os
 import textwrap
+import time
 from collections import namedtuple
 from subprocess import Popen, PIPE, CalledProcessError
 try:
@@ -68,6 +69,7 @@ def run_nb(args,
            capture_stderr=True,
            check=True,
            stdin=DEVNULL,
+           log=True,
            **kwargs):
     """Non-blocking run() that returns a blocking function."""
     p = Popen(
@@ -79,15 +81,20 @@ def run_nb(args,
         **kwargs)
 
     def result():
-        _log.debug('command: ' +
-                   (repr(args) if shell else ' '.join(map(repr, args))))
+        cmd_msg = (repr(args) if shell else ' '.join(map(repr, args)))
+        cwd = kwargs.get("cwd")
+        in_dir_msg = "" if cwd is None else f" (in {cwd})"
+        if log:
+            _log.debug(f"Running command{in_dir_msg}: {cmd_msg}")
         stdout, stderr = [
             b if b is None else b.decode('utf-8') for b in p.communicate()
         ]
         level = logging.ERROR if check and p.returncode else logging.DEBUG
-        _log.log(level, 'retcode: ' + str(p.returncode))
-        _log.log(level, 'stderr: {}'.format(stderr))
-        _log.log(level, 'stdout: {}'.format(stdout))
+        if log or level == logging.ERROR:
+            _log.log(level, (f"Result of command{in_dir_msg}: {cmd_msg}\n" +
+                             f'\tretcode: {p.returncode}\n' + '\tstderr: ' +
+                             stderr.rstrip("\n") + "\n" + '\tstdout: ' +
+                             stdout.rstrip("\n")))
         if check and p.returncode != 0:
             raise CalledProcessError(p.returncode, args)
         return namedtuple('CompletedProcess',
@@ -163,3 +170,20 @@ def add_file_to_git_exclude(root_dir, filename):
             f.seek(0)
             if filename not in f.read().splitlines():
                 f.write(filename + '\n')
+
+
+def _mtime_or_zero(path):
+    """Return file mtime or zero if file is not found or is empty."""
+    try:
+        result = os.stat(path)
+        return result.st_mtime if result.st_size > 0 else 0
+    except FileNotFoundError:
+        return 0
+
+
+def is_file_older_than_ref(path, reference):
+    return _mtime_or_zero(path) < _mtime_or_zero(reference)
+
+
+def is_file_too_old(path, age):
+    return time.time() - _mtime_or_zero(path) > age

@@ -63,11 +63,6 @@ make Moore
 For example, building from Gaudi up until Moore takes 40 min on a mobile i5 CPU
 with 2 physical cores.
 
-> __Note:__ the first time you `make`, a recent (or patched) version of
-> distcc (plus a bunch of scripts) will be installed.
-> This should take less than 5 minutes. If needed redo this step with
-`rm -rf contrib; make contrib`
-
 ## Run
 
 Run jobs in the right environment with
@@ -133,6 +128,35 @@ The `Makefile` provided features the following targets.
   - `fast/<Project>[/<target>]`: same as the target `<Project>[/<target>]`
     but do not try to build the dependencies,
   - `fast/<Project>/checkout`: just checkout `<Project>` without its dependecies.
+
+## Monolithic builds (experimental)
+
+Thanks to the modern CMake configuration, we can build all projects into
+one monolithic build. Some pros of this way of build are:
+
+- Save space and time by not copying files to InstallArea.
+- Can set breakpoints in the sources in upstream projects (not in InstallArea).
+- Jumping to definition (intellisense) leads to the sources.
+- The overall configure time is shorter (but re-configuring always goes through all projects).
+
+Enable the monolithic build by setting
+
+```sh
+utils/config.py monoBuild true
+```
+
+The `defaultProjects` setting is more important, it must contain the superset of
+projects you work with (it defines which projects are configured).
+
+The make targets are slightly different (no `fast/Project`, no `Project/purge`).
+See `make help` for a complete list. _TODO_ describe targets in detail.
+A typical workflow would be:
+
+```sh
+make Moore
+make Moore/test ARGS='-N'
+mono/run gaudirun.py ...
+```
 
 ## Integrations
 

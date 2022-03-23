@@ -6,18 +6,26 @@ import itertools
 import os
 import pathlib
 import re
-import time
 from subprocess import CalledProcessError
 import traceback
 import shutil
 import sys
 from concurrent.futures.thread import ThreadPoolExecutor
 from config import read_config, DIR, GITLAB_READONLY_URL, GITLAB_BASE_URLS
-from utils import setup_logging, run, run_nb, topo_sorted, add_file_to_git_exclude
+from utils import (
+    setup_logging,
+    run,
+    run_nb,
+    topo_sorted,
+    add_file_to_git_exclude,
+    write_file_if_different,
+    is_file_too_old,
+    is_file_older_than_ref,
+)
 from vscode import write_vscode_settings
 
 DATA_PACKAGE_DIRS = ["DBASE", "PARAM"]
-SPECIAL_TARGETS = ["update"]
+SPECIAL_TARGETS = ["update", "report"]
 MAKE_TARGET_RE = re.compile(
     r'^(?P<fast>fast/)?(?P<project>[A-Z]\w+)(/(?P<target>.*))?$')
 
@@ -47,10 +55,13 @@ class NotCMakeProjectError(RuntimeError):
 
 def symlink(src, dst):
     """Create a symlink only if not already existing and equivalent."""
-    if os.path.realpath(dst) == src:
+    src_check = (src if src.startswith('/') else os.path.join(
+        os.path.dirname(dst), src))
+    if os.path.realpath(dst) == os.path.realpath(src_check):
         return
     if os.path.isfile(dst) or os.path.islink(dst):
         os.remove(dst)
+    log.debug(f"Creating symlink {dst} -> {src}")
     os.symlink(src, dst)
 
 
@@ -162,12 +173,6 @@ def clone_cmake_project(project):
                                'non-canonical name {}'.format(
                                    canonical_name, project))
 
-    # Create runtime wrappers and hide them from git
-    for wrapper in ["run", "gdb"]:
-        target = os.path.join(project, wrapper)
-        symlink(os.path.join(DIR, f'project-{wrapper}.sh'), target)
-        add_file_to_git_exclude(project, wrapper)
-
     return project
 
 
@@ -226,52 +231,30 @@ def list_repos(dirs=['']):
     return all_paths
 
 
-def _mtime_or_zero(path):
-    try:
-        result = os.stat(path)
-        return result.st_mtime if result.st_size > 0 else 0
-    except FileNotFoundError:
-        return 0
-
-
-def check_staleness(repos):
+def check_staleness(repos, show=1):
     FETCH_TTL = 3600  # seconds
-    # TODO here we assume that having FETCH_HEAD also fetched our branch
-    # from our remote. See todo below for FETCH_HEAD.
+    # Here we assume that having FETCH_HEAD also fetched our branch
+    # from our remote.
     to_fetch = [
-        p for p in repos if time.time() -
-        _mtime_or_zero(os.path.join(p, '.git', 'FETCH_HEAD')) > FETCH_TTL
+        p for p in repos
+        if is_file_too_old(os.path.join(p, '.git', 'FETCH_HEAD'), FETCH_TTL)
     ]
 
     def fetch_repo(path):
-        url, branch = git_url_branch(path)
-        result = run(['git', 'remote', 'get-url', 'origin'],
-                     cwd=path,
-                     check=False)
-        origin_url = result.stdout.strip()
-        if result.returncode == 0 and (url is None or origin_url == url):
-            # fetch origin if its URL matches the config's URL
-            fetch_args = ['origin']
-            # TODO add +refs/merge-requests/*/head:refs/remotes/origin/mr/* ?
-        else:
-            # otherwise, fetch the URL directly:
-            # url, branch = git_url_branch(path, try_read_only=True)
-            # fetch_args = [url, branch]
-            log.warning(f"Failed to fetch {path} "
-                        f"as origin ({origin_url}) is not {url}")
-            return
-            # TODO in this case we might be tempted to use FETCH_HEAD as
-            # the reference below. However, this is a problem if a fetch
-            # was made from somewhere else (e.g. manually or by VSCode).
-            # We need to find a way to store our ref somewhere.
-        result = run(['git', 'fetch'] + fetch_args, cwd=path, check=False)
+        url, branch = git_url_branch(path, try_read_only=True)
+        url = url or "origin"  # for utils
+        fetch_args = [url, f"{branch}:refs/remotes/origin/{branch}"]
+        # TODO add +refs/merge-requests/*/head:refs/remotes/origin/mr/* ?
+        result = run(
+            ['git', 'fetch'] + fetch_args, cwd=path, check=False, log=True)
         if result.returncode != 0:
             log.warning(f"Failed to fetch {path}")
 
     if to_fetch:
         log.info("Fetching {}".format(', '.join(to_fetch)))
         with ThreadPoolExecutor(max_workers=64) as executor:
-            executor.map(fetch_repo, repos)
+            # list() to propagate exceptions
+            list(executor.map(fetch_repo, to_fetch))
 
     def compare_head(path):
         target = 'origin/' + git_url_branch(path)[1]
@@ -279,34 +262,75 @@ def check_staleness(repos):
             res = run(
                 ['git', 'rev-list', '--count', '--left-right', f'{target}...'],
                 cwd=path,
-                check=False)
+                check=False,
+                log=False)
             n_behind, n_ahead = map(int, res.stdout.split())
-            if n_behind:
-                ref_names = run(['git', 'log', '-n1', '--pretty=%D'],
-                                cwd=path).stdout.strip()
-                if not n_ahead:
-                    log.warning('{} ({}) is {} commits behind {}'.format(
-                        path, ref_names, n_behind, target))
-                else:
-                    log.warning(
-                        '{} ({}) is {} commits behind ({} ahead) {}'.format(
-                            path, ref_names, n_behind, n_ahead, target))
-            elif n_ahead:
-                log.info('{} is {} commits ahead {}'.format(
-                    path, n_ahead, target))
+
+            target_refs = run(
+                [
+                    'git', 'log', '-n1', '--pretty=%C(auto)%h',
+                    '--color=always', '--abbrev=10', target
+                ],
+                cwd=path,
+                log=False,
+            ).stdout.strip()
+
+            # using %d instead of %D and  -c log.excludeDecoration=...
+            # for backward compatibility with git 1.8
+            local_refs = run(
+                [
+                    'git', '-c', 'log.excludeDecoration=*/HEAD', 'log', '-n1',
+                    '--pretty=%C(auto)%h,%d', '--color=always', '--abbrev=10'
+                ],
+                cwd=path,
+                log=False,
+            ).stdout.strip()
+            local_refs = re.sub(r"HEAD -> |\(|\)", "", local_refs)
+
+            status = None
+            if show >= 2:
+                res = run(
+                    ['git', '-c', 'color.status=always', 'status', '--short'],
+                    cwd=path,
+                    check=False,
+                    log=False)
+                status = res.stdout.rstrip()
+
+            return (path, n_behind, n_ahead, local_refs, target, target_refs,
+                    status)
+
         except (CalledProcessError, ValueError):
             log.warning('Failed to get status of ' + path)
 
     with ThreadPoolExecutor(max_workers=64) as executor:
-        executor.map(compare_head, repos)
+        res = [r for r in executor.map(compare_head, repos) if r is not None]
+
+    res = sorted(res, key=lambda x: repos.index(x[0]))
+    res = [r for r in res if r[1] or (r[2] and show >= 1) or show >= 2]
+    width = max(len(r[0]) for r in res) if res else 0
+    for (path, n_behind, n_ahead, local_refs, target, target_refs,
+         status) in res:
+        import textwrap
+        status = "\n" + textwrap.indent(status, " " *
+                                        (width + 5)) if status else ""
+        if n_behind:
+            msg_n_ahead = "" if not n_ahead else f" ({n_ahead} ahead)"
+            log.warning(
+                f"{path:{width}} ({local_refs}) is \x1b[1m{n_behind} commits "
+                f"behind\x1b[22m{msg_n_ahead} {target} ({target_refs}){status}"
+            )
+        elif n_ahead:
+            log.info(f"{path:{width}} ({local_refs}) is {n_ahead} commits "
+                     f"ahead {target} ({target_refs}){status}")
+        else:
+            log.info(f"{path:{width}} is at {target} ({target_refs}){status}")
 
 
 def update_repos():
     log.info("Updating projects and data packages...")
     root_repos = list_repos()
     dp_repos = list_repos(DATA_PACKAGE_DIRS)
-    # find the LHCb projects
-    projects = list(find_all_deps(root_repos, {}).keys())
+    projects = topo_sorted(find_all_deps(root_repos, {}))
     repos = projects + dp_repos
 
     # Skip repos where the tracking branch does not match the config
@@ -326,21 +350,23 @@ def update_repos():
                 not_tracking.append(repo)  # tracking a non-default branch
         else:
             not_tracking.append(repo)
-    repos = [r for r in repos if r not in not_tracking]
+    tracking = [r for r in repos if r not in not_tracking]
 
     ps = []
-    for repo in repos:
+    for repo in tracking:
         url, branch = git_url_branch(repo, try_read_only=True)
         ps.append(
-            run_nb([
-                'git', '-c', 'color.ui=always', 'pull', '--ff-only', url,
-                branch
-            ],
-                   cwd=repo,
-                   check=False))
+            run_nb(
+                [
+                    'git', '-c', 'color.ui=always', 'pull', '--ff-only', url,
+                    f"{branch}:refs/remotes/origin/{branch}"
+                ],
+                cwd=repo,
+                check=False,
+            ))
     up_to_date = []
     update_failed = []
-    for repo, get_result in zip(repos, ps):
+    for repo, get_result in zip(tracking, ps):
         res = get_result()
         if res.returncode == 0:
             if 'Already up to date.' in res.stdout:
@@ -354,8 +380,22 @@ def update_repos():
     if not_tracking:
         log.warning("Skipped repos not tracking the default branch: "
                     f"{', '.join(not_tracking)}.")
+    check_staleness(not_tracking + update_failed, show=0)
     if update_failed:
         log.warning(f"Update failed for: {', '.join(update_failed)}.")
+
+
+def report_repos():
+    for env_file in ["make.sh.env", "project.mk.env"]:
+        env_path = os.path.join(config['outputPath'], env_file)
+        with open(env_path) as f:
+            log.info(f"Environment from {env_path}\n{f.read().strip()}")
+
+    root_repos = list_repos()
+    dp_repos = list_repos(DATA_PACKAGE_DIRS)
+    projects = topo_sorted(find_all_deps(root_repos, {}))
+    repos = projects + dp_repos + ["utils"]
+    check_staleness(repos, show=2)
 
 
 def checkout(projects, data_packages):
@@ -386,7 +426,7 @@ def checkout(projects, data_packages):
         os.makedirs(container, exist_ok=True)
         dp_repos.append(clone_package(name, container))
 
-    check_staleness(list(project_deps.keys()) + dp_repos + ['utils'])
+    check_staleness(topo_sorted(project_deps) + dp_repos + ['utils'])
 
     return project_deps
 
@@ -409,13 +449,41 @@ def inv_dependencies(project_deps):
     }
 
 
+def install_contrib(config):
+    # Install symlinks to external software such that CMake doesn't cache them
+    LBENV_BINARIES = ['cmake', 'ctest', 'ninja', 'ccache']
+    os.makedirs(os.path.join(config['contribPath'], 'bin'), exist_ok=True)
+    for fn in LBENV_BINARIES:
+        symlink(
+            os.path.join(config['lbenvPath'], 'bin', fn),
+            os.path.join(config['contribPath'], 'bin', fn))
+
+    if config['useDistcc']:
+        target = os.path.join(config['contribPath'], 'bin', "distcc")
+        script = os.path.join(DIR, "install-distcc.sh")
+        if is_file_older_than_ref(target, script):
+            log.info("Installing distcc...")
+            run([os.path.join(DIR, "build-env"), "bash", script])
+
+
+def error(config_path, *args):
+    log.error(*args)
+    with open(config_path, "w") as f:
+        f.write('$(error an error occurred)\n')
+    print(config_path)
+    exit()
+
+
 def main(targets):
     global config, log
     config = read_config()
     log = setup_logging(config['outputPath'])
+    output_path = config['outputPath']
+    config_path = os.path.join(output_path, "configuration.mk")
+    is_mono_build = config['monoBuild']
 
     # save the host environment where we're executed
-    output_path = config['outputPath']
+
     os.makedirs(output_path, exist_ok=True)
     with open(os.path.join(output_path, 'host.env'), 'w') as f:
         for name, value in sorted(os.environ.items()):
@@ -428,11 +496,19 @@ def main(targets):
     # Handle special targets
     if special_targets:
         if len(special_targets) > 1:
-            exit(f"expected at most one special target, got {special_targets}")
+            error(
+                config_path,
+                f"expected at most one special target, got {special_targets}")
         if targets:
-            exit(f"expected only special targets, also got {targets}")
-        if 'update' in special_targets:
+            error(config_path,
+                  f"expected only special targets, also got {targets}")
+        target, = special_targets
+        if target == "update":
             update_repos()
+        elif target == "report":
+            report_repos()
+        else:
+            raise NotImplementedError(f"unknown special target {target}")
         return
 
     # collect top level projects to be cloned
@@ -451,13 +527,19 @@ def main(targets):
     else:
         build_target_deps = []
 
-    # Install symlinks to external software such that CMake doesn't cache them
-    LBENV_BINARIES = ['cmake', 'ctest', 'ninja', 'ccache']
-    os.makedirs(os.path.join(config['contribPath'], 'bin'), exist_ok=True)
-    for fn in LBENV_BINARIES:
+    install_contrib(config)
+
+    if is_mono_build:
+        # mono build links
+        os.makedirs("mono", exist_ok=True)
         symlink(
-            os.path.join(config['lbenvPath'], 'bin', fn),
-            os.path.join(config['contribPath'], 'bin', fn))
+            os.path.join(DIR, 'CMakeLists.txt'),
+            os.path.join("mono", "CMakeLists.txt"))
+        for wrapper in ["run", "gdb"]:
+            target = os.path.join("mono", wrapper)
+            symlink(os.path.join(DIR, f'project-{wrapper}.sh'), target)
+        write_file_if_different(
+            os.path.join("mono", ".ignore"), "# ripgrep ignore\n*\n")
 
     try:
         # Clone projects without following their dependencies and without
@@ -467,7 +549,27 @@ def main(targets):
 
         # Clone data packages and projects to build with dependencies.
         data_packages = config['dataPackages']
-        project_deps = checkout(projects, data_packages)
+        if not is_mono_build:
+            project_deps = checkout(projects, data_packages)
+        else:
+            project_deps = checkout(config['defaultProjects'], data_packages)
+            other_projects = list(set(projects) - set(project_deps))
+            if other_projects:
+                error(
+                    config_path,
+                    "When monoBuild is true, you must add all necessary " +
+                    f"projects to defaultProjects. Missing: {other_projects}")
+
+        projects_sorted = topo_sorted(project_deps)
+
+        for project in projects:
+            # Create runtime wrappers and hide them from git
+            for wrapper in ["run", "gdb"]:
+                target = os.path.join(project, wrapper)
+                symlink(os.path.join(DIR, f'project-{wrapper}.sh'), target)
+                add_file_to_git_exclude(project, wrapper)
+            # Also hide .env files
+            add_file_to_git_exclude(project, ".env")
 
         # After we cloned the minimum necessary, check for other repos
         repos = list_repos()
@@ -482,8 +584,10 @@ def main(targets):
         repos.sort(key=lambda x: project_order.index(x))
 
         makefile_config = [
+            "MONO_BUILD := " + str(int(is_mono_build)),
             "BINARY_TAG := {}".format(config["binaryTag"]),
-            "PROJECTS := " + " ".join(sorted(project_deps)),
+            "PROJECTS := " + " ".join(projects_sorted),
+            "ALL_PROJECTS := " + " ".join(sorted(project_deps)),
         ]
         for p, deps in sorted(project_deps.items()):
             makefile_config += [
@@ -494,7 +598,6 @@ def main(targets):
                 "{}_INV_DEPS := {}".format(p, ' '.join(deps)),
             ]
         makefile_config += [
-            "CONTRIB_PATH := " + config["contribPath"],
             "REPOS := " + " ".join(repos + dp_repos),
             "build: " + " ".join(build_target_deps),
         ]
@@ -511,7 +614,6 @@ def main(targets):
                 '$(warning Error occurred in updating VSCode settings)'
             ]
 
-    config_path = os.path.join(output_path, "configuration.mk")
     with open(config_path, "w") as f:
         f.write('\n'.join(makefile_config) + '\n')
     # Print path so that the generated file can be included in one go

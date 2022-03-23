@@ -12,4 +12,4 @@ lbenvPath=$1
 eval $(python -m LbEnv --sh --quiet --siteroot /cvmfs/lhcb.cern.ch/lib)
 
 # print the entire environment
-env -0 | sort -z | xargs -0 bash -c 'printf "%q\n" "$@"' _arg0
+env -0 | sort -z | xargs -0 bash -c 'printf "%q\n" "$@"' _arg0 | grep -v '^PWD='

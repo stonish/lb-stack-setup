@@ -1,0 +1,47 @@
+{
+    "version": 3,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 21,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "default",
+            "hidden": true,
+            "displayName": "$env{BINARY_TAG}",
+            "description": "Build for $env{BINARY_TAG} platform",
+            "generator": "Ninja",
+            "toolchainFile": "${sourceDir}/utils/toolchain.cmake",
+            "binaryDir": "${sourceDir}/mono/build.$env{BINARY_TAG}",
+            "cacheVariables": {
+            }
+        },
+        {
+            "name": "x86_64_v3-centos7-gcc11-opt+g",
+            "inherits": "default",
+            "environment": {
+                "BINARY_TAG": "x86_64_v3-centos7-gcc11-opt+g"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "default",
+            "configurePreset": "default"
+        }
+    ],
+    "testPresets": [
+        {
+            "name": "default",
+            "configurePreset": "default",
+            "output": {
+                "outputOnFailure": true
+            },
+            "execution": {
+                "noTestsAction": "error",
+                "stopOnFailure": true
+            }
+        }
+    ]
+}

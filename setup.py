@@ -13,7 +13,10 @@ from os.path import join, realpath  # noqa: E402
 from subprocess import (  # noqa: E402
     check_call, check_output, CalledProcessError)
 from datetime import datetime  # noqa: E402
-from distutils.version import LooseVersion  # noqa: E402
+try:
+    from packaging.version import parse as parse_version  # noqa: E402
+except ImportError:
+    from distutils.version import LooseVersion as parse_version  # noqa: E402
 
 _DEBUG = False
 FROM_FILE = os.path.isfile(__file__)
@@ -88,8 +91,8 @@ def assert_os_or_docker():
 def assert_git_version():
     """Check git version and suggest alias if too old."""
     git_ver_str = check_output(['git', '--version']).decode('ascii').strip()
-    git_ver = LooseVersion(git_ver_str.split()[2])
-    if git_ver < LooseVersion('1.8'):
+    git_ver = parse_version(git_ver_str.split()[2])
+    if git_ver < parse_version('1.8'):
         sys.exit(
             'Old unsupported git version {} detected. See doc/prerequisites.md'
             .format(git_ver))

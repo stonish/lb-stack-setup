@@ -12,11 +12,15 @@ USE_DISTCC="$useDistcc"
 setup_output
 
 CHECK_KERBEROS=false
+REQUIRE_KERBEROS=false
 if [ "$1" = "--check-kerberos" ]; then
     shift
     CHECK_KERBEROS=true
-elif [ "$USE_DISTCC" = true ]; then
-    CHECK_KERBEROS=true
+    REQUIRE_KERBEROS=false
+elif [ "$1" = "--require-kerberos-distcc" ]; then
+    shift
+    CHECK_KERBEROS=$USE_DISTCC
+    REQUIRE_KERBEROS=true
 fi
 
 # Expand any variables in the command to run (e.g. $BINARY_TAG from run-env)
@@ -44,7 +48,7 @@ fi
 if [ "$CHECK_KERBEROS" = true ]; then
     # Strictly require kerberos only if using distcc
     LEVEL=WARNING
-    if [ "$USE_DISTCC" = true ]; then
+    if [ "$REQUIRE_KERBEROS" = true ]; then
         LEVEL=ERROR
         may_exit="exit 1"
     fi
@@ -117,9 +121,11 @@ else
         "HOSTNAME=${HOSTNAME}"
         "HOME=${HOME}"
         "USER=${USER}"
-        "TERM=${TERM}"
     )
-    vars+=( "BINARY_TAG=${BINARY_TAG}" )
+    vars+=(
+        "TERM=${TERM}"
+        "BINARY_TAG=${BINARY_TAG}"
+    )
     test -z ${KRB5CCNAME} || vars+=("KRB5CCNAME=${KRB5CCNAME}")
     test -z ${TMPDIR} || vars+=("TMPDIR=${TMPDIR}")
     test -z ${XDG_RUNTIME_DIR} || vars+=("XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR}")

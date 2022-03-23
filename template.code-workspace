@@ -49,16 +49,16 @@
         // and are constantly being recreated for a sensible limit of 5 GB.
         "C_Cpp.intelliSenseCacheSize": 0,
         "C_Cpp.workspaceParsingPriority": "low",
-        "cSpell.customWorkspaceDictionaries": [
-            "lhcb"
-        ],
-        "cSpell.diagnosticLevel": "Hint",
-        "cSpell.dictionaryDefinitions": [
-            {
-                "name": "lhcb",
-                "path": "$utilsPath/dictionary.txt"
+        "cmake.cmakePath": "${workspaceFolder:utils}/cmake",
+        "cSpell.customDictionaries": {
+            "lhcb": {
+              "name": "lhcb",
+              "path": "${workspaceFolder:utils}/dictionary.txt",
+              "description": "LHCb-specific dictionary",
+              "addWords": true
             }
-        ],
+        },
+        "cSpell.diagnosticLevel": "Hint",
         "cSpell.enabledLanguageIds": [
             "c",
             "cpp",
@@ -109,14 +109,13 @@
         "python.linting.flake8Enabled": true,
         "python.linting.flake8Path": "$outputPath/flake8",
         "python.linting.pylintEnabled": false,
-        "python.pythonPath": "$pythonPath",
+        "python.defaultInterpreterPath": "$pythonPath",
         "remote.downloadExtensionsLocally": true,
-        "restructuredtext.confPath": " ${workspaceFolder}/doc/conf.py",
+        "restructuredtext.confPath": "${workspaceFolder}/doc/conf.py",
         "restructuredtext.languageServer.disabled": true,
+        "restructuredtext.linter.disabled": true,
         "restructuredtext.linter.run": "off",
         "restructuredtext.sphinxBuildPath": "$lbenvPath/bin/sphinx-build",
-        "telemetry.enableCrashReporter": false,
-        "telemetry.enableTelemetry": false,
         "window.title": "${dirty}${activeEditorShort}${separator}${rootPath}"
     },
     "launch": {
@@ -136,7 +135,7 @@
                 // what happens when running qmt tests.
                 "cwd": "$projectPath",
                 // ${workspaceFolderBasename} does not work in "launch" and there
-                // is no ${fileWorkspaceFolderBasename}, so work around that:
+                // is no ${fileWorkspaceFolderBasename}, so work around that.
                 "envFile": "${fileWorkspaceFolder}/.env",
                 // TODO make envFile depend on $binaryTag, in which case we need to
                 // re-generate the .code-workspace every time the config has changed?
