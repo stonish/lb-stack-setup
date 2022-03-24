@@ -521,7 +521,8 @@ def main(targets):
                 fast_checkout_projects.append(m.group('project'))
             else:
                 projects.append(m.group('project'))
-    if 'build' in targets or 'all' in targets or not targets:
+    if ('build' in targets or 'all' in targets
+            or not targets) and not is_mono_build:
         build_target_deps = config['defaultProjects']
         projects += build_target_deps
     else:
