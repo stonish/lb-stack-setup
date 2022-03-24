@@ -76,6 +76,7 @@ AUTOMATIC_DEFAULTS = {
     'distccLocalslotsCpp': lambda _: 2 * cpu_count(),
     'useDistcc': lambda _: cpu_count() < 24,
     'ccacheHostsKey': ccache_hosts_key,
+    'functorJitNJobs': lambda _: 4 if cpu_count() >= 8 else max(1, cpu_count() // 2)
 }
 
 
