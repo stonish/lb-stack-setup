@@ -451,12 +451,18 @@ def inv_dependencies(project_deps):
 
 def install_contrib(config):
     # Install symlinks to external software such that CMake doesn't cache them
-    LBENV_BINARIES = ['cmake', 'ctest', 'ninja', 'ccache']
+    LBENV_BINARIES = {
+        'cmake': 'cmake',
+        'ctest': 'ctest',
+        'ninja': 'ninja',
+        'ninja-build': 'ninja',  # to make sure we don't pick up an old binary
+        'ccache': 'ccache',
+    }
     os.makedirs(os.path.join(config['contribPath'], 'bin'), exist_ok=True)
-    for fn in LBENV_BINARIES:
+    for tgt, src in LBENV_BINARIES.items():
         symlink(
-            os.path.join(config['lbenvPath'], 'bin', fn),
-            os.path.join(config['contribPath'], 'bin', fn))
+            os.path.join(config['lbenvPath'], 'bin', src),
+            os.path.join(config['contribPath'], 'bin', tgt))
 
     if config['useDistcc']:
         target = os.path.join(config['contribPath'], 'bin', "distcc")
