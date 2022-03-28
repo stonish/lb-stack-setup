@@ -3,7 +3,7 @@ set -eo pipefail
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 source "$DIR/helpers.sh"
 logname="build-env"
-eval $(config --sh outputPath binaryTag useDocker useDistcc lbenvPath lcgVersion localPoolDepth projectPath forwardEnv)
+eval $(config --sh outputPath binaryTag useDocker useDistcc lbenvPath lcgVersion localPoolDepth projectPath forwardEnv functorJitNJobs)
 
 OUTPUT="$outputPath"
 BINARY_TAG="$binaryTag"
@@ -84,6 +84,9 @@ vars=(
     "LCG_VERSION=$lcgVersion"
     "LBENV_CURRENT_WORKSPACE=$projectPath"
     "LOCAL_POOL_DEPTH=$localPoolDepth"
+    # options to use more threads in the JIT functor compilation
+    "LOKI_GENERATE_CPPCODE=$functorJitNJobs"
+    "THOR_JIT_N_JOBS=$functorJitNJobs"
 )
 test -z ${MAKEFLAGS+x} || vars+=("MAKEFLAGS=${MAKEFLAGS}")
 # Propagate variables listed explicitly in forwardEnv
