@@ -1,11 +1,11 @@
 {
     "extensions": {
         "recommendations": [
+            "albertopdrf.root-file-viewer",
             "eamodio.gitlens",
             "ms-python.python",
             "ms-python.vscode-pylance",
             "ms-vscode.cpptools",
-            "ms-vsliveshare.vsliveshare",
             "twxs.cmake",
             "lextudio.restructuredtext",
             "trond-snekvik.simple-rst",
