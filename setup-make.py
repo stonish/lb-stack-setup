@@ -569,6 +569,12 @@ def main(targets):
 
         projects_sorted = topo_sorted(project_deps)
 
+        if is_mono_build:
+            # generate a cmake file with the list of projects (to include in CMakeLists.txt)
+            write_file_if_different(
+                os.path.join(output_path, "mono_projects.cmake"),
+                "set(PROJECTS {})\n".format(" ".join(projects_sorted)))
+
         for project in projects:
             # Create runtime wrappers and hide them from git
             for wrapper in ["run", "gdb"]:

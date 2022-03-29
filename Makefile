@@ -34,17 +34,14 @@ else
 # A literal space.
 empty :=
 space := $(empty) $(empty)
-MONO_CMAKEFLAGS := "-DPROJECTS=$(subst $(space),;,$(PROJECTS))"
 
 clean:
 	@$(DIR)/build-env $(DIR)/make.sh mono clean
 purge:
 	$(RM) -r mono/build.$(BINARY_TAG) mono/InstallArea/$(BINARY_TAG)
 	find mono "(" -name "InstallArea" -prune -o -name "*.pyc" ")" -a -type f -exec $(RM) -v \{} \;
-build: MAKEFLAGS += MONO_CMAKEFLAGS=$(MONO_CMAKEFLAGS)
 build:
 	@$(DIR)/build-env --require-kerberos-distcc $(DIR)/make.sh mono all
-configure: MAKEFLAGS += MONO_CMAKEFLAGS=$(MONO_CMAKEFLAGS)
 configure:
 	@$(DIR)/build-env $(DIR)/make.sh mono configure
 test:
@@ -91,7 +88,6 @@ ALL_TARGETS += $(foreach p,$(PROJECTS),$(p) $(p)/ $(p)/test)
 define PROJECT_settings
 $(1)/%:
 	@$(DIR)/build-env --require-kerberos-distcc $(DIR)/make.sh mono $(1)/$$*
-$(1) $(1)/: MAKEFLAGS += MONO_CMAKEFLAGS=$(MONO_CMAKEFLAGS)
 $(1) $(1)/:
 	@$(DIR)/build-env --require-kerberos-distcc $(DIR)/make.sh mono $(1)/all
 $(1)/test: MAKEFLAGS += MONO_ARGS=-L\ '^$(1)$$$$$$$$'

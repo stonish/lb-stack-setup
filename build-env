@@ -84,6 +84,7 @@ vars=(
     "LCG_VERSION=$lcgVersion"
     "LBENV_CURRENT_WORKSPACE=$projectPath"
     "LOCAL_POOL_DEPTH=$localPoolDepth"
+    "OUTPUT_PATH=$outputPath"
     # options to use more threads in the JIT functor compilation
     "THOR_JIT_N_SPLITS=$functorJitNJobs"
     "THOR_JIT_N_JOBS=$functorJitNJobs"
