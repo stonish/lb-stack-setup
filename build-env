@@ -85,7 +85,7 @@ vars=(
     "LBENV_CURRENT_WORKSPACE=$projectPath"
     "LOCAL_POOL_DEPTH=$localPoolDepth"
     # options to use more threads in the JIT functor compilation
-    "LOKI_GENERATE_CPPCODE=$functorJitNJobs"
+    "THOR_JIT_N_SPLITS=$functorJitNJobs"
     "THOR_JIT_N_JOBS=$functorJitNJobs"
 )
 test -z ${MAKEFLAGS+x} || vars+=("MAKEFLAGS=${MAKEFLAGS}")
