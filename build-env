@@ -80,6 +80,7 @@ if [ "$CHECK_KERBEROS" = true ]; then
 fi
 
 vars=(
+    "ENABLE_BACKTRACE=1"
     # TODO move some of these to make.sh as only needed for building and not running?
     "LCG_VERSION=$lcgVersion"
     "LBENV_CURRENT_WORKSPACE=$projectPath"
