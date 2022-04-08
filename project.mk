@@ -141,4 +141,4 @@ $(MAKEFILE_LIST):
 # note that we only fully build the CMAKEFLAGS here in order not to slow down other targets
 $(BUILDDIR)/$(BUILD_CONF_FILE):
 	mkdir -p $(BUILDDIR)
-	cd $(BUILDDIR) && $(CMAKE) $(CMAKEFLAGS) $(MONO_CMAKEFLAGS) $(shell "$(DIR)config.py" cmakeFlags.default --default '') $(shell "$(DIR)config.py" cmakeFlags.$(PROJECT) --default '') $(CURDIR)
+	cd $(BUILDDIR) && $(CMAKE) $(CMAKEFLAGS) $(shell "$(DIR)config.py" cmakeFlags.default --default '') $(shell "$(DIR)config.py" cmakeFlags.$(PROJECT) --default '') $(CURDIR)

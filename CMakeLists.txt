@@ -21,13 +21,18 @@ endmacro()
 
 # TODO wrap lhcb_finalize_configuration and define ${project}_all target to really depend on all targets
 
+include($ENV{OUTPUT_PATH}/mono_projects.cmake)
+list(JOIN PROJECTS " " _projects_msg)
+message(STATUS "Building ${_projects_msg}")
+
 # special cases
 list(PREPEND CMAKE_MODULE_PATH ${root_path}/LHCb/Phys/LoKiCore/cmake)
 list(PREPEND CMAKE_MODULE_PATH ${root_path}/Gaudi/cmake/modules)
 # loop over the projects
+execute_process(COMMAND date +%s OUTPUT_VARIABLE start_time)
 foreach(project IN LISTS PROJECTS)
-    message(STATUS " ========== ${project} ==========")
-    execute_process(COMMAND date +%s OUTPUT_VARIABLE start_time)
+    message(STATUS "========== ${project} ==========")
+    execute_process(COMMAND date +%s OUTPUT_VARIABLE p_start_time)
 
     add_subdirectory(${root_path}/${project} ${project}) # use EXCLUDE_FROM_ALL?
     add_custom_target(${project}_all ALL)
@@ -37,11 +42,14 @@ foreach(project IN LISTS PROJECTS)
         endif()
     endforeach()
 
-    execute_process(COMMAND date +%s OUTPUT_VARIABLE end_time)
-    math(EXPR time_delta "${end_time} - ${start_time}")
-    message(STATUS " ========== ${project} configured in ${time_delta}s ==========")
+    execute_process(COMMAND date +%s OUTPUT_VARIABLE p_end_time)
+    math(EXPR time_delta "${p_end_time} - ${p_start_time}")
+    message(STATUS "========== ${project} configured in ${time_delta}s ==========")
     list(PREPEND CMAKE_MODULE_PATH ${root_path}/${project}/cmake)
 endforeach()
+
+math(EXPR time_delta "${p_end_time} - ${start_time}")
+message(STATUS "========== Everything configured in ${time_delta}s ==========")
 
 # add dependencies between Project_all targets
 get_property(project_deps_p GLOBAL PROPERTY project_deps_p)

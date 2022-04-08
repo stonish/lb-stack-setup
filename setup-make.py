@@ -451,12 +451,18 @@ def inv_dependencies(project_deps):
 
 def install_contrib(config):
     # Install symlinks to external software such that CMake doesn't cache them
-    LBENV_BINARIES = ['cmake', 'ctest', 'ninja', 'ccache']
+    LBENV_BINARIES = {
+        'cmake': 'cmake',
+        'ctest': 'ctest',
+        'ninja': 'ninja',
+        'ninja-build': 'ninja',  # to make sure we don't pick up an old binary
+        'ccache': 'ccache',
+    }
     os.makedirs(os.path.join(config['contribPath'], 'bin'), exist_ok=True)
-    for fn in LBENV_BINARIES:
+    for tgt, src in LBENV_BINARIES.items():
         symlink(
-            os.path.join(config['lbenvPath'], 'bin', fn),
-            os.path.join(config['contribPath'], 'bin', fn))
+            os.path.join(config['lbenvPath'], 'bin', src),
+            os.path.join(config['contribPath'], 'bin', tgt))
 
     if config['useDistcc']:
         target = os.path.join(config['contribPath'], 'bin', "distcc")
@@ -521,7 +527,8 @@ def main(targets):
                 fast_checkout_projects.append(m.group('project'))
             else:
                 projects.append(m.group('project'))
-    if 'build' in targets or 'all' in targets or not targets:
+    if ('build' in targets or 'all' in targets
+            or not targets) and not is_mono_build:
         build_target_deps = config['defaultProjects']
         projects += build_target_deps
     else:
@@ -561,6 +568,12 @@ def main(targets):
                     f"projects to defaultProjects. Missing: {other_projects}")
 
         projects_sorted = topo_sorted(project_deps)
+
+        if is_mono_build:
+            # generate a cmake file with the list of projects (to include in CMakeLists.txt)
+            write_file_if_different(
+                os.path.join(output_path, "mono_projects.cmake"),
+                "set(PROJECTS {})\n".format(" ".join(projects_sorted)))
 
         for project in projects:
             # Create runtime wrappers and hide them from git

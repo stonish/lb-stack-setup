@@ -10,62 +10,81 @@ In particular, check out
 
 Below you have some extracts and specific examples.
 
-## Automatic paswordless login to hosts behind a gateway
+## Automatic passwordless login to hosts behind a gateway
 
 If your machine is only reachable through a gateway, you need to use the
 `ProxyJump` directive.
 
-Here is an example of a minimal `config` file, in the case where you want to
-reach a (virtual) machine `my-openstack-vm.cern.ch` in the CERN network, and
-you need to go via `lxplus`.
+Here is an example of a minimal `config` file. It demonstrates two use cases:
+a host `cern-machine.cern.ch` in the CERN network (going via `lxtunnel.cern.ch`)
+and the `pluscc*` hosts in the LHCb Online network (going via both `lxtunnel.cern.ch`
+and then `lbgw.cern.ch`).
 It works independently of whether you are in the CERN network or outside.
 
-```sh
-Host lxplus
-    HostName lxplus.cern.ch
+```ssh
+Host cm
+    HostName cern-machine.cern.ch
+
+# Aliases for hosts in the LHCb Online network
+Host pluscc* swdev*
+    HostName %h.lbdaq.cern.ch
+
+# Put before the generic *.cern.ch section
+Host lbgw.cern.ch *.lbdaq.cern.ch
+    # your LHCb Online username (if different)
+    User janedoe
+
+Host *.cern.ch
+    # your CERN username
     User jdoe
-    GSSAPIDelegateCredentials yes
-    # - you might need to uncomment the following line
-    # GSSAPITrustDNS yes
-
-Host vm
-    HostName my-openstack-vm.cern.ch
-    User jdoe
-    GSSAPIDelegateCredentials yes
-
-# use a proxy only when no direct connection possible
-# (put section after short hostname definitions)
-Match host !lxplus*.cern.ch,*.cern.ch exec "! nc --send-only --wait 0.1 %h %p </dev/null 2>/dev/null"
-    ProxyJump lxplus
-# If this does not work (old version of OpenSSH), you can proxy unconditionally
-# and use ProxyCommand instead of ProxyJump.
-# Host vm
-#     ProxyCommand ssh lxplus -W %h:%p
-
-Host *
     GSSAPIAuthentication yes
-    # - disable public key authentication with
-    # PubkeyAuthentication no
-    # - disable password prompts with
-    # BatchMode yes
+    GSSAPIDelegateCredentials yes
+
+# Proxy *.lbdaq.cern.ch via lbgw only when not in the LHCb Online network.
+# Put section after hostname alias definitions and before lxtunnel proxy.
+Match host *.lbdaq.cern.ch !exec "hostname -A | grep -q '.lbdaq.cern.ch '"
+    ProxyJump lbgw.cern.ch
+
+# Proxy *.cern.ch (besides lxplus and lxtunnel) via lxtunnel only when not in the CERN network.
+# Put section after hostname alias definitions.
+Match host *.cern.ch,!lxtunnel*.cern.ch,!lxplus*.cern.ch !exec "hostname -A | grep -q '.cern.ch '"
+    ProxyJump lxtunnel.cern.ch
 ```
 
 Put the lines above in your `~/.ssh/config` on Linux/Mac and `??` on Windows.
 Then, get a kerberos ticket, and try to login.
 
+### LHCb Online network
+
 ```sh
 kinit jdoe@CERN.CH
-ssh vm
+ssh lbgw.cern.ch
 ```
-
-If you succeed, good, that's it! Either your machine supports login with kerberos credentials (GSSAPI) or you've already setup public key authentication.
 
 If you get a password prompt, hit `Ctrl+C` and let's set up public key authentication.
 
 ```sh
-ssh-copy-id vm
-# jdoe@my-openstack-vm.cern.ch's password: ******
-ssh vm
+ssh-copy-id lbgw.cern.ch
+# jdoe@lbgw.cern.ch's password: ******
+ssh lbgw.cern.ch
+```
+
+### Machines on the CERN network
+
+```sh
+kinit jdoe@CERN.CH
+ssh cm
+```
+
+If you succeed, good, that's it! Either your machine supports login with kerberos credentials (GSSAPI)
+or you've already setup public key authentication.
+
+If you get a password prompt, hit `Ctrl+C` and let's set up public key authentication.
+
+```sh
+ssh-copy-id cm
+# jdoe@cern-machine.cern.ch's password: ******
+ssh cm
 ```
 
 ## LXPLUS and known_hosts
