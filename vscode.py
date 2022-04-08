@@ -227,6 +227,7 @@ def write_project_settings(repos, project_deps, config, toolchain):
     log.debug('Potentially updating project settings for {}'.format(
         ', '.join(project_repos)))
     for project, repo_path in project_repos.items():
+        add_file_to_git_exclude(repo_path, ".vscode")
         # tell clangd where to find compile_commands.json
         # this is useful for people that don't use vscode
         with open(os.path.join(repo_path, ".clangd"), 'w') as f:
