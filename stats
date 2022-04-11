@@ -3,9 +3,10 @@ set -eo pipefail
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 source "$DIR/helpers.sh"
 logname="build-env"
-eval $(config --sh outputPath binaryTag buildPath contribPath)
+source_config outputPath binaryTag buildPath contribPath
 
-stats_dir="$outputPath/stats/$binaryTag"
+BINARY_TAG=${BINARY_TAG:-${binaryTag}}
+stats_dir="$outputPath/stats/$BINARY_TAG"
 reference="$stats_dir/start.timestamp"
 echo "Statistics for build started on $(date -r $reference)"
 echo
@@ -19,5 +20,5 @@ $contribPath/bin/ccache --show-log-stats -v | grep -v ' 0$'
 echo
 
 echo "=============== ninja stats ================"
-find "$buildPath"/*/build.$binaryTag -maxdepth 1 -name '.ninja_log' -type f -newer $reference \
+find "$buildPath"/*/build.$BINARY_TAG -maxdepth 1 -name '.ninja_log' -type f -newer $reference \
   | xargs -r $DIR/external/post_build_ninja_summary.py

@@ -78,7 +78,10 @@ make-oos-mono-bindfs:
     - utils/config.py monoBuild true
     - utils/config.py defaultProjects '["LHCb"]'
     - utils/config.py targetBuildPath $TMPDIR
+    - export BINARY_TAG=$(utils/config.py binaryTag)
+    - utils/config.py binaryTag ''
     - bash utils/ci-utils/make-mono-script.sh
+    - make purge
 
 # Test legacy branches until it's easy to support.
 make-legacy:

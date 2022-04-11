@@ -18,8 +18,8 @@ PROJECT="$1"
 shift
 
 # steering options
-eval $(config --sh outputPath contribPath buildPath targetBuildPath ccachePath useCcache useDistcc cmakePrefixPath \
-                   'ccacheHosts=ccacheHosts or ccacheHostsPresets.get(ccacheHostsKey, "")')
+source_config outputPath contribPath buildPath targetBuildPath ccachePath useCcache useDistcc cmakePrefixPath \
+                   'ccacheHosts=ccacheHosts or ccacheHostsPresets.get(ccacheHostsKey, "")'
 OUTPUT=$outputPath
 CONTRIB=$contribPath
 BUILD_PATH=$buildPath

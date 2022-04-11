@@ -3,14 +3,19 @@ set -eo pipefail
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 source "$DIR/helpers.sh"
 logname="build-env"
-eval $(config --sh outputPath buildPath binaryTag useDocker useDistcc lbenvPath lcgVersion localPoolDepth projectPath forwardEnv functorJitNJobs)
+source_config outputPath binaryTag buildPath useDocker useDistcc lbenvPath lcgVersion localPoolDepth projectPath forwardEnv functorJitNJobs
 
 OUTPUT="$outputPath"
+BINARY_TAG=${BINARY_TAG:-${binaryTag}}
 BUILD_PATH="$buildPath"
-BINARY_TAG="$binaryTag"
 USE_DOCKER="$useDocker"
 USE_DISTCC="$useDistcc"
 setup_output
+
+if [ -z $BINARY_TAG ]; then
+    log ERROR "Platform must be defined in config.json or with BINARY_TAG, see README"
+    exit 1
+fi
 
 CHECK_KERBEROS=false
 REQUIRE_KERBEROS=false
