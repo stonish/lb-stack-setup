@@ -49,7 +49,7 @@
 	"contribPath": "../contrib",
 	"buildPath": "..",
 	"buildPathLink": "..",
-	"ccachePath": "../.ccache/${binaryTag}",
+	"ccachePath": "../.ccache/$BINARY_TAG",
 	"outputPath": "../.output",
 	"localPoolDepth": null,
 	"ccacheHosts": null,

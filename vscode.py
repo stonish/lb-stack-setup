@@ -198,7 +198,7 @@ def write_project_settings(repos, project_deps, config, toolchain):
         for path in repos if os.path.basename(path) in project_deps
     }
     # Collect python import paths
-    build_dir_veto = '/build.' + config['binaryTag'] + '/'
+    build_dir_veto = '/build.'
     install_area_veto = '/InstallArea/'
     python_paths = {}
     for project, repo_path in project_repos.items():

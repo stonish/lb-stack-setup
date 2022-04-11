@@ -7,6 +7,13 @@ endif
 # default target
 all:
 
+ifeq (,$(findstring environment,$(origin BINARY_TAG)))
+  # BINARY_TAG was given on the command line (not in the environment).
+  # In this case we override the binaryTag setting.
+  # The output of setup-make.py below will not reset the value of BINARY_TAG.
+  BINARY_TAG_OVERRIDE := $(BINARY_TAG)
+endif
+
 # clone projects, write project settings .mk file and source it
 # also defines build target
 include $(shell "$(DIR)/setup-make.py" $(MAKECMDGOALS))

@@ -9,20 +9,20 @@
         {
             "name": "default",
             "hidden": true,
-            "displayName": "$env{BINARY_TAG}",
-            "description": "Build for $env{BINARY_TAG} platform",
+            "displayName": "$env{BINARY_TAG_OVERRIDE}",
+            "description": "Build for $env{BINARY_TAG_OVERRIDE} platform",
             "generator": "Ninja",
-            "toolchainFile": "${sourceDir}/utils/toolchain.cmake",
-            "binaryDir": "${sourceDir}/mono/build.$env{BINARY_TAG}",
-            "TODO": "the binaryDir must be generated from BUILD_PATH",
+            "toolchainFile": "${sourceDir}/toolchain.cmake",
+            "binaryDir": "${sourceDir}/../mono/build.$env{BINARY_TAG_OVERRIDE}",
             "cacheVariables": {
+                "TODO": "the binaryDir must be generated from BUILD_PATH"
             }
         },
         {
             "name": "x86_64_v3-centos7-gcc11-opt+g",
             "inherits": "default",
             "environment": {
-                "BINARY_TAG": "x86_64_v3-centos7-gcc11-opt+g"
+                "BINARY_TAG_OVERRIDE": "x86_64_v3-centos7-gcc11-opt+g"
             }
         }
     ],

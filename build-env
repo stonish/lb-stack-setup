@@ -7,7 +7,7 @@ eval $(config --sh outputPath buildPath binaryTag useDocker useDistcc lbenvPath 
 
 OUTPUT="$outputPath"
 BUILD_PATH="$buildPath"
-BINARY_TAG="$binaryTag"
+BINARY_TAG=${BINARY_TAG_OVERRIDE:-${binaryTag}}
 USE_DOCKER="$useDocker"
 USE_DISTCC="$useDistcc"
 setup_output
