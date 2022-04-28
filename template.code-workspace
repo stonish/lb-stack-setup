@@ -159,7 +159,6 @@
                 "externalConsole": false,
                 "MIMode": "gdb",
                 "miDebuggerPath": "${fileWorkspaceFolder}/gdb",
-                "miDebuggerArgs": "-ix ${workspaceFolder:utils}/gdbinit",
                 "setupCommands": [
                     {
                         "description": "Enable pretty-printing for gdb",
@@ -178,7 +177,6 @@
                 // When attaching, we can make do with any gdb (but we still
                 // need some minimal environment).
                 "miDebuggerPath": "${workspaceFolder:Gaudi}/gdb",
-                "miDebuggerArgs": "-ix ${workspaceFolder:utils}/gdbinit",
                 "setupCommands": [
                     {
                         "description": "Enable pretty-printing for gdb",

@@ -78,10 +78,9 @@ setup_ccache() {
   #   willl have it's path rewritten to one that is relative to the current working directory, before ccache hashes
   #   This means that I can share a cache between different lb-stack setups :)
   export CCACHE_BASEDIR="$PWD"
-  # - not including CWD in hash (debug info might be incorrect)
-  export CCACHE_NOHASHDIR=1
-  # see https://ccache.dev/manual/latest.html#_compiling_in_different_directories
-  # TODO use the -fdebug-prefix-map=old=new
+  # - using -ffile-prefix-map (see toolchain.cmake). CCACHE_NOHASHDIR=1 is not needed.
+  #   See https://ccache.dev/manual/latest.html#_compiling_in_different_directories
+  #   Needs recent distcc server, see https://github.com/distcc/distcc/pull/459
 
   # Secondary cache
   export CCACHE_SECONDARY_STORAGE="$ccacheHosts"
