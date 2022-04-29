@@ -279,7 +279,7 @@ def SummarizeEntries(entries, extra_step_types):
     # Print the slowest build steps (by weighted time).
     print('    Longest build steps:')
     entries.sort(key=lambda x: x.WeightedDuration())
-    for target in entries[-long_count:]:
+    for target in reversed(entries[-long_count:]):
         print('      %8.1f weighted s to build %s (%.1f s elapsed time)' %
               (target.WeightedDuration(), target.DescribeTargets(),
                target.Duration()))
@@ -300,11 +300,11 @@ def SummarizeEntries(entries, extra_step_types):
     print('    Time by build-step type:')
     # Copy to a list with extension name and total time swapped, to (time, ext)
     weighted_time_by_ext_sorted = sorted(
-        (y, x) for (x, y) in weighted_time_by_ext.items())
+        [(y, x) for (x, y) in weighted_time_by_ext.items()], reverse=True)
     # Print the slowest build target types (by weighted time):
     for time, extension in weighted_time_by_ext_sorted[-long_ext_count:]:
         print(
-            '      %8.1f s weighted time to generate %d %s files '
+            '      %8.1f weighted s to build %d %s files '
             '(%1.1f s elapsed time sum)' % (time, count_by_ext[extension],
                                             extension, time_by_ext[extension]))
 
