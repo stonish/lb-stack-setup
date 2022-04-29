@@ -21,7 +21,10 @@ endmacro()
 
 # TODO wrap lhcb_finalize_configuration and define ${project}_all target to really depend on all targets
 
+
 include($ENV{OUTPUT_PATH}/mono_projects.cmake)
+# TODO try to run config.json and read the output or use string(JSON).
+#      How to make the config a dependency for reconfiguring?
 list(JOIN PROJECTS " " _projects_msg)
 message(STATUS "Building ${_projects_msg}")
 

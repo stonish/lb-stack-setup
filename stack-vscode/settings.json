@@ -1,7 +1,7 @@
 {
     "cmake.cmakePath": "${workspaceFolder}/utils/cmake",
     "cmake.ctestPath": "${workspaceFolder}/utils/ctest",
-    "cmake.sourceDirectory": "${workspaceFolder}/Container",
+    "cmake.sourceDirectory": "${workspaceFolder}/utils",
     "cmake.configureOnEdit": false,
     "cmake.autoSelectActiveFolder": false,
     "cmake.useCMakePresets": "always"
