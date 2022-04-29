@@ -87,17 +87,19 @@ setup_ccache() {
 
   # Use generated depenencies instead of the preprocessor, much faster!
   export CCACHE_DEPEND=1
-  # Use a log (tiny overhead) to display stats later (hits and misses),
-  # see https://github.com/ccache/ccache/issues/262
-  export CCACHE_LOGFILE="$OUTPUT/ccache.log"
+  # Keep track of stats for this build.
+  export CCACHE_STATSLOG="$OUTPUT/stats/$BINARY_TAG/$PROJECT.ccache-statslog"
+  echo $CCACHE_STATSLOG
+  rm -f "$CCACHE_STATSLOG"  # clear stats
 
-  mkdir -p "$CCACHE_TEMPDIR" "$OUTPUT"
-  rm -f "$CCACHE_LOGFILE"  # clear logfile
+  mkdir -p "$CCACHE_TEMPDIR" $(dirname $CCACHE_STATSLOG)
 
   if [ "$DEBUG_CCACHE" = true ]; then
     export CCACHE_DEBUG=1
     export CCACHE_READONLY=1
     export CCACHE_DEBUGDIR="$CCACHE_TEMPDIR/debug/$PROJECT/"
+    export CCACHE_LOGFILE="$OUTPUT/ccache.log"
+    rm -f "$CCACHE_LOGFILE"  # clear logfile
   fi
 }
 
@@ -272,8 +274,7 @@ if [ "$USE_DISTCC" = true ]; then
   fi
 fi
 if [ "$USE_CCACHE" = true ]; then
-  # print ccache stats
-  (grep -E -o "Result: .*" "$CCACHE_LOGFILE" 2> /dev/null | sort | uniq -c) || true
+  ccache --show-log-stats -v | grep -v ' 0$'
 fi
 
 # Copy compile commands and runtime environment if changed
