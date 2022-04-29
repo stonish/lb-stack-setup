@@ -627,6 +627,12 @@ def main(targets):
                 '$(warning Error occurred in updating VSCode settings)'
             ]
 
+    stats_timestamp = (
+        f"{output_path}/stats/{config['binaryTag']}/start.timestamp")
+    os.makedirs(os.path.dirname(stats_timestamp), exist_ok=True)
+    with open(stats_timestamp, "w") as f:
+        pass
+
     with open(config_path, "w") as f:
         f.write('\n'.join(makefile_config) + '\n')
     # Print path so that the generated file can be included in one go

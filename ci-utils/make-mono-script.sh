@@ -10,3 +10,5 @@ make configure  # test a reconfigure
 bash utils/ci-utils/test-cmake.sh $MONO_BUILD_PATH
 
 bash utils/ci-utils/test-misc.sh
+
+utils/stats
