@@ -30,9 +30,13 @@ yum install -y distcc-server
 cd $HOME/build
 curl -L https://github.com/distcc/distcc/releases/download/v3.4/distcc-3.4.tar.gz | tar -xz
 cd distcc-3.4
-./configure --disable-pump-mode --with-auth --without-libiberty --without-avahi
+./autogen.sh  # If "configure" does not already exist.
+./configure --with-auth --without-libiberty --without-avahi
 make
 make check
+./distccd --version
+# Run individual tests with:
+#     PATH=$PWD:$PATH test/onetest.py --pump Gdb_Case
 
 # manually install the minimum possible
 sudo install -c distccd /usr/local/bin

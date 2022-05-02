@@ -65,6 +65,7 @@ make:
     - make LHCb/configure
     - bash utils/ci-utils/test-cmake.sh LHCb/build.$PLATFORM
     - bash utils/ci-utils/test-misc.sh
+    - utils/stats
 
 make-mono:
   extends: .make

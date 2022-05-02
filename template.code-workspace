@@ -7,7 +7,7 @@
             "ms-python.vscode-pylance",
             "ms-vscode.cpptools",
             "twxs.cmake",
-            "lextudio.restructuredtext",
+            // "lextudio.restructuredtext", see https://github.com/swyddfa/esbonio/issues/326
             "trond-snekvik.simple-rst",
             "davidanson.vscode-markdownlint",
             "streetsidesoftware.code-spell-checker"
@@ -111,9 +111,10 @@
         "python.linting.pylintEnabled": false,
         "python.defaultInterpreterPath": "$pythonPath",
         "remote.downloadExtensionsLocally": true,
-        "restructuredtext.confPath": "${workspaceFolder}/doc/conf.py",
-        "restructuredtext.languageServer.disabled": true,
-        "restructuredtext.linter.disabled": true,
+        "esbonio.sphinx.buildDir" : "${workspaceFolder}/doc/_build/html",
+        "esbonio.sphinx.confDir"  : "${workspaceFolder}/doc",
+        "esbonio.sphinx.srcDir"   : "${workspaceFolder}/doc",
+        "restructuredtext.linter.disabledLinters": ["doc8", "rst-lint", "rstcheck"],
         "restructuredtext.linter.run": "off",
         "restructuredtext.sphinxBuildPath": "$lbenvPath/bin/sphinx-build",
         "window.title": "${dirty}${activeEditorShort}${separator}${rootPath}"
@@ -158,7 +159,6 @@
                 "externalConsole": false,
                 "MIMode": "gdb",
                 "miDebuggerPath": "${fileWorkspaceFolder}/gdb",
-                "miDebuggerArgs": "-ix ${workspaceFolder:utils}/gdbinit",
                 "setupCommands": [
                     {
                         "description": "Enable pretty-printing for gdb",

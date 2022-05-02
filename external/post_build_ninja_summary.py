@@ -1,4 +1,4 @@
-#!/usr/bin/env vpython
+#!/usr/bin/env python2
 # Copyright (c) 2018 The Chromium Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
@@ -233,6 +233,7 @@ def SummarizeEntries(entries, extra_step_types):
         task_start_stop_times.append((target.start, 'start', target))
         task_start_stop_times.append((target.end, 'stop', target))
     length = latest - earliest
+    idle_time = 0.0
     weighted_total = 0.0
 
     task_start_stop_times.sort()
@@ -256,6 +257,8 @@ def SummarizeEntries(entries, extra_step_types):
         if num_running > 0:
             # Update the total weighted time up to this moment.
             last_weighted_time += (time - last_time) / float(num_running)
+        else:
+            idle_time += time - last_time
         if action_name == 'start':
             # Record the total weighted task time when this task starts.
             running_tasks[target] = last_weighted_time
@@ -269,14 +272,14 @@ def SummarizeEntries(entries, extra_step_types):
     assert (len(running_tasks) == 0)
 
     # Warn if the sum of weighted times is off by more than half a second.
-    if abs(length - weighted_total) > 500:
+    if abs(length - idle_time - weighted_total) > 0.5:
         print('Discrepancy!!! Length = %.3f, weighted total = %.3f' %
-              (length, weighted_total))
+              (length - idle_time, weighted_total))
 
     # Print the slowest build steps (by weighted time).
     print('    Longest build steps:')
     entries.sort(key=lambda x: x.WeightedDuration())
-    for target in entries[-long_count:]:
+    for target in reversed(entries[-long_count:]):
         print('      %8.1f weighted s to build %s (%.1f s elapsed time)' %
               (target.WeightedDuration(), target.DescribeTargets(),
                target.Duration()))
@@ -297,36 +300,30 @@ def SummarizeEntries(entries, extra_step_types):
     print('    Time by build-step type:')
     # Copy to a list with extension name and total time swapped, to (time, ext)
     weighted_time_by_ext_sorted = sorted(
-        (y, x) for (x, y) in weighted_time_by_ext.items())
+        [(y, x) for (x, y) in weighted_time_by_ext.items()], reverse=True)
     # Print the slowest build target types (by weighted time):
     for time, extension in weighted_time_by_ext_sorted[-long_ext_count:]:
         print(
-            '      %8.1f s weighted time to generate %d %s files '
+            '      %8.1f weighted s to build %d %s files '
             '(%1.1f s elapsed time sum)' % (time, count_by_ext[extension],
                                             extension, time_by_ext[extension]))
 
     print('    %.1f s weighted time (%.1f s elapsed time sum, %1.1fx '
-          'parallelism)' % (length, total_cpu_time,
-                            total_cpu_time * 1.0 / length))
+          'parallelism)' % (weighted_total, total_cpu_time,
+                            total_cpu_time * 1.0 / (length - idle_time)))
     print('    %d build steps completed, average of %1.2f/s' %
-          (len(entries), len(entries) / (length)))
+          (len(entries), len(entries) / (length - idle_time)))
 
 
 def main():
-    log_file = '.ninja_log'
     parser = argparse.ArgumentParser()
-    parser.add_argument('-C', dest='build_directory', help='Build directory.')
     parser.add_argument(
         '-s',
         '--step-types',
         help='semicolon separated fnmatch patterns for build-step grouping')
     parser.add_argument(
-        '--log-file', help="specific ninja log file to analyze.")
+        'log_files', nargs='+', help="specific ninja log files to analyze.")
     args, _extra_args = parser.parse_known_args()
-    if args.build_directory:
-        log_file = os.path.join(args.build_directory, log_file)
-    if args.log_file:
-        log_file = args.log_file
     if not args.step_types:
         # Offer a convenient way to add extra step types automatically, including
         # when this script is run by autoninja. get() returns None if the variable
@@ -338,9 +335,17 @@ def main():
         long_ext_count += len(args.step_types.split(';'))
 
     try:
-        with open(log_file, 'r') as log:
-            entries = ReadTargets(log, False)
-            SummarizeEntries(entries, args.step_types)
+        all_entries = []
+        for log_file in args.log_files:
+            mtime = os.path.getmtime(log_file)
+            with open(log_file, 'r') as log:
+                entries = ReadTargets(log, False)
+                offset = mtime - max(t.end for t in entries)
+                for t in entries:
+                    t.start += offset
+                    t.end += offset
+                all_entries += entries
+        SummarizeEntries(all_entries, args.step_types)
     except IOError:
         print('Log file %r not found, no build summary created.' % log_file)
         return errno.ENOENT

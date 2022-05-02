@@ -99,6 +99,19 @@ if(NOT CMAKE_SOURCE_DIR MATCHES "CMakeTmp")
     endif()
   endif()
 
+  # Map absolute paths prefixes in files (e.g. debug symbols) to `.`, see comments in
+  # make.sh around CCACHE_BASEDIR. Debugging with GDB needs some adaptations for
+  # this (either directory or substitute-path), see the project-gdb.sh wrapper.
+  if((CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 8) OR
+     (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 10))
+    set(_prefix_map_opt "-ffile-prefix-map")
+  else()
+    set(_prefix_map_opt "-fdebug-prefix-map")  # compat with old toolchain/compilers
+  endif()
+  foreach(_lang IN ITEMS CXX C Fortran)
+    string(APPEND CMAKE_${_lang}_FLAGS_INIT " ${_prefix_map_opt}=$ENV{LBENV_CURRENT_WORKSPACE}=.")
+  endforeach()
+
   # Support distcc for new cmake where the compiler wrapper is not on /cvmfs.
   # A symlink to the local compiler wrapper is created. The symlink name fully
   # identifies the compiler, which allows the distcc server to match based on name.
