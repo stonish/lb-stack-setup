@@ -89,7 +89,6 @@ setup_ccache() {
   export CCACHE_DEPEND=1
   # Keep track of stats for this build.
   export CCACHE_STATSLOG="$OUTPUT/stats/$BINARY_TAG/$PROJECT.ccache-statslog"
-  echo $CCACHE_STATSLOG
   rm -f "$CCACHE_STATSLOG"  # clear stats
 
   mkdir -p "$CCACHE_TEMPDIR" $(dirname $CCACHE_STATSLOG)
