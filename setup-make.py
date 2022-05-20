@@ -96,7 +96,9 @@ def cmake_name(project):
     with open(os.path.join(project, 'CMakeLists.txt')) as f:
         cmake = f.read()
     m = re.search(
-        r'\s+(gaudi_)?project\(\s*(?P<name>\w+)\s', cmake, flags=re.IGNORECASE)
+        r'\s+(gaudi_)?project\(\s*(?P<name>\w+)(\s|\))',
+        cmake,
+        flags=re.IGNORECASE)
     return m.group('name')
 
 
