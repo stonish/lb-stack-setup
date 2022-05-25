@@ -15,7 +15,7 @@ export CCACHE_STATSLOG=$stats_dir/ccache-statslog
 find $stats_dir -maxdepth 1 -name '*.ccache-statslog' -type f -newer $reference \
   | xargs -r cat > $stats_dir/ccache-statslog
 echo "=============== ccache stats ==============="
-ccache --show-log-stats -v | grep -v ' 0$'
+$contribPath/bin/ccache --show-log-stats -v | grep -v ' 0$'
 echo
 
 echo "=============== ninja stats ================"
