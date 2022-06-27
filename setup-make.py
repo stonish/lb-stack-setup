@@ -577,7 +577,7 @@ def main(targets):
                 os.path.join(output_path, "mono_projects.cmake"),
                 "set(PROJECTS {})\n".format(" ".join(projects_sorted)))
 
-        for project in projects:
+        for project in projects_sorted:
             # Create runtime wrappers and hide them from git
             for wrapper in ["run", "gdb"]:
                 target = os.path.join(project, wrapper)
