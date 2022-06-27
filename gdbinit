@@ -1,4 +1,5 @@
 add-auto-load-safe-path /cvmfs/lhcb.cern.ch/lib/lcg/releases
+add-auto-load-safe-path /cvmfs/sft.cern.ch/lcg/releases
 
 # In order to step into LCG libraries, you will need to obtain the sources
 # locally (make sure to use the right tag) and set up a path substitution
