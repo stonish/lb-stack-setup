@@ -96,6 +96,8 @@ If you want to open a folder, the syntax is
 code --folder-uri "vscode-remote://ssh-remote+vm/home/jdoe/some/folder"
 ```
 
+From MacOS, you may need to run command + shift + p > `Shell Command: Install 'code' command in PATH`. 
+
 Now go ahead and make an alias for your favourite workspace :sunglasses:.
 
 ### Debug `gaudirun.py` applications
