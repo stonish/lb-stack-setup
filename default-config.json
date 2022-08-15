@@ -11,7 +11,7 @@
 		"default": "master",
 		"defaultDataPackages": "master"
 	},
-	"lcgVersion": "101",
+	"lcgVersion": "101x",
 	"cmakePrefixPath": "$CMAKE_PREFIX_PATH:/cvmfs/sft.cern.ch/lcg/releases",
 	"cmakeFlags": {
 		"default": "-Wno-dev",
