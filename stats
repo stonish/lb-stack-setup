@@ -3,7 +3,7 @@ set -eo pipefail
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 source "$DIR/helpers.sh"
 logname="build-env"
-eval $(config --sh outputPath binaryTag contribPath)
+source_config outputPath binaryTag contribPath
 
 stats_dir="$outputPath/stats/$binaryTag"
 reference="$stats_dir/start.timestamp"

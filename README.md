@@ -184,7 +184,8 @@ Depending on what and where you build there are different recommendations.
 
 - `binaryTag`: Default platform to use. The value is used to set the BINARY_TAG environment
   variable when building. The value can be overridden for a particular invocation of `make`
-  with `make BINARY_TAG=<other binary tag> <target>`.
+  with `make BINARY_TAG=<other binary tag> <target>`. Alternatively, set the value to an
+  empty string in `config.json` and export it before running make: `BINARY_TAG=... make <target>`.
 - `defaultProjects`: Defines which projects are built when `make` is invoked without giving any
   project-specific target (i.e. `make`, `make all` or `make build`).
 - `buildPath` and `ccachePath`: Defines where the build artifacts are stored. By default, they

@@ -3,11 +3,9 @@ set -eo pipefail
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 source "$DIR/helpers.sh"
 logname="build-env"
-eval $(config --sh outputPath buildPath binaryTag useDocker useDistcc lbenvPath lcgVersion localPoolDepth projectPath forwardEnv functorJitNJobs)
+source_config outputPath useDocker useDistcc lbenvPath lcgVersion localPoolDepth projectPath forwardEnv functorJitNJobs
 
 OUTPUT="$outputPath"
-BUILD_PATH="$buildPath"
-BINARY_TAG=${BINARY_TAG_OVERRIDE:-${binaryTag}}
 USE_DOCKER="$useDocker"
 USE_DISTCC="$useDistcc"
 setup_output

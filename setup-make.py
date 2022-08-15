@@ -487,15 +487,33 @@ def main(targets):
     config = read_config()
     log = setup_logging(config['outputPath'])
     output_path = config['outputPath']
-    config_path = os.path.join(output_path, "configuration.mk")
     is_mono_build = config['monoBuild']
 
     # save the host environment where we're executed
-
     os.makedirs(output_path, exist_ok=True)
     with open(os.path.join(output_path, 'host.env'), 'w') as f:
         for name, value in sorted(os.environ.items()):
             print(name + "=" + value, file=f)
+
+    # Override binaryTag if necessary
+    binary_tag_override = os.getenv("BINARY_TAG_OVERRIDE")
+    binary_tag_env = os.getenv("BINARY_TAG")
+    binary_tag = config["binaryTag"]
+    if binary_tag_override:
+        binary_tag = binary_tag_override
+    elif binary_tag_env:
+        if not binary_tag:
+            binary_tag = binary_tag_env
+        elif binary_tag != binary_tag_env:
+            exit(f"BINARY_TAG environment variable ({binary_tag_env}) and " +
+                 f"binaryTag setting in config.json ({binary_tag}) are both " +
+                 "set to conflicting values.\nPlease set just one of the two "
+                 + "or invoke with " +
+                 f"`make BINARY_TAG={binary_tag_env} {' '.join(targets)}` " +
+                 "to force the platform.")
+    config["binaryTag"] = binary_tag
+
+    config_path = os.path.join(output_path, f"configuration-{binary_tag}.mk")
 
     # Separate out special targets
     special_targets = [t for t in SPECIAL_TARGETS if t in targets]
@@ -599,9 +617,9 @@ def main(targets):
         repos.sort(key=lambda x: project_order.index(x))
 
         makefile_config = [
+            "export BINARY_TAG := {}".format(config["binaryTag"]),
+            "export BUILD_PATH := {}".format(config["buildPath"]),
             "MONO_BUILD := " + str(int(is_mono_build)),
-            "BINARY_TAG := {}".format(config["binaryTag"]),
-            "BUILD_PATH := {}".format(config["buildPath"]),
             "PROJECTS := " + " ".join(projects_sorted),
             "ALL_PROJECTS := " + " ".join(sorted(project_deps)),
         ]
