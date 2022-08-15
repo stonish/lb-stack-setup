@@ -99,7 +99,12 @@ accounts), you can do
 
 ```sh
 yum install -y openldap-clients  # for ldapsearch
+cat >/etc/cron.daily/distcc_whitelist <<'EOF'
 ldapsearch -E pr=100/noprompt -x -h xldap.cern.ch -b 'OU=Users,OU=Organic Units,DC=cern,DC=ch' '(&(objectClass=user)(|(gidNumber=1470)(memberof=CN=lhcb-general-dynamic,OU=e-groups,OU=Workgroups,DC=cern,DC=ch)))' sAMAccountName | grep '^sAMAccountName:' | cut -d " " -f 2 | sort > /etc/distcc/whitelist
+systemctl restart distccd.service
+EOF
+chmod +x /etc/cron.daily/distcc_whitelist
+/etc/cron.daily/distcc_whitelist
 ```
 
 ## Service configuration
