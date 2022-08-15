@@ -48,7 +48,7 @@
 	"projectPath": "..",
 	"contribPath": "../contrib",
 	"buildPath": "..",
-	"buildPathLink": "..",
+	"targetBuildPath": "",
 	"ccachePath": "../.ccache/$BINARY_TAG",
 	"outputPath": "../.output",
 	"localPoolDepth": null,

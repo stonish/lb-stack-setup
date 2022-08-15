@@ -18,8 +18,7 @@ PROJECT="$1"
 shift
 
 # steering options
-eval $(config --sh outputPath contribPath buildPath ccachePath useCcache useDistcc cmakePrefixPath \
-                   buildPathLink \
+eval $(config --sh outputPath contribPath buildPath targetBuildPath ccachePath useCcache useDistcc cmakePrefixPath \
                    'ccacheHosts=ccacheHosts or ccacheHostsPresets.get(ccacheHostsKey, "")')
 OUTPUT=$outputPath
 CONTRIB=$contribPath
@@ -260,18 +259,24 @@ printenv | sort > "$OUTPUT/project.mk.env"
 if [ "$PROJECT" = monohack ]; then  # FIXME this is a hack for the cmake wrapper!
   "$@"
 else
-  # we do all this symlink/bindfs stuff because otherwise ccache keys would always
-  # contain /home/username (the source and the build have a different base and base_dir is not enough)
-  mkdir -p "$buildPathLink/$PROJECT/build.$BINARY_TAG" "$BUILD_PATH/$PROJECT/build.$BINARY_TAG"
-  # ln -sTf "$buildPathLink/$PROJECT/build.$BINARY_TAG" "$BUILD_PATH/$PROJECT/build.$BINARY_TAG"
-  # https://discourse.cmake.org/t/symlinks-on-macos-can-result-in-error-still-dirty-after-100-tries-when-using-ninja/3647
-  # https://web.archive.org/web/20161124231755/http://www.redbottledesign.com/blog/mirroring-files-different-places-links-bind-mounts-and-bindfs
-  findmnt "$BUILD_PATH/$PROJECT/build.$BINARY_TAG" >/dev/null \
-    || (
-      ulimit -Sn $(ulimit -Hn);
-      bindfs --multithreaded "$buildPathLink/$PROJECT/build.$BINARY_TAG" "$BUILD_PATH/$PROJECT/build.$BINARY_TAG";
-    )
-  # TODO if the mountpoint is not empty, rm -rf it or simply complain
+  if [ -n "$targetBuildPath" ]; then
+    # We need to "symlink" the build directory because otherwise ccache keys would always
+    # contain /home/username (the source and the build have a different base and base_dir is not enough).
+    # For a comparison of various options, see
+    #     https://web.archive.org/web/20161124231755/http://www.redbottledesign.com/blog/mirroring-files-different-places-links-bind-mounts-and-bindfs
+    # We can't really use symlinking
+    #    ln -sTf "$targetBuildPath/$PROJECT/build.$BINARY_TAG" "$BUILD_PATH/$PROJECT/build.$BINARY_TAG"
+    # because that doesn't work with cmake:
+    #     https://discourse.cmake.org/t/symlinks-on-macos-can-result-in-error-still-dirty-after-100-tries-when-using-ninja/3647
+    # Instead, resort to bindfs, if available:
+    mkdir -p "$targetBuildPath/$PROJECT/build.$BINARY_TAG" "$BUILD_PATH/$PROJECT/build.$BINARY_TAG"
+    findmnt "$BUILD_PATH/$PROJECT/build.$BINARY_TAG" >/dev/null \
+      || (
+        ulimit -Sn $(ulimit -Hn);
+        bindfs --multithreaded "$targetBuildPath/$PROJECT/build.$BINARY_TAG" "$BUILD_PATH/$PROJECT/build.$BINARY_TAG";
+      )
+  fi
+
   make -f "$DIR/project.mk" -C "$PROJECT" "BUILDDIR=$BUILD_PATH/$PROJECT/build.$BINARY_TAG" "$@"
 fi
 # cd "$BUILD_PATH/$PROJECT/build.$BINARY_TAG" && ninja $BUILDFLAGS "$@" && cd -
