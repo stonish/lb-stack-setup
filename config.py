@@ -251,7 +251,7 @@ if __name__ == '__main__':
     elif not args.key:
         # print entire config
         print(json.dumps(config, indent=4))
-    elif not args.value:
+    elif args.value is None:
         # print the value for a key
         try:
             value = query(config, key_parts)
