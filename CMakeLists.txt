@@ -1,6 +1,6 @@
 # preamble
 cmake_minimum_required(VERSION 3.15)
-project(mono LANGUAGES CXX)
+project(mono VERSION 1.0 LANGUAGES CXX)
 include(CTest)
 
 set(root_path ${CMAKE_SOURCE_DIR}/..)
