@@ -76,13 +76,6 @@ endif()
 # versions with old-style CMake, for which GAUDI_OLD_STYLE_PROJECT is not
 # pre-set in the LbDevTools toolchain and the detection fails.
 if(NOT CMAKE_SOURCE_DIR MATCHES "CMakeTmp")
-  if(_project STREQUAL "Gaussino" OR _project STREQUAL "Gauss")
-    # FIXME: very bad, but GitCondDB is not in the LCG_externals_....txt files, again
-    set(CMAKE_PREFIX_PATH "/cvmfs/lhcb.cern.ch/lib/lcg/releases/GitCondDB/0.2.0-b068a/x86_64-centos7-gcc10-opt" ${CMAKE_PREFIX_PATH})
-    # FIXME: very bad, LCIO has to be in LCG_LAYER
-    set(CMAKE_PREFIX_PATH "/cvmfs/lhcb.cern.ch/lib/lcg/releases/LCG_100/LCIO/02.16.01/x86_64-centos7-gcc10-opt" ${CMAKE_PREFIX_PATH})
-  endif()
-
   if(EXISTS ${CMAKE_SOURCE_DIR}/toolchain.cmake
     AND NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_LIST_DIR  # monobuild: do not "delegate" to self
     # The above is needed because the top level CMakeLists.txt is in the same directory as this file.
