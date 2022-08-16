@@ -618,6 +618,7 @@ def main(targets):
 
         makefile_config = [
             "export BINARY_TAG := {}".format(config["binaryTag"]),
+            "BUILD_PATH := {}".format(config["buildPath"]),
             "MONO_BUILD := " + str(int(is_mono_build)),
             "PROJECTS := " + " ".join(projects_sorted),
             "ALL_PROJECTS := " + " ".join(sorted(project_deps)),

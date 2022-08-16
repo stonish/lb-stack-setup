@@ -45,7 +45,8 @@ space := $(empty) $(empty)
 clean:
 	@$(DIR)/build-env $(DIR)/make.sh mono clean
 purge:
-	$(RM) -r $(BUILD_PATH)/mono/build.$(BINARY_TAG)/* $(BUILD_PATH)/mono/InstallArea/$(BINARY_TAG)
+	find $(BUILD_PATH)/mono/build.$(BINARY_TAG) -mindepth 1 -maxdepth 1 -exec rm -r -- {} +
+	$(RM) -r $(BUILD_PATH)/mono/InstallArea/$(BINARY_TAG)
 	rmdir $(BUILD_PATH)/mono/build.$(BINARY_TAG) || fusermount -q -u $(BUILD_PATH)/mono/build.$(BINARY_TAG) || true
 	find mono "(" -name "InstallArea" -prune -o -name "*.pyc" ")" -a -type f -exec $(RM) -v \{} \;
 build:
@@ -113,7 +114,8 @@ define PROJECT_settings_clean
 # exception for purge: always do fast/Project/purge
 $(1)/purge: fast/$(1)/purge ;
 fast/$(1)/purge:
-	$(RM) -r $(BUILD_PATH)/$(1)/build.$(BINARY_TAG)/* $(BUILD_PATH)/$(1)/InstallArea/$(BINARY_TAG)
+	find $(BUILD_PATH)/$(1)/build.$(BINARY_TAG) -mindepth 1 -maxdepth 1 -exec rm -r -- {} +
+	$(RM) -r $(BUILD_PATH)/$(1)/InstallArea/$(BINARY_TAG)
 	rmdir $(BUILD_PATH)/$(1)/build.$(BINARY_TAG) || fusermount -q -u $(BUILD_PATH)/$(1)/build.$(BINARY_TAG) || true
 	find $(1) "(" -name "InstallArea" -prune -o -name "*.pyc" ")" -a -type f -exec $(RM) -v \{} \;
 # clean
