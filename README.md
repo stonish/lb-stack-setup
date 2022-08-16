@@ -13,6 +13,11 @@ for example, `$HOME` or `/afs/cern.ch/work/j/jdoe`.
 > volumes (e.g. on CERN OpenStack) is typically slower than on a local disk,
 > especially if the latter is an SSD.
 
+> **Note:** A good hybrid solution is to put the source code (few GiB) in your
+> backed up home (e.g. AFS/NFS) and put the build artifacts in a bigger and faster
+> local storage (that may not be backed up). See below how to do this using
+> the [`buildPath`](#configuration-settings) setting.
+
 Adjust the following command according to how you want the directory containing your stack to be called and then run it (here we use simply "`stack`"):
 
 ```sh
@@ -127,7 +132,7 @@ The `Makefile` provided features the following targets.
   - `<Project>-clean`: clean `<Project>` and the projects that depend on it
   - `fast/<Project>[/<target>]`: same as the target `<Project>[/<target>]`
     but do not try to build the dependencies,
-  - `fast/<Project>/checkout`: just checkout `<Project>` without its dependecies.
+  - `fast/<Project>/checkout`: just checkout `<Project>` without its dependencies.
 
 ## Monolithic builds (experimental)
 
@@ -177,8 +182,21 @@ See [doc/vscode.md](doc/vscode.md) for more information, including some demos.
 You can set the following options in `config.json` to configure your build setup.
 Depending on what and where you build there are different recommendations.
 
+- `binaryTag`: Default platform to use. The value is used to set the BINARY_TAG environment
+  variable when building. The value can be overridden for a particular invocation of `make`
+  with `make BINARY_TAG=<other binary tag> <target>`. Alternatively, set the value to an
+  empty string in `config.json` and export it before running make: `BINARY_TAG=... make <target>`.
 - `defaultProjects`: Defines which projects are built when `make` is invoked without giving any
   project-specific target (i.e. `make`, `make all` or `make build`).
+- `buildPath` and `ccachePath`: Defines where the build artifacts are stored. By default, they
+  are put under the stack directory (and the respective projects inside). Instead, you can put
+  the artifacts in a separate directory/volume, with something like this:
+
+    ```sh
+    utils/config.py ccachePath '/localdisk1/$USER/ccache/$BINARY_TAG'
+    utils/config.py buildPath  '/localdisk2/$USER/build/$HOSTNAME/${projectPath}'
+    ```
+
 - `useDocker (true/false)`: Allows running with docker, check
   [doc/prerequisites.md](doc/prerequisites.md) for instructions.
   Defaults to false on CentOS7, otherwise is true.
@@ -215,6 +233,14 @@ utils/config.py binaryTag x86_64_v3-centos7-gcc11-opt
 ```
 
 or edit the file `utils/config.json` directly.
+
+You can also temporarily override the `binaryTag` setting when running `make`
+or the run scripts:
+
+```sh
+make BINARY_TAG=x86_64_v3-centos7-gcc11-opt Moore
+BINARY_TAG_OVERRIDE=x86_64_v3-centos7-gcc11-opt Moore/run
+```
 
 ### Add a data package
 

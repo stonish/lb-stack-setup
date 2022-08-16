@@ -7,9 +7,16 @@ endif
 # default target
 all:
 
+ifeq (,$(findstring environment,$(origin BINARY_TAG)))
+  # BINARY_TAG was given on the command line (not in the environment).
+  # In this case we override the binaryTag setting in setup-make.py,
+  # which in the end exports BINARY_TAG to be used in build-env
+  BINARY_TAG_OVERRIDE := $(BINARY_TAG)
+endif
+
 # clone projects, write project settings .mk file and source it
 # also defines build target
-include $(shell "$(DIR)/setup-make.py" $(MAKECMDGOALS))
+include $(shell env BINARY_TAG_OVERRIDE=$(BINARY_TAG_OVERRIDE) "$(DIR)/setup-make.py" $(MAKECMDGOALS))
 
 # main targets
 all: build
@@ -38,7 +45,8 @@ space := $(empty) $(empty)
 clean:
 	@$(DIR)/build-env $(DIR)/make.sh mono clean
 purge:
-	$(RM) -r mono/build.$(BINARY_TAG) mono/InstallArea/$(BINARY_TAG)
+	$(RM) -r $(BUILD_PATH)/mono/build.$(BINARY_TAG)/* $(BUILD_PATH)/mono/InstallArea/$(BINARY_TAG)
+	rmdir $(BUILD_PATH)/mono/build.$(BINARY_TAG) || fusermount -q -u $(BUILD_PATH)/mono/build.$(BINARY_TAG) || true
 	find mono "(" -name "InstallArea" -prune -o -name "*.pyc" ")" -a -type f -exec $(RM) -v \{} \;
 build:
 	@$(DIR)/build-env --require-kerberos-distcc $(DIR)/make.sh mono all
@@ -105,14 +113,15 @@ define PROJECT_settings_clean
 # exception for purge: always do fast/Project/purge
 $(1)/purge: fast/$(1)/purge ;
 fast/$(1)/purge:
-	$(RM) -r $(1)/build.$(BINARY_TAG) $(1)/InstallArea/$(BINARY_TAG)
+	$(RM) -r $(BUILD_PATH)/$(1)/build.$(BINARY_TAG)/* $(BUILD_PATH)/$(1)/InstallArea/$(BINARY_TAG)
+	rmdir $(BUILD_PATH)/$(1)/build.$(BINARY_TAG) || fusermount -q -u $(BUILD_PATH)/$(1)/build.$(BINARY_TAG) || true
 	find $(1) "(" -name "InstallArea" -prune -o -name "*.pyc" ")" -a -type f -exec $(RM) -v \{} \;
 # clean
 $(1)-clean: $(patsubst %,%-clean,$($(1)_INV_DEPS))
 	$$(MAKE) fast/$(1)-clean
 fast/$(1)-clean:
-	@test -d $(1)/build.$(BINARY_TAG) && $$(MAKE) $(1)/clean || true
-	$(RM) -r $(1)/InstallArea/$(BINARY_TAG)
+	@test -d $(BUILD_PATH)/$(1)/build.$(BINARY_TAG) && $$(MAKE) $(1)/clean || true
+	$(RM) -r $(BUILD_PATH)/$(1)/InstallArea/$(BINARY_TAG)
 endef
 $(foreach proj,$(ALL_PROJECTS),$(eval $(call PROJECT_settings_clean,$(proj))))
 ALL_TARGETS += $(foreach p,$(ALL_PROJECTS),$(p)-clean fast/$(p)-clean)

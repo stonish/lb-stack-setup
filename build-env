@@ -3,13 +3,19 @@ set -eo pipefail
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 source "$DIR/helpers.sh"
 logname="build-env"
-eval $(config --sh outputPath binaryTag useDocker useDistcc lbenvPath lcgVersion localPoolDepth projectPath forwardEnv functorJitNJobs)
+source_config outputPath binaryTag buildPath useDocker useDistcc lbenvPath lcgVersion localPoolDepth projectPath forwardEnv functorJitNJobs
 
 OUTPUT="$outputPath"
-BINARY_TAG="$binaryTag"
+BINARY_TAG=${BINARY_TAG:-${binaryTag}}
+BUILD_PATH="$buildPath"
 USE_DOCKER="$useDocker"
 USE_DISTCC="$useDistcc"
 setup_output
+
+if [ -z $BINARY_TAG ]; then
+    log ERROR "Platform must be defined in config.json or with BINARY_TAG, see README"
+    exit 1
+fi
 
 CHECK_KERBEROS=false
 REQUIRE_KERBEROS=false
@@ -23,7 +29,7 @@ elif [ "$1" = "--require-kerberos-distcc" ]; then
     REQUIRE_KERBEROS=true
 fi
 
-# Expand any variables in the command to run (e.g. $BINARY_TAG from run-env)
+# Expand any variables in the command to run (e.g. $BUILD_PATH and $BINARY_TAG from run-env)
 cmd=$(eval echo "$1")
 cmd=${cmd:-printenv}  # if no command is given, print environment
 shift

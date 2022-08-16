@@ -77,6 +77,8 @@ endif()
 # pre-set in the LbDevTools toolchain and the detection fails.
 if(NOT CMAKE_SOURCE_DIR MATCHES "CMakeTmp")
   if(EXISTS ${CMAKE_SOURCE_DIR}/toolchain.cmake
+    AND NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_LIST_DIR  # monobuild: do not "delegate" to self
+    # The above is needed because the top level CMakeLists.txt is in the same directory as this file.
     AND NOT _project STREQUAL "Geant4"  # FIXME Geant4's toolchain.cmake does not work with this setup
     AND NOT _project STREQUAL "Gauss"  # FIXME Gauss' toolchain.cmake does not work with this setup
     AND NOT _project STREQUAL "Gaussino"  # FIXME Gaussino's toolchain.cmake does not work with this setup

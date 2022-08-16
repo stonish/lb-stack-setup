@@ -47,6 +47,8 @@
 	"lbenvPath": "/cvmfs/lhcb.cern.ch/lib/var/lib/LbEnv/2361/stable/linux-64",
 	"projectPath": "..",
 	"contribPath": "../contrib",
+	"buildPath": "..",
+	"targetBuildPath": "",
 	"ccachePath": "../.ccache/$BINARY_TAG",
 	"outputPath": "../.output",
 	"localPoolDepth": null,

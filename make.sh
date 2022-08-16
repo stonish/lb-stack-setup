@@ -18,10 +18,11 @@ PROJECT="$1"
 shift
 
 # steering options
-eval $(config --sh outputPath contribPath ccachePath useCcache useDistcc cmakePrefixPath \
-                   'ccacheHosts=ccacheHosts or ccacheHostsPresets.get(ccacheHostsKey, "")')
+source_config outputPath contribPath buildPath targetBuildPath ccachePath useCcache useDistcc cmakePrefixPath \
+                   'ccacheHosts=ccacheHosts or ccacheHostsPresets.get(ccacheHostsKey, "")'
 OUTPUT=$outputPath
 CONTRIB=$contribPath
+BUILD_PATH=$buildPath
 USE_CCACHE=$useCcache
 USE_DISTCC=$useDistcc
 USE_DISTCC_PUMP=true
@@ -216,8 +217,8 @@ fi
 # Disable distcc when there are few cxx to build.
 # This saves the overheads when iterating on some file.
 if [ "$USE_DISTCC" = true -a "$DEBUG_DISTCC" != true ]; then
-  if [ -f "$PROJECT/build.$BINARY_TAG/build.ninja" ]; then
-    ninja_todo=$("$CONTRIB/bin/ninja" -C "$PROJECT/build.$BINARY_TAG" -n | \
+  if [ -f "$BUILD_PATH/$PROJECT/build.$BINARY_TAG/build.ninja" ]; then
+    ninja_todo=$("$CONTRIB/bin/ninja" -C "$BUILD_PATH/$PROJECT/build.$BINARY_TAG" -n | \
       grep 'Building CXX object\|Re-running CMake' | head -2 || true)
     # do not disable distcc when rerunning CMake
     if [[ $ninja_todo != *'CMake'* ]]; then
@@ -242,9 +243,9 @@ elif [ "$USE_DISTCC" = true ]; then
   export COMPILER_PREFIX="$DIR/../contrib/bin/distcc"
 fi
 
-compile_commands_src="$PROJECT/build.$BINARY_TAG/compile_commands.json"
+compile_commands_src="$BUILD_PATH/$PROJECT/build.$BINARY_TAG/compile_commands.json"
 compile_commands_dst="$OUTPUT/$PROJECT/compile_commands.json"
-runtime_env_src="$PROJECT/build.$BINARY_TAG/python.env"
+runtime_env_src="$BUILD_PATH/$PROJECT/build.$BINARY_TAG/python.env"
 runtime_env_dst="$OUTPUT/$PROJECT/runtime.env"
 runtime_env_dst2="$PROJECT/.env"  # needed for Python debugging config
 
@@ -258,9 +259,27 @@ printenv | sort > "$OUTPUT/project.mk.env"
 if [ "$PROJECT" = monohack ]; then  # FIXME this is a hack for the cmake wrapper!
   "$@"
 else
-  make -f "$DIR/project.mk" -C "$PROJECT" "$@"
+  if [ -n "$targetBuildPath" ]; then
+    # We need to "symlink" the build directory because otherwise ccache keys would always
+    # contain /home/username (the source and the build have a different base and base_dir is not enough).
+    # For a comparison of various options, see
+    #     https://web.archive.org/web/20161124231755/http://www.redbottledesign.com/blog/mirroring-files-different-places-links-bind-mounts-and-bindfs
+    # We can't really use symlinking
+    #    ln -sTf "$targetBuildPath/$PROJECT/build.$BINARY_TAG" "$BUILD_PATH/$PROJECT/build.$BINARY_TAG"
+    # because that doesn't work with cmake:
+    #     https://discourse.cmake.org/t/symlinks-on-macos-can-result-in-error-still-dirty-after-100-tries-when-using-ninja/3647
+    # Instead, resort to bindfs, if available:
+    mkdir -p "$targetBuildPath/$PROJECT/build.$BINARY_TAG" "$BUILD_PATH/$PROJECT/build.$BINARY_TAG"
+    findmnt "$BUILD_PATH/$PROJECT/build.$BINARY_TAG" >/dev/null \
+      || (
+        ulimit -Sn $(ulimit -Hn);
+        bindfs --multithreaded "$targetBuildPath/$PROJECT/build.$BINARY_TAG" "$BUILD_PATH/$PROJECT/build.$BINARY_TAG";
+      )
+  fi
+
+  make -f "$DIR/project.mk" -C "$PROJECT" "BUILDDIR=$BUILD_PATH/$PROJECT/build.$BINARY_TAG" "$@"
 fi
-# cd "$PROJECT/build.$BINARY_TAG" && ninja $BUILDFLAGS "$@" && cd -
+# cd "$BUILD_PATH/$PROJECT/build.$BINARY_TAG" && ninja $BUILDFLAGS "$@" && cd -
 # TODO catch CTRL-C during make here and do the clean up, see
 #      https://unix.stackexchange.com/questions/163561/control-which-process-gets-cancelled-by-ctrlc
 
@@ -276,11 +295,30 @@ if [ "$USE_CCACHE" = true ]; then
   ccache --show-log-stats -v | grep -v ' 0$'
 fi
 
+# Create symlinks if building outside of stack
+# rel_build_dir=$PROJECT/build.$BINARY_TAG
+# rel_install_area=$PROJECT/InstallArea/$BINARY_TAG
+# if [ ! $BUILD_PATH/$rel_build_dir -ef $rel_build_dir ]; then
+#   if [ -d $rel_build_dir ]; then
+#     if [ -d $rel_build_dir -a ! \( -L $rel_build_dir \) ]; then
+#       log ERROR "Please delete existing directory $rel_build_dir"
+#     fi
+#     ln -sTf $BUILD_PATH/$rel_build_dir $rel_build_dir || true
+#   fi
+#   if [ -d $BUILD_PATH/$rel_install_area ]; then
+#     mkdir -p $PROJECT/InstallArea
+#     if [ -d $rel_install_area -a ! \( -L $rel_install_area \) ]; then
+#       log ERROR "Please delete existing directory $rel_install_area"
+#     fi
+#     ln -sTf $BUILD_PATH/$rel_install_area $rel_install_area || true
+#   fi
+# fi
+
 # Copy compile commands and runtime environment if changed
 cmp --silent "$compile_commands_src" "$compile_commands_dst" \
   || cp -f "$compile_commands_src" "$compile_commands_dst" 2>/dev/null \
   || true
-run_cmd="$PROJECT/build.$BINARY_TAG/run"
+run_cmd="$BUILD_PATH/$PROJECT/build.$BINARY_TAG/run"
 if [ -f $run_cmd ]; then
   # TODO the following costs about 0.2s, should only run it if the xenv changed
   # Filter out PYTHONHOME to workaround an issue in the VSCode python extension,
