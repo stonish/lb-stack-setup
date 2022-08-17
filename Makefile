@@ -45,10 +45,13 @@ space := $(empty) $(empty)
 clean:
 	@$(DIR)/build-env $(DIR)/make.sh mono clean
 purge:
-	find $(BUILD_PATH)/mono/build.$(BINARY_TAG) -mindepth 1 -maxdepth 1 -exec rm -r -- {} +
+	path=$(BUILD_PATH)/mono/build.$(BINARY_TAG); \
+	if test -d "$$$$path" ; then \
+		find "$$$$path" -mindepth 1 -maxdepth 1 -exec $(RM) -r -- {} + ; \
+		rmdir "$$$$path" || fusermount -q -u "$$$$path" || true; \
+	fi
 	$(RM) -r $(BUILD_PATH)/mono/InstallArea/$(BINARY_TAG)
-	rmdir $(BUILD_PATH)/mono/build.$(BINARY_TAG) || fusermount -q -u $(BUILD_PATH)/mono/build.$(BINARY_TAG) || true
-	find mono "(" -name "InstallArea" -prune -o -name "*.pyc" ")" -a -type f -exec $(RM) -v \{} \;
+	find mono "(" -name "InstallArea" -prune -o -name "build.*" -prune -o -name "*.pyc" ")" -a -type f -exec $(RM) -v \{} \;
 build:
 	@$(DIR)/build-env --require-kerberos-distcc $(DIR)/make.sh mono all
 configure:
@@ -114,10 +117,13 @@ define PROJECT_settings_clean
 # exception for purge: always do fast/Project/purge
 $(1)/purge: fast/$(1)/purge ;
 fast/$(1)/purge:
-	find $(BUILD_PATH)/$(1)/build.$(BINARY_TAG) -mindepth 1 -maxdepth 1 -exec rm -r -- {} +
+	path=$(BUILD_PATH)/$(1)/build.$(BINARY_TAG); \
+	if test -d "$$$$path" ; then \
+		find "$$$$path" -mindepth 1 -maxdepth 1 -exec $(RM) -r -- {} + ; \
+		rmdir "$$$$path" || fusermount -q -u "$$$$path" || true; \
+	fi
 	$(RM) -r $(BUILD_PATH)/$(1)/InstallArea/$(BINARY_TAG)
-	rmdir $(BUILD_PATH)/$(1)/build.$(BINARY_TAG) || fusermount -q -u $(BUILD_PATH)/$(1)/build.$(BINARY_TAG) || true
-	find $(1) "(" -name "InstallArea" -prune -o -name "*.pyc" ")" -a -type f -exec $(RM) -v \{} \;
+	find $(1) "(" -name "InstallArea" -prune -o -name "build.*" -prune -o -name "*.pyc" ")" -a -type f -exec $(RM) -v \{} \;
 # clean
 $(1)-clean: $(patsubst %,%-clean,$($(1)_INV_DEPS))
 	$$(MAKE) fast/$(1)-clean
@@ -127,6 +133,7 @@ fast/$(1)-clean:
 endef
 $(foreach proj,$(ALL_PROJECTS),$(eval $(call PROJECT_settings_clean,$(proj))))
 ALL_TARGETS += $(foreach p,$(ALL_PROJECTS),$(p)-clean fast/$(p)-clean)
+ALL_TARGETS += $(foreach p,$(ALL_PROJECTS),$(p)/checkout fast/$(p)/checkout)
 
 endif
 

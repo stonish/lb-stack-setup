@@ -554,6 +554,11 @@ def main(targets):
     else:
         build_target_deps = []
 
+    if fast_checkout_projects and len(fast_checkout_projects) != len(targets):
+        error(
+            config_path, "fast/Project/checkout targets cannot be mixed " +
+            "with other targets")
+
     install_contrib(config)
 
     if is_mono_build:
