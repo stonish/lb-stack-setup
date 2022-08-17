@@ -294,61 +294,80 @@ For example, to override the default number of concurrent compilations to 2, run
 make Rec BUILDFLAGS='-j 2'
 ```
 
-### Use DD4hep, Detector and Gaussino
+### Use DD4hep
 
-To use DD4hep and the new [Detector](https://gitlab.cern.ch/lhcb/Detector) project,
-checkout the `master` branch of Detector and pass `USE_DD4HEP=ON` to CMake,
-and configure Geant4 to build with multi-threaded support.
+To use DD4hep it is enough to switch to a platform with `+dd4hep` added after the compiler,
+for example
 
 ```sh
-git -C Detector switch master
-utils/config.py -- cmakeFlags.default '-Wno-dev -DUSE_DD4HEP=ON'
-utils/config.py -- cmakeFlags.Geant4 '-Wno-dev -DGEANT4_BUILD_MULTITHREADED=ON'
+utils/config.py binaryTag x86_64_v2-centos7-gcc11+dd4hep-opt
 ```
 
-A workaround is also needed until the LHCB_5 layer installation is comlete
-(see [LBCORE-1995](https://its.cern.ch/jira/browse/LBCORE-1995)).
+### Building Gauss
+
+Gauss typically requires some MRs to be applied on top
+of the default branch use in the nightlies. This is reflected in the nightly
+slot definitions (by using HEAD as version) and you can see the exact set of
+MRs applied at the Gauss checkout page of a given build.
+
+Below are two examples of how to get a checkout locally. They correspond to the
+[lhcb-master/1767](https://lhcb-nightlies.web.cern.ch/nightly/lhcb-master/1767/) build.
+
+#### Checkout and apply MRs manually
+
+(Adapt list of MRs according to what you need.)
 
 ```sh
-utils/config.py -- cmakePrefixPath '$CMAKE_PREFIX_PATH:/cvmfs/sft.cern.ch/lcg/releases:/cvmfs/lhcb.cern.ch/lib/lcg/releases/LCG_97a/LCIO/02.13.03/x86_64-centos7-gcc9-opt'
-```
-
-#### Checkout and apply MRs for Gaussino and Gauss (preferred option)
-
-```sh
-make fast/Gaussino/checkout  # clone Gaussino if not already there
-cd Gaussino
-git fetch && git fetch origin '+refs/merge-requests/*/head:refs/remotes/origin/mr/*'
-git checkout origin/master
-git merge --no-edit origin/mr/9 origin/mr/13 origin/mr/18 origin/mr/19 origin/mr/21 origin/mr/23
-cd ..
-
 make fast/Gauss/checkout  # clone Gauss if not already there
-cd Gauss
-git fetch && git fetch origin '+refs/merge-requests/*/head:refs/remotes/origin/mr/*'
-git checkout origin/Futurev3
-git merge --no-edit origin/mr/686 origin/mr/695 origin/mr/718
-cd ..
+git -C Gauss fetch && git fetch origin '+refs/merge-requests/*/head:refs/remotes/origin/mr/*'
+git -C Gauss checkout origin/master
+git -C Gauss merge --no-edit origin/mr/845 origin/mr/861
 ```
 
-#### Checkout the versions used in the nightlies (alternative option)
+#### Checkout the nightly tags
 
-An alternative to checkout Gaussino and Gauss is to take the exact version built in the nightlies.
-For example, as of 9 Mar 2021, the latest build ID in the `lhcb-gaussino` slot is 901,
-so we need to do the following.
+The nightlies create a tag for each project and for each build. These tags can be used as follows
 
 ```sh
-make fast/Gaussino/checkout  # clone Gaussino if not already there
-cd Gaussino
-git fetch ssh://git@gitlab.cern.ch:7999/lhcb-nightlies/Gaussino.git lhcb-gaussino/901
-git checkout FETCH_HEAD
-cd ..
+make fast/Gauss/checkout  # clone Gauss if not already there
+git -C Gauss fetch ssh://git@gitlab.cern.ch:7999/lhcb-nightlies/Gauss.git lhcb-master/1767
+git -C Gauss checkout FETCH_HEAD
+```
 
-make fast/Gaussino/checkout  # clone Gauss if not already there
-cd Gauss
-git fetch ssh://git@gitlab.cern.ch:7999/lhcb-nightlies/Gauss.git lhcb-gaussino/901
-git checkout FETCH_HEAD
-cd ..
+### Building Gauss on Gaussino
+
+- (Temporarily) switch to LCG 101
+- Configure Geant4 to build with multi-threaded support.
+- Switch to `Futurev4` in Gauss
+- Merge the MRs applied in the [lhcb-gaussino](https://lhcb-nightlies.web.cern.ch/nightly/lhcb-gaussino/) slot.
+- You can also change the platform to dd4hep if you want to build that flavour.
+
+```sh
+utils/config.py lcgVersion 101
+
+utils/config.py -- cmakeFlags.Geant4 '-DGEANT4_BUILD_MULTITHREADED=ON'
+
+utils/config.py gitBranch.Gauss Futurev4
+git -C Gauss switch Futurev4
+
+make Gauss/checkout  # clone Gauss and Gaussino if not already there
+
+git -C Gaussino fetch && git fetch origin '+refs/merge-requests/*/head:refs/remotes/origin/mr/*'
+git -C Gaussino checkout origin/master
+git -C Gaussino merge --no-edit origin/mr/{35,53,57,59,68,73,75}
+
+git -C Gauss fetch && git fetch origin '+refs/merge-requests/*/head:refs/remotes/origin/mr/*'
+git -C Gauss checkout origin/Futurev4
+git -C Gauss merge --no-edit origin/mr/{800,812,827,847,848,850,856,870,872}
+```
+
+### Build a run2-patches stack
+
+```sh
+curl https://gitlab.cern.ch/rmatev/lb-stack-setup/raw/master/setup.py | python3 - run2-stack
+cd run2-stack
+utils/config.py gitBranch.default run2-patches
+make DaVinci
 ```
 
 ### Update the setup
