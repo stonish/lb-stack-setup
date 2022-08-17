@@ -127,6 +127,7 @@ fast/$(1)-clean:
 endef
 $(foreach proj,$(ALL_PROJECTS),$(eval $(call PROJECT_settings_clean,$(proj))))
 ALL_TARGETS += $(foreach p,$(ALL_PROJECTS),$(p)-clean fast/$(p)-clean)
+ALL_TARGETS += $(foreach p,$(ALL_PROJECTS),$(p)/checkout fast/$(p)/checkout)
 
 endif
 
