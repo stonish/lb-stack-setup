@@ -3,7 +3,6 @@ import json
 import os
 import re
 import shutil
-import stat
 from collections import OrderedDict
 from utils import setup_logging, write_file_if_different, topo_sorted, add_file_to_git_exclude
 from config import rinterp
@@ -55,7 +54,7 @@ def create_python_tool_wrappers(config):
         src = os.path.join(config['lbenvPath'], 'bin', name)
         dst = os.path.join(config['outputPath'], name)
         contents = '#!/bin/sh\nenv -i {} "$@"\n'.format(src)
-        write_file_if_different(dst, contents, mode=stat.S_IRWXU)
+        write_file_if_different(dst, contents, executable=True)
 
 
 def update_json(filename, update, default={}):
