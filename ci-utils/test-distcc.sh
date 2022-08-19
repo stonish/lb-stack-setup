@@ -1,11 +1,6 @@
-set -xo pipefail
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+source "$DIR/framework.sh"
 
-retcode=0
-
-error() {
-    problems+="ERROR $1\n"
-    retcode=1
-}
 
 src=$(mktemp tmp-test-distcc.XXXXXXXXXX.cpp)
 cat >"$src" <<EOF
@@ -76,6 +71,3 @@ fi
 # python3 contrib/lib/python3.6/site-packages/include_server/include_server.py --port ./socket
 
 rm -f "$src"*
-
-echo -en $problems >&2
-exit $retcode
