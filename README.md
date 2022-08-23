@@ -462,6 +462,16 @@ git clone ssh://git@gitlab.cern.ch:7999/lhcb-core/lcg-toolchains.git
 - Run `make`. Required projects that you don't have (like Gaudi) will be
   cloned for you.
 
+### Pass flags to docker
+
+When running in docker, you might want to pass flags to the LHCb docker wrapper
+`lb-docker-run`. You can do that by setting the `LB_DOCKER_RUN_FLAGS` environment
+variable. For example, to mount the directory `/some/path` you would do
+
+```sh
+LB_DOCKER_RUN_FLAGS="-v /some/path" Moore/run gaudirun.py ...
+```
+
 ### Troubleshooting
 
 1. Check your configuration files `utils/config.json` and `utils/default-config.json`.

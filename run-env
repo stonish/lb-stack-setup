@@ -11,7 +11,7 @@ for iproject in $(seq 1 $#); do
 done
 
 PROJECT="${!iproject}"
-export LB_DOCKER_RUN_FLAGS="--ptrace ${@:1:$iproject-1}"
+export LB_DOCKER_RUN_FLAGS="--ptrace ${@:1:$iproject-1} ${LB_DOCKER_RUN_FLAGS}"
 # Check kerberos token as we're most likely going to access data.
 # Note that ${BINARY_TAG} and ${BUILD_PATH} are expanded in build-env.
 exec "${DIR}/build-env" --check-kerberos \${BUILD_PATH}/${PROJECT}/build.\${BINARY_TAG}/run "${@:$iproject+1}"
