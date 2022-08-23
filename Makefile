@@ -51,7 +51,7 @@ purge:
 		rmdir "$$path" || ( fusermount -q -u "$$path" && rmdir "$$path" ) || true; \
 	fi
 	$(RM) -r $(BUILD_PATH)/mono/InstallArea/$(BINARY_TAG)
-	find mono "(" -name "InstallArea" -prune -o -name "build.*" -prune -o -name "*.pyc" ")" -a -type f -exec $(RM) -v \{} \;
+	find mono "(" -name "InstallArea" -prune -o -name "*.pyc" ")" -a -type f -exec $(RM) -v \{} \;
 build:
 	@$(DIR)/build-env --require-kerberos-distcc $(DIR)/make.sh mono all
 configure:
@@ -123,7 +123,7 @@ fast/$(1)/purge:
 		rmdir "$$$$path" || ( fusermount -q -u "$$$$path" && rmdir "$$$$path" ) || true; \
 	fi
 	$(RM) -r $(BUILD_PATH)/$(1)/InstallArea/$(BINARY_TAG)
-	find $(1) "(" -name "InstallArea" -prune -o -name "build.*" -prune -o -name "*.pyc" ")" -a -type f -exec $(RM) -v \{} \;
+	find $(1) "(" -name "InstallArea" -prune -o -name "*.pyc" ")" -a -type f -exec $(RM) -v \{} \;
 # clean
 $(1)-clean: $(patsubst %,%-clean,$($(1)_INV_DEPS))
 	$$(MAKE) fast/$(1)-clean
