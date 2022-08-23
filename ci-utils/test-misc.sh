@@ -1,17 +1,11 @@
-set -xo pipefail
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+source "$DIR/framework.sh"
 
 LHCb_or_mono=LHCb
 if [ -x mono/run ]
 then
     LHCb_or_mono=mono
 fi
-
-retcode=0
-
-error() {
-    problems+="ERROR $1\n"
-    retcode=1
-}
 
 if [ ! "$($LHCb_or_mono/run pwd)" = "$(pwd)" ]
 then
@@ -51,5 +45,3 @@ then
     error 'PRConfig is not picked up from the local clone'
 fi
 
-echo -en $problems >&2
-exit $retcode

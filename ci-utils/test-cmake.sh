@@ -1,4 +1,5 @@
-set -xo pipefail
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+source "$DIR/framework.sh"
 
 ### TODO
 # - check that we don't lookup released projects from cvmfs
@@ -8,12 +9,6 @@ build="${1:-.}"
 build_ninja="$build/build.ninja"
 rules_ninja="$build/CMakeFiles/rules.ninja"
 CMAKE=contrib/bin/cmake
-retcode=0
-
-error() {
-    problems+="ERROR $1\n"
-    retcode=1
-}
 
 if ! $CMAKE -LA -N $build | \
     grep '^CMAKE_MAKE_PROGRAM:' | grep "contrib/bin/ninja"
@@ -76,6 +71,3 @@ if ( cd "$build/.."; git grep GENREFLEX_JOB_POOL ) ; then
         error 'genreflex does not use dedicated job pool'
     fi
 fi
-
-echo -en $problems >&2
-exit $retcode

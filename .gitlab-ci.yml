@@ -64,8 +64,6 @@ make-mono:
     - utils/config.py monoBuild true
     - utils/config.py defaultProjects '["LHCb"]'
     - bash utils/ci-utils/make-mono-script.sh
-    - make purge
-    - make purge  # second purge should not fail
 
 make-oos:
   extends: .make
@@ -87,8 +85,6 @@ make-oos-mono-bindfs:
     - export BINARY_TAG=$(utils/config.py binaryTag)
     - utils/config.py binaryTag ''
     - bash utils/ci-utils/make-mono-script.sh
-    - make purge
-    - make purge  # second purge should not fail
 
 # Test legacy branches until it's easy to support.
 make-legacy:

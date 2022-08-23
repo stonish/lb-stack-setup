@@ -115,7 +115,7 @@ def run(args,
                   **kwargs)()
 
 
-def write_file_if_different(path, contents, mode=None, backup=None):
+def write_file_if_different(path, contents, executable=False, backup=None):
     """Write `contents` to file `path` unless already identical.
 
     Returns old file contents if file was modified or None otherwise.
@@ -127,12 +127,16 @@ def write_file_if_different(path, contents, mode=None, backup=None):
         old_contents = f.read()
         if callable(contents):
             contents = contents(old_contents)
-        if contents == old_contents:
+        mode = new_mode = 0
+        if executable:
+            mode = os.fstat(f.fileno()).st_mode
+            new_mode = mode | ((mode & 0o444) >> 2)  # copy R bits to X
+        if contents == old_contents and mode == new_mode:
             return None
         f.seek(0)
         f.truncate()
         f.write(contents)
-        if mode is not None:
+        if executable:
             os.chmod(f.fileno(), mode)
     if backup is not None:
         with open(backup, 'w') as f:

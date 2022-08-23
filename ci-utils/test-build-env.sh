@@ -1,8 +1,5 @@
-set -xo pipefail
-error() {
-    problems+="ERROR $1\n"
-    retcode=1
-}
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+source "$DIR/framework.sh"
 
 
 if ! ls /cvmfs/{lhcb,lhcb-condb,lhcbdev,sft}.cern.ch/
@@ -37,7 +34,3 @@ if BLAH=blah utils/build-env env | grep '^BLAH=blah$'
 then
     error 'Variable not listed in forwardEnv should not be propagated'
 fi
-
-
-echo -en $problems >&2
-exit $retcode
