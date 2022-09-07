@@ -134,7 +134,7 @@ def find_project_deps(project):
     try:
         with open(metadata_path) as f:
             metadata = f.read()
-        m = re.search(r'(\n|^)dependencies:\s(?P<deps>(\s+-\s+\w+\n)+)',
+        m = re.search(r'(\n|^)dependencies:\s(?P<deps>(\s+-\s+\w+(\n|$))+)',
                       metadata)
         if not m:
             raise RuntimeError(f'dependencies not found in {metadata_path}')
