@@ -387,6 +387,7 @@ docker_opts = [
     (opts.quiet_env, ['-e', 'QUIET_LBLOGIN=1']),
     (opts.platform, ['-e', 'CMTCONFIG={0}'.format(opts.platform)]),
     (opts.ptrace, ['--cap-add=SYS_PTRACE', '--security-opt', 'seccomp=unconfined']),
+    (True, ['--entrypoint=' + os.path.join(os.path.dirname(__file__), 'docker', 'entrypoint.sh')]),
     (True, [image_name]),
     (True, args)
 ]  # yapf: disable
