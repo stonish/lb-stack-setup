@@ -346,7 +346,7 @@ if opts.kerberos:
     krb5ccname = os.environ.get('KRB5CCNAME', '').split(':')[-1]
     if os.path.isfile(krb5ccname):
         opts.env.append('KRB5CCNAME')
-        opts.volume.append(krb5ccname)
+        opts.volume.append("{0}:{0}:ro,Z".format(krb5ccname))
     else:
         sys.exit('the --kerberos flag requires KRB5CCNAME to point to a file')
 
