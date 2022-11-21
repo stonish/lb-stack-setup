@@ -471,7 +471,7 @@ def install_contrib(config):
         script = os.path.join(DIR, "install-distcc.sh")
         if is_file_older_than_ref(target, script):
             log.info("Installing distcc...")
-            run([os.path.join(DIR, "build-env"), "bash", script])
+            run([os.path.join(DIR, "build-env"), "bash", script], stdin=None)
 
 
 def error(config_path, *args):

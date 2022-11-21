@@ -346,7 +346,7 @@ if opts.kerberos:
     krb5ccname = os.environ.get('KRB5CCNAME', '').split(':')[-1]
     if os.path.isfile(krb5ccname):
         opts.env.append('KRB5CCNAME')
-        opts.volume.append(krb5ccname)
+        opts.volume.append("{0}:{0}:ro,Z".format(krb5ccname))
     else:
         sys.exit('the --kerberos flag requires KRB5CCNAME to point to a file')
 
@@ -387,6 +387,7 @@ docker_opts = [
     (opts.quiet_env, ['-e', 'QUIET_LBLOGIN=1']),
     (opts.platform, ['-e', 'CMTCONFIG={0}'.format(opts.platform)]),
     (opts.ptrace, ['--cap-add=SYS_PTRACE', '--security-opt', 'seccomp=unconfined']),
+    (True, ['--entrypoint=' + os.path.join(os.path.dirname(__file__), 'docker', 'entrypoint.sh')]),
     (True, [image_name]),
     (True, args)
 ]  # yapf: disable

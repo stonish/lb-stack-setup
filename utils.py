@@ -91,10 +91,13 @@ def run_nb(args,
         ]
         level = logging.ERROR if check and p.returncode else logging.DEBUG
         if log or level == logging.ERROR:
-            _log.log(level, (f"Result of command{in_dir_msg}: {cmd_msg}\n" +
-                             f'\tretcode: {p.returncode}\n' + '\tstderr: ' +
-                             stderr.rstrip("\n") + "\n" + '\tstdout: ' +
-                             stdout.rstrip("\n")))
+            msg = (f"Result of command{in_dir_msg}: {cmd_msg}\n" +
+                   f"\tretcode: {p.returncode}")
+            if stderr is not None:
+                msg += "\n\tstderr: " + stderr.rstrip("\n")
+            if stdout is not None:
+                msg += "\n\tstdout: " + stdout.rstrip("\n")
+            _log.log(level, msg)
         if check and p.returncode != 0:
             raise CalledProcessError(p.returncode, args)
         return namedtuple('CompletedProcess',
