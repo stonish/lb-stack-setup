@@ -140,7 +140,7 @@ def write_file_if_different(path, contents, executable=False, backup=None):
         f.truncate()
         f.write(contents)
         if executable:
-            os.chmod(f.fileno(), mode)
+            os.chmod(f.fileno(), new_mode)
     if backup is not None:
         with open(backup, 'w') as f:
             f.write(old_contents)
