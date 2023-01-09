@@ -12,4 +12,4 @@ fi
 args=()
 [ -n "$COMPILER_PREFIX" ] && args+=("$COMPILER_PREFIX")
 args+=("$@")
-exec "${args[@]}"
+exec  \time --format '"%C",%e,%U,%S,%M' --append --output=compile.csv "${args[@]}"
