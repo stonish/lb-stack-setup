@@ -275,6 +275,13 @@ else
         ulimit -Sn $(ulimit -Hn);
         bindfs --multithreaded "$targetBuildPath/$PROJECT/build.$BINARY_TAG" "$BUILD_PATH/$PROJECT/build.$BINARY_TAG";
       )
+    mkdir -p "$targetBuildPath/$PROJECT/InstallArea"
+    ln -sTf "$targetBuildPath/$PROJECT/InstallArea" "$BUILD_PATH/$PROJECT/InstallArea"
+    # findmnt "$BUILD_PATH/$PROJECT/InstallArea" >/dev/null \
+    #   || (
+    #     ulimit -Sn $(ulimit -Hn);
+    #     bindfs --multithreaded "$targetBuildPath/$PROJECT/InstallArea" "$BUILD_PATH/$PROJECT/InstallArea";
+    #   )
   fi
 
   make -f "$DIR/project.mk" -C "$PROJECT" "BUILDDIR=$BUILD_PATH/$PROJECT/build.$BINARY_TAG" "$@"

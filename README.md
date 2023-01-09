@@ -188,13 +188,13 @@ Depending on what and where you build there are different recommendations.
   empty string in `config.json` and export it before running make: `BINARY_TAG=... make <target>`.
 - `defaultProjects`: Defines which projects are built when `make` is invoked without giving any
   project-specific target (i.e. `make`, `make all` or `make build`).
-- `buildPath` and `ccachePath`: Defines where the build artifacts are stored. By default, they
+- `targetBuildPath` and `ccachePath`: Defines where the build artifacts are stored. By default, they
   are put under the stack directory (and the respective projects inside). Instead, you can put
   the artifacts in a separate directory/volume, with something like this:
 
     ```sh
-    utils/config.py ccachePath '/localdisk1/$USER/ccache/$BINARY_TAG'
-    utils/config.py buildPath  '/localdisk2/$USER/build/$HOSTNAME/${projectPath}'
+    utils/config.py ccachePath      '/localdisk1/$USER/ccache/$BINARY_TAG'
+    utils/config.py targetBuildPath '/localdisk2/$USER/build/$HOSTNAME/${projectPath}'
     ```
 
 - `useDocker (true/false)`: Allows running with docker, check
