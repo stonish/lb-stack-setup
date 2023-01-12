@@ -8,6 +8,7 @@
 	"extraDependencies": {},
 	"gitBranch": {
 		"Gaudi": "master",
+		"Gauss": "Futurev5",
 		"default": "master",
 		"defaultDataPackages": "master"
 	},
@@ -16,8 +17,7 @@
 	"cmakeFlags": {
 		"default": "-Wno-dev",
 		"Allen": "-DSTANDALONE=OFF",
-		"Gaussino": "-DLCG_LAYER=LHCB_7 -DLCG_USE_GENERATORS=ON",
-		"Gauss": "-DLCG_LAYER=LHCB_7 -DLCG_USE_GENERATORS=ON"
+		"Geant4": "-DGEANT4_BUILD_MULTITHREADED=ON"
 	},
 	"forwardEnv": [
 		"DISPLAY",
@@ -29,6 +29,7 @@
 	"gitGroup": {
 		"Gaudi": "gaudi",
 		"Gaussino": "Gaussino",
+		"GaussinoExtLibs": "Gaussino",
 		"default": "lhcb",
 		"defaultDataPackages": "lhcb-datapkg"
 	},
