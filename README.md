@@ -305,60 +305,34 @@ utils/config.py binaryTag x86_64_v2-centos7-gcc11+dd4hep-opt
 
 ### Building Gauss
 
-Gauss typically requires some MRs to be applied on top
-of the default branch use in the nightlies. This is reflected in the nightly
-slot definitions (by using HEAD as version) and you can see the exact set of
-MRs applied at the Gauss checkout page of a given build.
+### Sim11 (Gauss-on-Gaussino)
 
-Below are two examples of how to get a checkout locally. They correspond to the
-[lhcb-master/1767](https://lhcb-nightlies.web.cern.ch/nightly/lhcb-master/1767/) build.
-
-#### Checkout and apply MRs manually
-
-(Adapt list of MRs according to what you need.)
+The default version of Gauss used for `lb-stack-setup` is `Sim11` (Gauss-on-Gaussino).
+In order to build the whole Gauss-on-Gaussino stack, you only need to run:
 
 ```sh
-make fast/Gauss/checkout  # clone Gauss if not already there
-git -C Gauss fetch && git fetch origin '+refs/merge-requests/*/head:refs/remotes/origin/mr/*'
-git -C Gauss checkout origin/master
-git -C Gauss merge --no-edit origin/mr/845 origin/mr/861
+make Gauss
 ```
 
-#### Checkout the nightly tags
-
-The nightlies create a tag for each project and for each build. These tags can be used as follows
+If you wish to work with Gaussino only:
 
 ```sh
-make fast/Gauss/checkout  # clone Gauss if not already there
-git -C Gauss fetch ssh://git@gitlab.cern.ch:7999/lhcb-nightlies/Gauss.git lhcb-master/1767
-git -C Gauss checkout FETCH_HEAD
+make Gaussino
 ```
 
-### Building Gauss on Gaussino
+More information can be found in the following documentations:
+- [Gaussino](https://gaussino.docs.cern.ch/)
+- [Gauss-on-Gaussino](https://lhcb-gauss.docs.cern.ch/)
 
-- (Temporarily) switch to LCG 101
-- Configure Geant4 to build with multi-threaded support.
-- Switch to `Futurev4` in Gauss
-- Merge the MRs applied in the [lhcb-gaussino](https://lhcb-nightlies.web.cern.ch/nightly/lhcb-gaussino/) slot.
-- You can also change the platform to dd4hep if you want to build that flavour.
+#### Sim10
+
+Older versions of Gauss need a few more steps. Below you will find an example for `Sim10`.
 
 ```sh
-utils/config.py lcgVersion 101
-
-utils/config.py -- cmakeFlags.Geant4 '-DGEANT4_BUILD_MULTITHREADED=ON'
-
-utils/config.py gitBranch.Gauss Futurev4
-git -C Gauss switch Futurev4
-
-make Gauss/checkout  # clone Gauss and Gaussino if not already there
-
-git -C Gaussino fetch && git fetch origin '+refs/merge-requests/*/head:refs/remotes/origin/mr/*'
-git -C Gaussino checkout origin/master
-git -C Gaussino merge --no-edit origin/mr/{35,53,57,59,68,73,75}
-
-git -C Gauss fetch && git fetch origin '+refs/merge-requests/*/head:refs/remotes/origin/mr/*'
-git -C Gauss checkout origin/Futurev4
-git -C Gauss merge --no-edit origin/mr/{800,812,827,847,848,850,856,870,872}
+utils/config.py -- cmakeFlags.Geant4 '-DGEANT4_BUILD_MULTITHREADED=OFF'
+utils/config.py gitBranch.Gauss Sim10
+git -C Gauss switch Sim10
+make Gauss
 ```
 
 ### Build a run2-patches stack
@@ -368,6 +342,35 @@ curl https://gitlab.cern.ch/rmatev/lb-stack-setup/raw/master/setup.py | python3 
 cd run2-stack
 utils/config.py gitBranch.default run2-patches
 make DaVinci
+```
+
+### Reproduce nightly builds
+
+Some projects might require some MRs to be applied on top
+of the default branch used in the nightlies. This is reflected in the nightly
+slot definitions (by using HEAD as version) and you can see the exact set of
+MRs applied at the project's checkout page of a given build.
+
+Below are two examples of how to get a checkout of Gauss that corresponds to the
+`lhcb-master/1767` build (which included MRs 845 and 861).
+
+#### Checkout and apply MRs manually
+
+```sh
+cd Gauss
+git fetch && git fetch origin '+refs/merge-requests/*/head:refs/remotes/origin/mr/*'
+git checkout origin/master
+git merge --no-edit origin/mr/845 origin/mr/861
+```
+
+#### Checkout the nightly tags
+
+The nightlies create a tag for each project and for each build. These tags can be used as follows
+
+```sh
+cd Gauss
+git fetch ssh://git@gitlab.cern.ch:7999/lhcb-nightlies/Gauss.git lhcb-master/1767
+git checkout FETCH_HEAD
 ```
 
 ### Update the setup
