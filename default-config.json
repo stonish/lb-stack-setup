@@ -45,7 +45,7 @@
 	"useDocker": false,
 	"useCcache": true,
 	"useDistcc": null,
-	"lbenvPath": "/cvmfs/lhcb.cern.ch/lib/var/lib/LbEnv/2361/stable/linux-64",
+	"lbenvPath": "/cvmfs/lhcb.cern.ch/lib/var/lib/LbEnv/2683/stable/linux-64",
 	"projectPath": "..",
 	"contribPath": "../contrib",
 	"buildPath": "..",
