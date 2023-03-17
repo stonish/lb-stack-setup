@@ -294,13 +294,13 @@ For example, to override the default number of concurrent compilations to 2, run
 make Rec BUILDFLAGS='-j 2'
 ```
 
-### Use DD4hep
+### Use DetDesc
 
-To use DD4hep it is enough to switch to a platform with `+dd4hep` added after the compiler,
-for example
+By default, dd4hep is used for the detector description. To use DetDesc it is enough to 
+switch to a platform with `+detdesc` added after the compiler, for example
 
 ```sh
-utils/config.py binaryTag x86_64_v2-centos7-gcc11+dd4hep-opt
+utils/config.py binaryTag x86_64_v2-centos7-gcc11+detdesc-opt
 ```
 
 ### Building Gauss
