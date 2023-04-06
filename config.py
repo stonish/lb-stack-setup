@@ -75,6 +75,10 @@ def ccache_hosts_key(config):
             return key
 
 
+def functor_jit_n_jobs(_):
+    return 4 if cpu_count() >= 8 else max(1, cpu_count() // 2)
+
+
 AUTOMATIC_DEFAULTS = {
     'gitBase': git_base,
     'localPoolDepth': lambda _: 2 * cpu_count(),
@@ -82,7 +86,7 @@ AUTOMATIC_DEFAULTS = {
     'distccLocalslotsCpp': lambda _: 2 * cpu_count(),
     'useDistcc': lambda _: cpu_count() < 24,
     'ccacheHostsKey': ccache_hosts_key,
-    'functorJitNJobs': lambda _: 4 if cpu_count() >= 8 else max(1, cpu_count() // 2)
+    'functorJitNJobs': functor_jit_n_jobs,
 }
 
 
