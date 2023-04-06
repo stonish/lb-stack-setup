@@ -54,6 +54,27 @@ def _rinterp(obj, mapping):
         return obj
 
 
+def get_host_os():
+    from subprocess import check_output
+    host_os = (check_output('/cvmfs/lhcb.cern.ch/lib/bin/host_os').decode(
+        'ascii').strip())
+    # known compatibilities
+    # TODO remove once host_os is updated
+    arch, _os = host_os.split("-")
+    el9s = ["rhel9", "almalinux9", "centos9"]
+    if any(_os.startswith(x) for x in el9s):
+        return arch + "-el9"
+    return host_os
+
+
+def binary_tag(config):
+    host_os = get_host_os()
+    for pattern, tag in config["defaultBinaryTags"]:
+        if re.match(pattern, host_os):
+            return tag
+    raise RuntimeError("Could not determine default binary tag")
+
+
 def git_base(config):
     for base in GITLAB_BASE_URLS:
         code = os.system(
@@ -94,6 +115,7 @@ def functor_jit_n_jobs(_):
 
 
 AUTOMATIC_DEFAULTS = {
+    'binaryTag': binary_tag,
     'gitBase': git_base,
     'localPoolDepth': lambda _: 2 * cpu_count(),
     'distccLocalslots': cpu_count,
