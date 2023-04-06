@@ -1,27 +1,22 @@
 #!/usr/bin/env python3
-from __future__ import print_function
+import argparse
+import logging
+import os
+import re
+import shutil
 import sys
-
-if sys.version_info < (2, 7):
-    sys.exit("Python 2.7 or later is required.")
-
-import argparse  # noqa: E402
-import logging  # noqa: E402
-import os  # noqa: E402
-import re  # noqa: E402
-import shutil  # noqa: E402
-from os.path import join, realpath  # noqa: E402
-from subprocess import (  # noqa: E402
-    check_call, check_output, CalledProcessError)
-from datetime import datetime  # noqa: E402
+from os.path import join, realpath
+from subprocess import check_call, check_output, CalledProcessError
+from datetime import datetime
 try:
-    from packaging.version import parse as parse_version  # noqa: E402
+    from packaging.version import parse as parse_version
 except ImportError:
-    from distutils.version import LooseVersion as parse_version  # noqa: E402
+    # kept to support the default Python 3 on CentOS 7
+    from distutils.version import LooseVersion as parse_version
 
 _DEBUG = False
 FROM_FILE = os.path.isfile(__file__)
-SUPPORTED_HOSTS = ['^x86_64-centos[78]$', '^x86_64-rhel8[0-9]*$']
+SUPPORTED_OS_RE = r"^x86_64-(centos7|el9)$"
 CVMFS_DIRS = [
     # (path, mandatory)
     ('/cvmfs/lhcb.cern.ch', True),
@@ -71,11 +66,22 @@ def assert_cvmfs():
                  'Check {}/blob/master/doc/prerequisites.md'.format(URL_BASE))
 
 
-def assert_os_or_docker():
+def get_host_os():
     host_os = (check_output('/cvmfs/lhcb.cern.ch/lib/bin/host_os').decode(
         'ascii').strip())
+    # known compatibilities
+    # TODO remove once host_os is updated
+    arch, _os = host_os.split("-")
+    el9s = ["rhel9", "almalinux9", "centos9"]
+    if any(_os.startswith(x) for x in el9s):
+        return arch + "-el9"
+    return host_os
+
+
+def assert_os_or_docker():
+    host_os = get_host_os()
     use_docker = False
-    if any(re.match(p, host_os) for p in SUPPORTED_HOSTS):
+    if re.match(SUPPORTED_OS_RE, host_os):
         # test native setup
         pass
     else:

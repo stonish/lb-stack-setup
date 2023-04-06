@@ -2,7 +2,10 @@
 from __future__ import print_function
 import errno
 import json
+import logging
 import os
+import platform
+import re
 from collections import OrderedDict
 from copy import copy, deepcopy
 from string import Template
@@ -75,6 +78,17 @@ def ccache_hosts_key(config):
             return key
 
 
+def use_distcc(config):
+    if cpu_count() >= 24:
+        # Disable distcc if we have many cores
+        return False
+    if not re.match(r'x86_64[^-]*-centos7-.*', config["binaryTag"]):
+        logging.warning(
+            "Will disable distcc as it's only supported for CentOS 7")
+        return False
+    return True
+
+
 def functor_jit_n_jobs(_):
     return 4 if cpu_count() >= 8 else max(1, cpu_count() // 2)
 
@@ -84,7 +98,7 @@ AUTOMATIC_DEFAULTS = {
     'localPoolDepth': lambda _: 2 * cpu_count(),
     'distccLocalslots': cpu_count,
     'distccLocalslotsCpp': lambda _: 2 * cpu_count(),
-    'useDistcc': lambda _: cpu_count() < 24,
+    'useDistcc': use_distcc,
     'ccacheHostsKey': ccache_hosts_key,
     'functorJitNJobs': functor_jit_n_jobs,
 }

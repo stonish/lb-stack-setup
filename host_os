@@ -1,0 +1,40 @@
+#!/bin/bash
+###############################################################################
+# (c) Copyright 2018-2022 CERN                                                #
+#                                                                             #
+# This software is distributed under the terms of the GNU General Public      #
+# Licence version 3 (GPL Version 3), copied verbatim in the file "LICENSE".   #
+#                                                                             #
+# In applying this licence, CERN does not waive the privileges and immunities #
+# granted to it by virtue of its status as an Intergovernmental Organization  #
+# or submit itself to any jurisdiction.                                       #
+###############################################################################
+
+if [ -z "${force_host_os}" ] ; then
+  _os=unknown
+  if [ -e /etc/os-release ] ; then
+    _os=$(awk -F= '/^ID=/{gsub("[.\"]|(-.*)", "", $2); n=tolower($2)}/^VERSION_ID/{gsub("[.\"]", "", $2); v=$2}END{print n""v}' /etc/os-release)
+  elif [ -e /etc/redhat-release ] ; then
+    if grep -q -E '(CentOS|Scientific Linux|Red Hat Enterprise Linux).*release 7' /etc/redhat-release ; then
+      _os=centos7
+    elif grep -q -E '(CentOS|Scientific Linux|Red Hat Enterprise Linux).*release 6' /etc/redhat-release ; then
+      _os=slc6
+    elif grep -q -E '(CentOS|Scientific Linux|Red Hat Enterprise Linux).*release 5' /etc/redhat-release ; then
+      _os=slc5
+    fi
+  elif [ -e /etc/lsb-release ] ; then
+    _os=$(awk -F= '/^DISTRIB_ID/{n=tolower($2)}/^DISTRIB_RELEASE/{gsub("\\.", "", $2); v=$2}END{print n""v}' /etc/lsb-release)
+  fi
+else
+  (>&2 echo "warning: overriding host os detection (using ${force_host_os})")
+  _os=${force_host_os}
+fi
+
+
+# known compatibilities
+case "${_os}" in
+  scientific7*|rhel7*|opensuse15*) _os=centos7 ;;
+  rhel9*|almalinux9*|centos9*) _os=el9 ;;
+esac
+
+echo $(uname -m)-${_os}
