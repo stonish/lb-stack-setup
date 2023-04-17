@@ -2,7 +2,10 @@
 from __future__ import print_function
 import errno
 import json
+import logging
 import os
+import platform
+import re
 from collections import OrderedDict
 from copy import copy, deepcopy
 from string import Template
@@ -51,6 +54,27 @@ def _rinterp(obj, mapping):
         return obj
 
 
+def get_host_os():
+    from subprocess import check_output
+    host_os = (check_output('/cvmfs/lhcb.cern.ch/lib/bin/host_os').decode(
+        'ascii').strip())
+    # known compatibilities
+    # TODO remove once host_os is updated
+    arch, _os = host_os.split("-")
+    el9s = ["rhel9", "almalinux9", "centos9"]
+    if any(_os.startswith(x) for x in el9s):
+        return arch + "-el9"
+    return host_os
+
+
+def binary_tag(config):
+    host_os = get_host_os()
+    for pattern, tag in config["defaultBinaryTags"]:
+        if re.match(pattern, host_os):
+            return tag
+    raise RuntimeError("Could not determine default binary tag")
+
+
 def git_base(config):
     for base in GITLAB_BASE_URLS:
         code = os.system(
@@ -75,14 +99,30 @@ def ccache_hosts_key(config):
             return key
 
 
+def use_distcc(config):
+    if cpu_count() >= 24:
+        # Disable distcc if we have many cores
+        return False
+    if not re.match(r'x86_64[^-]*-centos7-.*', config["binaryTag"]):
+        logging.warning(
+            "Will disable distcc as it's only supported for CentOS 7")
+        return False
+    return True
+
+
+def functor_jit_n_jobs(_):
+    return 4 if cpu_count() >= 8 else max(1, cpu_count() // 2)
+
+
 AUTOMATIC_DEFAULTS = {
+    'binaryTag': binary_tag,
     'gitBase': git_base,
     'localPoolDepth': lambda _: 2 * cpu_count(),
     'distccLocalslots': cpu_count,
     'distccLocalslotsCpp': lambda _: 2 * cpu_count(),
-    'useDistcc': lambda _: cpu_count() < 24,
+    'useDistcc': use_distcc,
     'ccacheHostsKey': ccache_hosts_key,
-    'functorJitNJobs': lambda _: 4 if cpu_count() >= 8 else max(1, cpu_count() // 2)
+    'functorJitNJobs': functor_jit_n_jobs,
 }
 
 

@@ -1,5 +1,5 @@
 {
-	"binaryTag": "x86_64_v2-centos7-gcc11-opt",
+	"binaryTag": null,
 	"monoBuild": false,
 	"defaultProjects": [
 		"Alignment",
@@ -13,6 +13,20 @@
 		"defaultDataPackages": "master"
 	},
 	"lcgVersion": "103",
+	"defaultBinaryTags": [
+		[
+			"^x86_64-el9$",
+			"x86_64_v2-el9-gcc12-opt"
+		],
+		[
+			"^x86_64-centos7$",
+			"x86_64_v2-centos7-gcc12-opt"
+		],
+		[
+			".*",
+			"x86_64_v2-el9-gcc12-opt"
+		]
+	],
 	"cmakePrefixPath": "$CMAKE_PREFIX_PATH:/cvmfs/sft.cern.ch/lcg/releases",
 	"cmakeFlags": {
 		"default": "-Wno-dev",
