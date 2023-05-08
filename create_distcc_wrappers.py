@@ -46,6 +46,18 @@ def parse_compiler_fragment(filename):
     return values
 
 
+def write_file_if_different(path, contents, mode):
+    # use a+ instead of r+ so that the file is created if not existing
+    with open(path, 'a+') as f:
+        f.seek(0)
+        old_contents = f.read()
+        os.chmod(f.fileno(), mode)
+        if contents != old_contents:
+            f.seek(0)
+            f.truncate()
+            f.write(contents)
+
+
 parser = argparse.ArgumentParser()
 parser.add_argument(
     "--input-dir",
@@ -99,6 +111,4 @@ for name in os.listdir(args.input_dir):
 
     log.info(f"Writing wrapper {wrapper_name}")
     wrapper_path = os.path.join(args.output_dir, wrapper_name)
-    with open(wrapper_path, "w") as f:
-        f.write(wrapper)
-    os.chmod(wrapper_path, 0o755)
+    write_file_if_different(wrapper_path, wrapper, 0o755)

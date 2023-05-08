@@ -89,24 +89,6 @@ DISTCC_PRINCIPAL=distccd DISTCC_HOSTS="127.0.0.1:12345/1,auth=lbquantaperf02.cer
     contrib/bin/distcc -o test.o -c test.cpp
 ```
 
-### Create a whitelist of users that have access
-
-The whitelist is a file containing CERN usernames, one on each line.
-The file is located at `/etc/distcc/whitelist`.
-
-To add everyone in, e.g. `lhcb-general` and `z5` (people can have more than one
-accounts), you can do
-
-```sh
-yum install -y openldap-clients  # for ldapsearch
-cat >/etc/cron.daily/distcc_whitelist <<'EOF'
-ldapsearch -E pr=100/noprompt -x -h xldap.cern.ch -b 'OU=Users,OU=Organic Units,DC=cern,DC=ch' '(&(objectClass=user)(|(gidNumber=1470)(memberof=CN=lhcb-general-dynamic,OU=e-groups,OU=Workgroups,DC=cern,DC=ch)))' sAMAccountName | grep '^sAMAccountName:' | cut -d " " -f 2 | sort > /etc/distcc/whitelist
-systemctl restart distccd.service
-EOF
-chmod +x /etc/cron.daily/distcc_whitelist
-/etc/cron.daily/distcc_whitelist
-```
-
 ## Service configuration
 
 Create a system user and group called `distcc`.
@@ -158,16 +140,35 @@ OPTIONS="--allow 0.0.0.0/0 --auth --whitelist /etc/distcc/whitelist"
 EOF
 ```
 
-Install compiler wrappers.
+### Create a whitelist of users that have access
+
+The whitelist is a file containing CERN usernames, one on each line.
+The file is located at `/etc/distcc/whitelist`.
+
+To add everyone in, e.g. `lhcb-general` and `z5` (people can have more than one
+accounts), you can do
 
 ```sh
-mkdir -p /usr/lib/distcc/bin
-curl -L -O https://gitlab.cern.ch/rmatev/lb-stack-setup/-/raw/master/create_distcc_wrappers.py
-python3 create_distcc_wrappers.py /usr/lib/distcc/bin
-ls -1 /cvmfs/lhcb.cern.ch/lib/bin/x86_64-centos7/lcg-* /usr/lib/distcc/bin/* > /etc/distcc/commands.allow
+yum install -y openldap-clients  # for ldapsearch
+cat >/etc/cron.daily/distcc_whitelist <<'EOF'
+ldapsearch -E pr=100/noprompt -x -h xldap.cern.ch -b 'OU=Users,OU=Organic Units,DC=cern,DC=ch' '(&(objectClass=user)(|(gidNumber=1470)(memberof=CN=lhcb-general-dynamic,OU=e-groups,OU=Workgroups,DC=cern,DC=ch)))' sAMAccountName | grep '^sAMAccountName:' | cut -d " " -f 2 | sort > /etc/distcc/whitelist
+systemctl restart distccd.service
+EOF
+chmod +x /etc/cron.daily/distcc_whitelist
+/etc/cron.daily/distcc_whitelist
 ```
 
-__TODO__: do the above and the LDAP user list automatically on service start using `ExecStartPre=`
+### Install compiler wrappers.
+
+```sh
+cat >/etc/cron.daily/distcc_compiler_wrappers <<'EOF'
+mkdir -p /usr/lib/distcc/bin
+curl https://gitlab.cern.ch/rmatev/lb-stack-setup/-/raw/master/create_distcc_wrappers.py | python3 - /usr/lib/distcc/bin
+ls -1 /cvmfs/lhcb.cern.ch/lib/bin/x86_64-centos7/lcg-* /usr/lib/distcc/bin/* > /etc/distcc/commands.allow
+EOF
+chmod +x /etc/cron.daily/distcc_compiler_wrappers
+/etc/cron.daily/distcc_compiler_wrappers
+```
 
 ## Start the service
 
