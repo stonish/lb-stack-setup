@@ -8,6 +8,7 @@ import sys
 from os.path import join, realpath
 from subprocess import check_call, check_output, CalledProcessError
 from datetime import datetime
+from socket import getfqdn
 try:
     from packaging.version import parse as parse_version
 except ImportError:
@@ -191,6 +192,10 @@ if __name__ == '__main__':
     config, _, overrides = read_config(True)
     if new_setup:
         overrides['useDocker'] = use_docker
+        if getfqdn().endswith(".lbdaq.cern.ch"):
+            overrides['cmakeFlags'] = {
+                'Moore': '-DLOKI_BUILD_FUNCTOR_CACHE=OFF',
+            }
         write_config(overrides)
         logging.info(NEXT_STEPS_MSG.format(stack_dir))
     else:
