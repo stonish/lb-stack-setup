@@ -79,6 +79,8 @@ setup_ccache() {
   #   willl have it's path rewritten to one that is relative to the current working directory, before ccache hashes
   #   This means that I can share a cache between different lb-stack setups :)
   export CCACHE_BASEDIR="$PWD"
+  # - rewrite absolute paths in stderr to not get wrong paths in e.g. warning messages
+  export CCACHE_ABSSTDERR=1
   # - using -ffile-prefix-map (see toolchain.cmake). CCACHE_NOHASHDIR=1 is not needed.
   #   See https://ccache.dev/manual/latest.html#_compiling_in_different_directories
   #   Needs recent distcc server, see https://github.com/distcc/distcc/pull/459
