@@ -73,7 +73,7 @@ def get_host_os():
     # known compatibilities
     # TODO remove once host_os is updated
     arch, _os = host_os.split("-")
-    el9s = ["rhel9", "almalinux9", "centos9"]
+    el9s = ["rhel9", "almalinux9", "centos9", "rocky9"]
     if any(_os.startswith(x) for x in el9s):
         return arch + "-el9"
     return host_os

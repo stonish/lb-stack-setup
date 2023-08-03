@@ -34,7 +34,7 @@ fi
 # known compatibilities
 case "${_os}" in
   scientific7*|rhel7*|opensuse15*) _os=centos7 ;;
-  rhel9*|almalinux9*|centos9*) _os=el9 ;;
+  rhel9*|almalinux9*|centos9*|rocky9*) _os=el9 ;;
 esac
 
 echo $(uname -m)-${_os}
