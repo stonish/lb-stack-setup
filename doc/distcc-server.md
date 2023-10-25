@@ -3,34 +3,15 @@
 These are instructions for installing a distcc server on a CentOS 7 machine.
 Execute all commands with sudo, or just become root with `sudo su`.
 
-## Install distcc-server with GSSAPI authentication support
+## Install distcc-server from source with GSSAPI authentication support
 
-Add the CERN repo that has `distccd` compiled with GSSAPI authentication support.
-
-```sh
-cat >/etc/yum.repos.d/distcc7-stable.repo <<'EOF'
-[distcc7-stable]
-name=distcc cern version (krb enabled) [stable] (OS)
-baseurl=http://linuxsoft.cern.ch/internal/repos/distcc7-stable/x86_64/os
-enabled=1
-gpgcheck=0
-priority=5
-EOF
-```
-
-Install the `distcc-server` package, which provides `distccd`.
-
-```sh
-yum install -y distcc-server
-```
-
-### Alternatively, install from source
+First remove previously installed packages with `sudo yum remove "distcc*"`.
 
 ```sh
 cd $HOME/build
-curl -L https://github.com/distcc/distcc/releases/download/v3.4/distcc-3.4.tar.gz | tar -xz
-cd distcc-3.4
-./autogen.sh  # If "configure" does not already exist.
+git clone https://github.com/rmatev/distcc.git --branch v3.4.20220429 distcc-3.4.20220429
+cd distcc-3.4.20220429
+./autogen.sh
 ./configure --with-auth --without-libiberty --without-avahi
 make
 make check
@@ -40,53 +21,6 @@ make check
 
 # manually install the minimum possible
 sudo install -c distccd /usr/local/bin
-# sudo make install  # installs under /usr/local
-
-# remove the cern package
-sudo yum remove distcc-server
-```
-
-Write the service file (adjust the path to distccd).
-
-```sh
-cat >/usr/lib/systemd/system/distccd.service <<EOF
-[Unit]
-Description=Distccd A Distributed Compilation Server
-After=network.target
-
-[Service]
-User=distcc
-RuntimeDirectory=distccd
-EnvironmentFile=-/etc/sysconfig/distccd
-ExecStart=/usr/local/bin/distccd --no-detach --daemon \$OPTIONS
-
-[Install]
-WantedBy=multi-user.target
-EOF
-systemctl daemon-reload
-```
-
-## Setup Kerberos authentication
-
-### Create a service principal for distcc
-
-Create a keytab file for distccd, which registers it in CERN's
-central database (KDC).
-
-```sh
-cern-get-keytab --service distccd --isolate
-chown distcc:distcc /etc/krb5.keytab.distccd
-k5srvutil -f /etc/krb5.keytab.distccd list
-```
-
-### Test authentication with port forwarding
-
-```sh
-ssh -4 -f -N -o ExitOnForwardFailure=yes -L 12345:lbquantaperf02.cern.ch:3632 lxplus.cern.ch
-echo 'int main() { return 0; }' >test.cpp
-rm -rf ~/.distcc/
-DISTCC_PRINCIPAL=distccd DISTCC_HOSTS="127.0.0.1:12345/1,auth=lbquantaperf02.cern.ch --localslots=1" DISTCC_VERBOSE=1 \
-    contrib/bin/distcc -o test.o -c test.cpp
 ```
 
 ## Service configuration
@@ -133,31 +67,41 @@ cat >/etc/sysconfig/distccd <<EOF
 DISTCC_CMDLIST=/etc/distcc/commands.allow
 DISTCC_CMDLIST_NUMWORDS=1
 DISTCCD_PATH=
-DISTCCD_PRINCIPAL="distccd@$(hostname --fqdn)"
-KRB5_KTNAME=/etc/krb5.keytab.distccd
 TMPDIR=/run/distccd
 OPTIONS="--allow 0.0.0.0/0 --auth --whitelist /etc/distcc/whitelist"
+# only needed for kerberos auth:
+DISTCCD_PRINCIPAL="distccd@$(hostname --fqdn)"
+KRB5_KTNAME=/etc/krb5.keytab.distccd
 EOF
 ```
 
-### Automatically update whitelist and compilers
-
-#### Create a whitelist of users that have access
-
-The whitelist is a file containing CERN usernames, one on each line.
-The file is located at `/etc/distcc/whitelist`.
-
-To add everyone in, e.g. `lhcb-general` and `z5` (people can have more than one
-accounts), you can do
-
-#### Install compiler wrappers
+Finally, write the service file (adjust the path to `distccd`).
 
 ```sh
-yum install -y openldap-clients  # for ldapsearch
+cat >/usr/lib/systemd/system/distccd.service <<EOF
+[Unit]
+Description=Distccd A Distributed Compilation Server
+After=network.target
 
-cat >/etc/cron.daily/distcc_config <<'EOF'
-ldapsearch -E pr=100/noprompt -x -h xldap.cern.ch -b 'OU=Users,OU=Organic Units,DC=cern,DC=ch' '(&(objectClass=user)(|(gidNumber=1470)(memberof=CN=lhcb-general-dynamic,OU=e-groups,OU=Workgroups,DC=cern,DC=ch)))' sAMAccountName | grep '^sAMAccountName:' | cut -d " " -f 2 | sort > /etc/distcc/whitelist
+[Service]
+User=distcc
+RuntimeDirectory=distccd
+EnvironmentFile=-/etc/sysconfig/distccd
+ExecStart=/usr/local/bin/distccd --no-detach --daemon \$OPTIONS
 
+[Install]
+WantedBy=multi-user.target
+EOF
+systemctl daemon-reload
+```
+
+### Install compiler wrappers
+
+New compiler wrappers are needed about once per year so we set up a daily cron job.
+
+**TODO**: do not download the script every time since it's a security issue.
+
+```sh
 mkdir -p /usr/lib/distcc/bin
 curl https://gitlab.cern.ch/rmatev/lb-stack-setup/-/raw/master/create_distcc_wrappers.py | python3 - /usr/lib/distcc/bin
 ls -1 /cvmfs/lhcb.cern.ch/lib/bin/x86_64-centos7/lcg-* /usr/lib/distcc/bin/* > /etc/distcc/commands.allow
@@ -166,6 +110,44 @@ systemctl restart distccd.service
 EOF
 chmod +x /etc/cron.daily/distcc_config
 /etc/cron.daily/distcc_config
+```
+
+### Create a whitelist of users that have access (kerberos auth)
+
+The whitelist is a file containing CERN usernames, one on each line.
+The file is located at `/etc/distcc/whitelist`.
+
+To add everyone in, e.g. `lhcb-general` and `z5` (people can have more than one
+accounts), you can do
+
+```sh
+yum install -y openldap-clients  # for ldapsearch
+
+cat >/etc/cron.daily/distcc_config <<'EOF'
+ldapsearch -E pr=100/noprompt -x -h xldap.cern.ch -b 'OU=Users,OU=Organic Units,DC=cern,DC=ch' '(&(objectClass=user)(|(gidNumber=1470)(memberof=CN=lhcb-general-dynamic,OU=e-groups,OU=Workgroups,DC=cern,DC=ch)))' sAMAccountName | grep '^sAMAccountName:' | cut -d " " -f 2 | sort > /etc/distcc/whitelist
+```
+
+## Setup Kerberos authentication
+
+### Create a service principal for distcc
+
+Create a keytab file for distccd, which registers it in CERN's
+central database (KDC).
+
+```sh
+cern-get-keytab --service distccd --isolate
+chown distcc:distcc /etc/krb5.keytab.distccd
+k5srvutil -f /etc/krb5.keytab.distccd list
+```
+
+### Test authentication with port forwarding
+
+```sh
+ssh -4 -f -N -o ExitOnForwardFailure=yes -L 12345:lbquantaperf02.cern.ch:3632 lxplus.cern.ch
+echo 'int main() { return 0; }' >test.cpp
+rm -rf ~/.distcc/
+DISTCC_PRINCIPAL=distccd DISTCC_HOSTS="127.0.0.1:12345/1,auth=lbquantaperf02.cern.ch --localslots=1" DISTCC_VERBOSE=1 \
+    contrib/bin/distcc -o test.o -c test.cpp
 ```
 
 ## Start the service
