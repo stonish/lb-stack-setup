@@ -18,6 +18,7 @@ setup:
   tags:
     - cvmfs
   script:
+    - . /cvmfs/lhcb.cern.ch/lib/LbEnv  # TODO remove this and test setup on all supported hosts
     - git --version
     - python3 setup.py --debug --repo . --branch $CI_COMMIT_SHA stack
     - cd stack
@@ -36,6 +37,8 @@ setup:
     - cvmfs
   variables:
     GIT_STRATEGY: none
+  before_script:
+    - . /cvmfs/lhcb.cern.ch/lib/LbEnv  # TODO remove this and test setup on all supported hosts
   artifacts:
     paths:
       - stack/stack.code-workspace
@@ -96,6 +99,7 @@ make-legacy:
     PLATFORM: x86_64-centos7-gcc62-opt
     LEGACY: 1
   script:
+    - . /cvmfs/lhcb.cern.ch/lib/LbEnv  # TODO remove this and test setup on all supported hosts
     - export GAUDI_OLD_STYLE_PROJECT=YES  # FIXME: this shouldn't be needed
     - cd stack
     - test -n "$PLATFORM" && utils/config.py binaryTag $PLATFORM
