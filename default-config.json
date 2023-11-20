@@ -8,7 +8,6 @@
 	"extraDependencies": {},
 	"gitBranch": {
 		"Gaudi": "v36-patches",
-		"Gauss": "Futurev5",
 		"default": "master",
 		"defaultDataPackages": "master"
 	},
