@@ -3,6 +3,8 @@
         "recommendations": [
             "albertopdrf.root-file-viewer",
             "eamodio.gitlens",
+            "eeyore.yapf",
+            "ms-python.flake8",
             "ms-python.python",
             "ms-python.vscode-pylance",
             "ms-vscode.cpptools",
@@ -19,10 +21,13 @@
         }
     ],
     "settings": {
+        "[python]": {
+            "editor.defaultFormatter": "eeyore.yapf"
+        },
         "C_Cpp.clang_format_fallbackStyle": "none",
         "C_Cpp.clang_format_path": "/cvmfs/lhcb.cern.ch/lib/bin/x86_64-centos7/lcg-clang-format-8.0.0",
         "C_Cpp.clang_format_style": "file",
-        "C_Cpp.configurationWarnings": "Disabled",
+        "C_Cpp.configurationWarnings": "disabled",
         "C_Cpp.default.browse.path": [],
         "C_Cpp.default.cStandard": "c11",
         // fix nagging "to auto-configure IntelliSense for the ... folder" in non-cpp folders
@@ -92,23 +97,16 @@
                 ]
             }
         ],
-        "cSpell.showStatus": false,
         "files.associations": {
             "*.C": "cpp",
             "*.icpp": "cpp"
         },
         "files.trimTrailingWhitespace": true,
-        // python.envFile is set per folder (.vscode/settings.json)
-        "python.formatting.provider": "yapf",
-        "python.formatting.yapfPath": "$outputPath/yapf",
-        "python.languageServer": "Pylance",
-        "python.linting.enabled": true,
-        "python.linting.flake8Args": [
+        "flake8.args": [
             "--select=F,E71,E9,W1,W6"
         ],
-        "python.linting.flake8Enabled": true,
-        "python.linting.flake8Path": "$outputPath/flake8",
-        "python.linting.pylintEnabled": false,
+        // python.envFile is set per folder (.vscode/settings.json)
+        "python.languageServer": "Pylance",
         "python.defaultInterpreterPath": "$pythonPath",
         "remote.downloadExtensionsLocally": true,
         "esbonio.sphinx.buildDir" : "${workspaceFolder}/doc/_build/html",
@@ -117,7 +115,10 @@
         "restructuredtext.linter.disabledLinters": ["doc8", "rst-lint", "rstcheck"],
         "restructuredtext.linter.run": "off",
         "restructuredtext.sphinxBuildPath": "$lbenvPath/bin/sphinx-build",
-        "window.title": "${dirty}${activeEditorShort}${separator}${rootPath}"
+        "window.title": "${dirty}${activeEditorShort}${separator}${rootPath}",
+        "yapf.path": [
+            "$outputPath/yapf"
+        ]
     },
     "launch": {
         "version": "0.2.0",
