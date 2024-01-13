@@ -327,11 +327,23 @@ More information can be found in the following documentations:
 #### Sim10
 
 Older versions of Gauss need a few more steps. Below you will find an example for `Sim10`.
+You can find the right tags/branches/platforms for other versions in the
+[Gauss release notes](https://gitlab.cern.ch/lhcb/Gauss/-/releases).
 
 ```sh
+utils/config.py binaryTag x86_64_v2-centos7-gcc11-opt
+utils/config.py lcgVersion 102b
 utils/config.py -- cmakeFlags.Geant4 '-DGEANT4_BUILD_MULTITHREADED=OFF'
 utils/config.py gitBranch.Gauss Sim10
+utils/config.py gitBranch.Run2Support sim10-patches
+utils/config.py gitBranch.LHCb sim10-patches
+utils/config.py gitBranch.Gaudi v36r9p1
+# if the projects were already created, then:
 git -C Gauss switch Sim10
+git -C Run2Support switch sim10-patches
+git -C LHCb switch sim10-patches
+git -C Gaudi checkout v36r9p1
+# finally make Gauss
 make Gauss
 ```
 
