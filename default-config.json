@@ -7,7 +7,7 @@
 	],
 	"extraDependencies": {},
 	"gitBranch": {
-		"Gaudi": "v36-patches",
+		"Gaudi": "master",
 		"default": "master",
 		"defaultDataPackages": "master"
 	},
