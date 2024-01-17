@@ -106,7 +106,8 @@
             "--select=F,E71,E9,W1,W6"
         ],
         "python.analysis.exclude": [
-            "v*r999"  // exclude recursive symlinks inside data packages since they break pylance
+            // exclude recursive symlinks inside data packages since they break pylance
+            "v*r999"
         ],
         // python.envFile is set per folder (.vscode/settings.json)
         "python.languageServer": "Pylance",
