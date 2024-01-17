@@ -57,10 +57,10 @@
         "cmake.cmakePath": "${workspaceFolder:utils}/cmake",
         "cSpell.customDictionaries": {
             "lhcb": {
-              "name": "lhcb",
-              "path": "${workspaceFolder:utils}/dictionary.txt",
-              "description": "LHCb-specific dictionary",
-              "addWords": true
+                "name": "lhcb",
+                "path": "${workspaceFolder:utils}/dictionary.txt",
+                "description": "LHCb-specific dictionary",
+                "addWords": true
             }
         },
         "cSpell.diagnosticLevel": "Hint",
@@ -105,14 +105,21 @@
         "flake8.args": [
             "--select=F,E71,E9,W1,W6"
         ],
+        "python.analysis.exclude": [
+            "v*r999"  // exclude recursive symlinks inside data packages since they break pylance
+        ],
         // python.envFile is set per folder (.vscode/settings.json)
         "python.languageServer": "Pylance",
         "python.defaultInterpreterPath": "$pythonPath",
         "remote.downloadExtensionsLocally": true,
-        "esbonio.sphinx.buildDir" : "${workspaceFolder}/doc/_build/html",
-        "esbonio.sphinx.confDir"  : "${workspaceFolder}/doc",
-        "esbonio.sphinx.srcDir"   : "${workspaceFolder}/doc",
-        "restructuredtext.linter.disabledLinters": ["doc8", "rst-lint", "rstcheck"],
+        "esbonio.sphinx.buildDir": "${workspaceFolder}/doc/_build/html",
+        "esbonio.sphinx.confDir": "${workspaceFolder}/doc",
+        "esbonio.sphinx.srcDir": "${workspaceFolder}/doc",
+        "restructuredtext.linter.disabledLinters": [
+            "doc8",
+            "rst-lint",
+            "rstcheck"
+        ],
         "restructuredtext.linter.run": "off",
         "restructuredtext.sphinxBuildPath": "$lbenvPath/bin/sphinx-build",
         "window.title": "${dirty}${activeEditorShort}${separator}${rootPath}",

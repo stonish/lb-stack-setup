@@ -245,8 +245,14 @@ def check_staleness(repos, show=1):
     def fetch_repo(path):
         url, branch = git_url_branch(path, try_read_only=True)
         url = url or "origin"  # for utils
-        fetch_args = [url, f"{branch}:refs/remotes/origin/{branch}"]
+        fetch_args = [url, f"refs/heads/{branch}:refs/remotes/origin/{branch}"]
         # TODO add +refs/merge-requests/*/head:refs/remotes/origin/mr/* ?
+        result = run(
+            ['git', 'fetch'] + fetch_args, cwd=path, check=False, log=True)
+        if result.returncode == 0:
+            return
+        log.debug(f"Assuming {branch} is a tag")
+        fetch_args = [url, "tag", branch]
         result = run(
             ['git', 'fetch'] + fetch_args, cwd=path, check=False, log=True)
         if result.returncode != 0:
