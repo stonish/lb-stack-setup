@@ -245,18 +245,20 @@ def check_staleness(repos, show=1):
     def fetch_repo(path):
         url, branch = git_url_branch(path, try_read_only=True)
         url = url or "origin"  # for utils
+        # Check if `branch` is a branch
         fetch_args = [url, f"refs/heads/{branch}:refs/remotes/origin/{branch}"]
-        # TODO add +refs/merge-requests/*/head:refs/remotes/origin/mr/* ?
         result = run(
             ['git', 'fetch'] + fetch_args, cwd=path, check=False, log=True)
         if result.returncode == 0:
             return
-        log.debug(f"Assuming {branch} is a tag")
-        fetch_args = [url, "tag", branch]
+        # Check if `branch` is a tag
+        fetch_args = [url, "refs/tags/{branch}:refs/tags/{branch}"]
         result = run(
             ['git', 'fetch'] + fetch_args, cwd=path, check=False, log=True)
-        if result.returncode != 0:
-            log.warning(f"Failed to fetch {path}")
+        if result.returncode == 0:
+            return
+        # `branch` must be a commit SHA, it should be fetched manually
+        log.debug(f"Assuming {branch} is a commit SHA")
 
     if to_fetch:
         log.info("Fetching {}".format(', '.join(to_fetch)))
@@ -265,12 +267,19 @@ def check_staleness(repos, show=1):
             list(executor.map(fetch_repo, to_fetch))
 
     def compare_head(path):
-        target = 'origin/' + git_url_branch(path)[1]
+        ref = git_url_branch(path)[1]
         try:
+            # First check if the target is a branch or not (i.e. tag/SHA)
+            res = run(
+                ['git', 'show-ref', '--verify', f'refs/remotes/origin/{ref}'],
+                cwd=path,
+                check=False,
+                log=False)
+            target = 'origin/' + ref if res.returncode == 0 else ref
+
             res = run(
                 ['git', 'rev-list', '--count', '--left-right', f'{target}...'],
                 cwd=path,
-                check=False,
                 log=False)
             n_behind, n_ahead = map(int, res.stdout.split())
 
