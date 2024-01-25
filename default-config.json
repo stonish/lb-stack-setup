@@ -11,11 +11,11 @@
 		"default": "master",
 		"defaultDataPackages": "master"
 	},
-	"lcgVersion": "103",
+	"lcgVersion": "104",
 	"defaultBinaryTags": [
 		[
 			"^x86_64-el9$",
-			"x86_64_v2-el9-gcc12-opt"
+			"x86_64_v2-el9-gcc13-opt"
 		],
 		[
 			"^x86_64-centos7$",
@@ -23,7 +23,7 @@
 		],
 		[
 			".*",
-			"x86_64_v2-el9-gcc12-opt"
+			"x86_64_v2-el9-gcc13-opt"
 		]
 	],
 	"cmakePrefixPath": "$CMAKE_PREFIX_PATH:/cvmfs/sft.cern.ch/lcg/releases",
