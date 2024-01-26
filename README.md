@@ -244,15 +244,16 @@ BINARY_TAG_OVERRIDE=x86_64_v3-centos7-gcc11-opt Moore/run
 
 ### Add a data package
 
-By default only [PRConfig](https://gitlab.cern.ch/lhcb-datapkg/PRConfig) and
-[AppConfig](https://gitlab.cern.ch/lhcb-datapkg/AppConfig) are cloned.
+By default only [PRConfig](https://gitlab.cern.ch/lhcb-datapkg/PRConfig),
+[AppConfig](https://gitlab.cern.ch/lhcb-datapkg/AppConfig) and
+[ParamFiles](https://gitlab.cern.ch/lhcb-datapkg/ParamFiles) are cloned.
 You can add a new package to be checked out in the json configuration.
 
 > __Note:__ After adding a new data package, do a purge in the projects where you
 > need it (e.g. `make Project/purge`) in order for CMake to pick it up.
 
-> __Note:__ All data packages are put under `DBASE`, even those that nominally
-> belong to `PARAM`. This does not affect the builds in any way.
+> __Note:__ Data packages are put under either `DBASE` or `PARAM`, depending on a
+> predefined list. The location does not affect the builds in any way.
 
 ### Use special LCG versions
 
@@ -296,7 +297,7 @@ make Rec BUILDFLAGS='-j 2'
 
 ### Use DetDesc
 
-By default, dd4hep is used for the detector description. To use DetDesc it is enough to 
+By default, dd4hep is used for the detector description. To use DetDesc it is enough to
 switch to a platform with `+detdesc` added after the compiler, for example
 
 ```sh
