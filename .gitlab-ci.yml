@@ -18,7 +18,7 @@ setup:
   script:
     - . /cvmfs/lhcb.cern.ch/lib/LbEnv  # TODO remove this and test setup on all supported hosts
     - git --version
-    - python3 setup.py --debug --repo . --branch $CI_COMMIT_SHA stack
+    - python3 setup.py --debug --repo $CI_PROJECT_URL --branch $CI_COMMIT_SHA stack
     - cd stack
     - utils/config.py useDistcc false
     - make stack.code-workspace  # would install contrib
