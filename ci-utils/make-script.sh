@@ -12,6 +12,7 @@ make Detector/configure
 bash utils/ci-utils/test-cmake.sh Detector/build.$PLATFORM
 make LHCb/configure
 bash utils/ci-utils/test-cmake.sh LHCb/build.$PLATFORM
-bash utils/ci-utils/test-misc.sh
+bash utils/ci-utils/test-misc.sh LHCb
+bash utils/ci-utils/test-test.sh
 
 utils/stats

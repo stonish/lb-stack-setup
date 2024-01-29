@@ -140,10 +140,19 @@ def find_project_deps(project):
             raise RuntimeError(f'dependencies not found in {metadata_path}')
         deps = [s.strip(' -') for s in m.group('deps').splitlines()]
         deps = [d for d in deps if d not in IGNORED_DEPENDENCIES]
+        local_deps = [d for d in deps if d not in config['cvmfsProjects']]
+        cvmfs_deps = {
+            d: config['cvmfsProjects'][d]
+            for d in deps if d in config['cvmfsProjects']
+        }
     except IOError:
         # Fall back to old-style cmake
-        deps = old_cmake_deps(project)
-    return deps + config['extraDependencies'].get(project, [])
+        local_deps = old_cmake_deps(project)
+        if config['cvmfsProjects']:
+            raise RuntimeError("cvmfsProjects not supported with old CMake")
+        cvmfs_deps = {}
+    return (local_deps + config['extraDependencies'].get(project, []),
+            cvmfs_deps)
 
 
 def clone_cmake_project(project):
@@ -154,6 +163,7 @@ def clone_cmake_project(project):
     Nothing is done if the project directory already exists.
 
     """
+    assert project not in config['cvmfsProjects']
     m = [x for x in os.listdir('.') if x.lower() == project.lower()]
     assert len(m) <= 1, 'Multiple directories for project: ' + str(m)
     if not m:
@@ -426,9 +436,18 @@ def checkout(projects, data_packages):
     while to_checkout:
         p = to_checkout.pop(0)
         p = clone_cmake_project(p)
-        deps = find_project_deps(p)
+        deps, cvmfs_deps = find_project_deps(p)
         to_checkout.extend(sorted(set(deps).difference(project_deps)))
         project_deps[p] = deps
+        # write cmake cache preload file to force dependency version
+        preload_content = ""
+        for dep, ver in cvmfs_deps.items():
+            cmake_ver = ver.replace("v", "").replace("r", ".").replace(
+                "p", ".")
+            preload_content += f'set({dep}_EXACT_VERSION "{cmake_ver}" CACHE STRING "")\n'
+        preload_fn = os.path.join(p, "cache_preload.cmake")
+        if preload_content or os.path.isfile(preload_fn):
+            write_file_if_different(preload_fn, preload_content)
 
     # Check that all dependencies are also keys
     assert set().union(*project_deps.values()).issubset(project_deps)
@@ -453,7 +472,7 @@ def find_all_deps(repos, project_deps={}):
     for r in repos:
         if r not in project_deps:
             try:
-                project_deps[r] = find_project_deps(r)
+                project_deps[r], _ = find_project_deps(r)
             except NotCMakeProjectError:
                 pass
     return project_deps

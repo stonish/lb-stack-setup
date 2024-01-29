@@ -6,6 +6,7 @@
 		"Moore"
 	],
 	"extraDependencies": {},
+	"cvmfsProjects": {},
 	"gitBranch": {
 		"Gaudi": "master",
 		"default": "master",

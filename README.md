@@ -242,17 +242,52 @@ make BINARY_TAG=x86_64_v3-centos7-gcc11-opt Moore
 BINARY_TAG_OVERRIDE=x86_64_v3-centos7-gcc11-opt Moore/run
 ```
 
+### Use released versions of the software
+
+It is possible to build only a part of stack by specifying the versions of
+the direct dependencies to be picked up from CVMFS.
+
+For example, if you want to build Moore on top of released Rec, Allen, etc.,
+you can run
+
+```sh
+utils/config.py cvmfsProjects.Allen v3r22p1
+```
+
+which results in the following being added to `config.json`
+
+```json
+    "cvmfsProjects": {
+        "Allen": "v3r22p1"
+    }
+```
+
+To build MooreOnline but pick up Moore from CVMFS,
+you need to specify the versions of Moore and LHCb
+(because MooreOnline depends on Online, which (today) depends on LHCb).
+
+```json
+    "cvmfsProjects": {
+        "Moore": "v54r22p3",
+        "LHCb": "v54r21"
+    }
+```
+
+> __Note:__ Don't forget to also set a `binaryTag` and an `lcgVersion`
+> that make sense for the chosen versions.
+
 ### Add a data package
 
-By default only [PRConfig](https://gitlab.cern.ch/lhcb-datapkg/PRConfig) and
-[AppConfig](https://gitlab.cern.ch/lhcb-datapkg/AppConfig) are cloned.
+By default only [PRConfig](https://gitlab.cern.ch/lhcb-datapkg/PRConfig),
+[AppConfig](https://gitlab.cern.ch/lhcb-datapkg/AppConfig) and
+[ParamFiles](https://gitlab.cern.ch/lhcb-datapkg/ParamFiles) are cloned.
 You can add a new package to be checked out in the json configuration.
 
 > __Note:__ After adding a new data package, do a purge in the projects where you
 > need it (e.g. `make Project/purge`) in order for CMake to pick it up.
 
-> __Note:__ All data packages are put under `DBASE`, even those that nominally
-> belong to `PARAM`. This does not affect the builds in any way.
+> __Note:__ Data packages are put under either `DBASE` or `PARAM`, depending on a
+> predefined list. The location does not affect the builds in any way.
 
 ### Use special LCG versions
 
@@ -296,7 +331,7 @@ make Rec BUILDFLAGS='-j 2'
 
 ### Use DetDesc
 
-By default, dd4hep is used for the detector description. To use DetDesc it is enough to 
+By default, dd4hep is used for the detector description. To use DetDesc it is enough to
 switch to a platform with `+detdesc` added after the compiler, for example
 
 ```sh

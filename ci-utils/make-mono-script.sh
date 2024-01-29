@@ -10,7 +10,8 @@ bash utils/ci-utils/test-cmake.sh $MONO_BUILD_PATH
 make configure  # test a reconfigure
 bash utils/ci-utils/test-cmake.sh $MONO_BUILD_PATH
 
-bash utils/ci-utils/test-misc.sh
+bash utils/ci-utils/test-misc.sh mono
+bash utils/ci-utils/test-test.sh
 
 utils/stats
 
