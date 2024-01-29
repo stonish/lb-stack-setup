@@ -2,9 +2,6 @@ stages:
   - setup
   - make
 
-# image should match what is used for lb-docker-run (see build-env)
-image: gitlab-registry.cern.ch/lhcb-core/lbdocker/centos7-build:v4.57
-
 variables:
   LHCB_ENV_MODE: "lbenv-stable"  # Use the default LbEnv environment from the lbdocker container
 
@@ -17,10 +14,11 @@ setup:
   stage: setup
   tags:
     - cvmfs
+  image: gitlab-registry.cern.ch/lhcb-docker/os-base/alma9-devel:latest
   script:
     - . /cvmfs/lhcb.cern.ch/lib/LbEnv  # TODO remove this and test setup on all supported hosts
     - git --version
-    - python3 setup.py --debug --repo . --branch $CI_COMMIT_SHA stack
+    - python3 setup.py --debug --repo $CI_PROJECT_URL --branch $CI_COMMIT_SHA stack
     - cd stack
     - utils/config.py useDistcc false
     - make stack.code-workspace  # would install contrib
@@ -35,6 +33,7 @@ setup:
   stage: make
   tags:
     - cvmfs
+  image: gitlab-registry.cern.ch/lhcb-docker/os-base/alma9-devel:latest
   variables:
     GIT_STRATEGY: none
   before_script:
@@ -80,7 +79,7 @@ make-oos:
 make-oos-mono-bindfs:
   extends: .make
   script:
-    - sudo yum install -y bindfs
+    - dnf install -y bindfs
     - cd stack
     - utils/config.py monoBuild true
     - utils/config.py defaultProjects '["LHCb"]'
@@ -95,7 +94,7 @@ make-partial:
   script:
     - cd stack
     - utils/config.py lcgVersion 103
-    - utils/config.py binaryTag x86_64_v2-centos7-gcc12-opt
+    - utils/config.py binaryTag x86_64_v2-el9-gcc12-opt
     - utils/config.py cvmfsProjects.Allen v3r22p1
     - utils/config.py gitBranch.Moore v54r22p3
     # configure with functor cache to check cmake
@@ -113,6 +112,7 @@ make-legacy:
   stage: make
   tags:
     - cvmfs
+  image: gitlab-registry.cern.ch/lhcb-docker/os-base/centos7-devel:latest
   variables:
     GIT_STRATEGY: none
     PLATFORM: x86_64-centos7-gcc62-opt
@@ -145,7 +145,6 @@ check-formatting:
   stage: setup
   tags:
     - cvmfs
-  image: gitlab-registry.cern.ch/ci-tools/ci-worker:cc7
   script:
     - . /cvmfs/lhcb.cern.ch/lib/LbEnv
     - curl -o lb-format "https://gitlab.cern.ch/lhcb-core/LbDevTools/raw/master/LbDevTools/SourceTools.py?inline=false"
