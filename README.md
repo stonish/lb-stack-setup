@@ -242,6 +242,40 @@ make BINARY_TAG=x86_64_v3-centos7-gcc11-opt Moore
 BINARY_TAG_OVERRIDE=x86_64_v3-centos7-gcc11-opt Moore/run
 ```
 
+### Use released versions of the software
+
+It is possible to build only a part of stack by specifying the versions of
+the direct dependencies to be picked up from CVMFS.
+
+For example, if you want to build Moore on top of released Rec, Allen, etc.,
+you can run
+
+```sh
+utils/config.py cvmfsProjects.Allen v3r22p1
+```
+
+which results in the following being added to `config.json`
+
+```json
+    "cvmfsProjects": {
+        "Allen": "v3r22p1"
+    }
+```
+
+To build MooreOnline but pick up Moore from CVMFS,
+you need to specify the versions of Moore and LHCb
+(because MooreOnline depends on Online, which (today) depends on LHCb).
+
+```json
+    "cvmfsProjects": {
+        "Moore": "v54r22p3",
+        "LHCb": "v54r21"
+    }
+```
+
+> __Note:__ Don't forget to also set a `binaryTag` and an `lcgVersion`
+> that make sense for the chosen versions.
+
 ### Add a data package
 
 By default only [PRConfig](https://gitlab.cern.ch/lhcb-datapkg/PRConfig),
