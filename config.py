@@ -4,7 +4,6 @@ import errno
 import json
 import logging
 import os
-import platform
 import re
 from collections import OrderedDict
 from copy import copy, deepcopy
@@ -75,6 +74,14 @@ def binary_tag(config):
     raise RuntimeError("Could not determine default binary tag")
 
 
+def lcg_version(config):
+    host_os = get_host_os()
+    for pattern, version in config["defaultLcgVersions"]:
+        if re.match(pattern, host_os):
+            return version
+    raise RuntimeError("Could not determine default LCG version")
+
+
 def git_base(config):
     for base in GITLAB_BASE_URLS:
         code = os.system(
@@ -116,6 +123,7 @@ def functor_jit_n_jobs(_):
 
 AUTOMATIC_DEFAULTS = {
     'binaryTag': binary_tag,
+    'lcgVersion': lcg_version,
     'gitBase': git_base,
     'localPoolDepth': lambda _: 2 * cpu_count(),
     'distccLocalslots': cpu_count,
