@@ -368,15 +368,16 @@ You can find the right tags/branches/platforms for other versions in the
 ```sh
 utils/config.py binaryTag x86_64_v2-centos7-gcc11-opt
 utils/config.py lcgVersion 102b
-utils/config.py -- cmakeFlags.Geant4 '-DGEANT4_BUILD_MULTITHREADED=OFF'
 utils/config.py gitBranch.Gauss Sim10
 utils/config.py gitBranch.Run2Support sim10-patches
 utils/config.py gitBranch.LHCb sim10-patches
+utils/config.py gitBranch.Geant4 v10r6p2t7
 utils/config.py gitBranch.Gaudi v36r9p1
 # if the projects were already created, then:
 git -C Gauss switch Sim10
 git -C Run2Support switch sim10-patches
 git -C LHCb switch sim10-patches
+git -C Geant4 checkout v10r6p2t7
 git -C Gaudi checkout v36r9p1
 # finally make Gauss
 make Gauss
