@@ -358,7 +358,10 @@ def update_repos():
     root_repos = list_repos()
     dp_repos = list_repos(DATA_PACKAGE_DIRS)
     projects = topo_sorted(find_all_deps(root_repos, {}))
-    repos = projects + dp_repos
+    missing = [p for p in projects if not os.path.isdir(p)]
+    if missing:
+        log.warning(f"Dependency projects not cloned: {','.join(missing)}")
+    repos = [p for p in projects if p not in missing] + dp_repos
 
     # Skip repos where the tracking branch does not match the config
     # or nothing is tracked (e.g. a tag is checked out).
