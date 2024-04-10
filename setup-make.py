@@ -279,18 +279,28 @@ def check_staleness(repos, show=1):
     def compare_head(path):
         ref = git_url_branch(path)[1]
         try:
-            # First check if the target is a branch or not (i.e. tag/SHA)
-            res = run(
-                ['git', 'show-ref', '--verify', f'refs/remotes/origin/{ref}'],
-                cwd=path,
-                check=False,
-                log=False)
-            target = 'origin/' + ref if res.returncode == 0 else ref
+            # FIXME the following can be simplified by parsing the output of
+            # git show-ref refs/remotes/origin/{ref} refs/tags/{ref}
+            for check in [False, True]:
+                # First check if the target is a branch, tag or not (i.e. tag/SHA)
+                res = run([
+                    'git', 'show-ref', '--verify', f'refs/remotes/origin/{ref}'
+                ],
+                          cwd=path,
+                          check=False,
+                          log=False)
+                target = 'origin/' + ref if res.returncode == 0 else ref
 
-            res = run(
-                ['git', 'rev-list', '--count', '--left-right', f'{target}...'],
-                cwd=path,
-                log=False)
+                res = run([
+                    'git', 'rev-list', '--count', '--left-right',
+                    f'{target}...'
+                ],
+                          cwd=path,
+                          check=check,
+                          log=False)
+                if res.returncode == 0:
+                    break
+                fetch_repo(path)
             n_behind, n_ahead = map(int, res.stdout.split())
 
             target_refs = run(
