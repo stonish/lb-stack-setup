@@ -1,6 +1,7 @@
 {
 	"binaryTag": null,
 	"lcgVersion": null,
+	"promptedModelSlot": null,
 	"monoBuild": false,
 	"defaultProjects": [
 		"Alignment",
@@ -9,7 +10,6 @@
 	"extraDependencies": {},
 	"cvmfsProjects": {},
 	"gitBranch": {
-		"Gaudi": "master",
 		"default": "master",
 		"defaultDataPackages": "master"
 	},

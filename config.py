@@ -66,11 +66,68 @@ def get_host_os():
     return host_os
 
 
+def slot_config(name):
+    fn = f"/cvmfs/lhcbdev.cern.ch/nightlies/{name}/latest/slot-config.json"
+    try:
+        with open(fn) as f:
+            config = json.load(f)
+    except FileNotFoundError:
+        return
+    res = {"gitBranch": {}}
+    for p in config["projects"]:
+        name = p["name"]
+        if name == "LCG":
+            res["lcgVersion"] = p["version"]
+        elif name not in ["DBASE", "PARAM"]:
+            branch = p["version"] if p["version"] != "HEAD" else "master"
+            res["gitBranch"][name] = branch
+    for p in config["packages"]:
+        branch = p["version"] if p["version"].upper() != "HEAD" else "master"
+        res["gitBranch"][p["name"]] = branch
+    return res
+
+
+def model_slot(config):
+    import sys
+
+    if not (sys.stdin.isatty() and sys.stderr.isatty()):
+        return {}
+
+    while True:
+        print(
+            "Which slot are you targeting (e.g. lhcb-2024-patches lhcb-master ...): ",
+            end="",
+            file=sys.stderr)
+        slot = input()
+        if slot == "NA":
+            return {"promptedModelSlot": "true"}
+        res = slot_config(slot)
+        if res: break
+        print(
+            f"'{slot}' is not an existing slot, try again. " +
+            "Use 'NA' to skip and use defaults (master)",
+            file=sys.stderr)
+    update = {
+        "promptedModelSlot": "true",
+        "gitBranch": config["gitBranch"],
+    }
+    for p, v in res["gitBranch"].items():
+        if p not in update["gitBranch"]:
+            update["gitBranch"][p] = v
+        elif update["gitBranch"][p] != v:
+            print(
+                f"WARNING gitBranch.{p} is already set to " +
+                f"{update['gitBranch'][p]} which does not match {v} " +
+                f"from {slot}",
+                file=sys.stderr)
+    return update
+
+
 def binary_tag(config):
     host_os = get_host_os()
     for pattern, tag in config["defaultBinaryTags"]:
         if re.match(pattern, host_os):
-            return tag
+            return {"binaryTag": tag}
     raise RuntimeError("Could not determine default binary tag")
 
 
@@ -78,7 +135,7 @@ def lcg_version(config):
     host_os = get_host_os()
     for pattern, version in config["defaultLcgVersions"]:
         if re.match(pattern, host_os):
-            return version
+            return {"lcgVersion": version}
     raise RuntimeError("Could not determine default LCG version")
 
 
@@ -91,10 +148,10 @@ def git_base(config):
             # if base != GITLAB_BASE_URLS[0]:
             #     logging.warning('Using {} git base for cloning as {} is not accessible'
             #                     .format(base, GITLAB_BASE_URLS[0]))
-            return base
+            return {"gitBase": base}
     # This really should not happen, but let's not crash
     # TODO output logging warnings on stderr
-    return ''
+    return {"gitBase": ""}
 
 
 def ccache_hosts_key(config):
@@ -103,31 +160,36 @@ def ccache_hosts_key(config):
     fqdn = getfqdn()
     for key in sorted(config["ccacheHostsPresets"], key=len, reverse=True):
         if fqdn.endswith(key):
-            return key
+            return {"ccacheHostsKey": key}
+    return {"ccacheHostsKey": "NA"}
 
 
 def use_distcc(config):
     if cpu_count() >= 24:
         # Disable distcc if we have many cores
-        return False
+        return {"useDistcc": False}
     if not re.match(r'x86_64[^-]*-centos7-.*', config["binaryTag"]):
         logging.warning(
             "Will disable distcc as it's only supported for CentOS 7")
-        return False
-    return True
+        return {"useDistcc": False}
+    return {"useDistcc": True}
 
 
 def functor_jit_n_jobs(_):
-    return 4 if cpu_count() >= 8 else max(1, cpu_count() // 2)
+    return {
+        "functorJitNJobs": 4 if cpu_count() >= 8 else max(1,
+                                                          cpu_count() // 2)
+    }
 
 
 AUTOMATIC_DEFAULTS = {
+    'promptedModelSlot': model_slot,
     'binaryTag': binary_tag,
     'lcgVersion': lcg_version,
     'gitBase': git_base,
-    'localPoolDepth': lambda _: 2 * cpu_count(),
-    'distccLocalslots': cpu_count,
-    'distccLocalslotsCpp': lambda _: 2 * cpu_count(),
+    'localPoolDepth': lambda _: {'localPoolDepth': 2 * cpu_count()},
+    'distccLocalslots': lambda _: {'distccLocalslots': cpu_count()},
+    'distccLocalslotsCpp': lambda _: {'distccLocalslotsCpp': 2 * cpu_count()},
     'useDistcc': use_distcc,
     'ccacheHostsKey': ccache_hosts_key,
     'functorJitNJobs': functor_jit_n_jobs,
@@ -178,7 +240,7 @@ def _read_json_config(path):
 def read_config(original=False,
                 default_config=DEFAULT_CONFIG,
                 config_in=CONFIG,
-                config_out=None):
+                config_out=CONFIG):
     defaults = _read_json_config(default_config)
 
     overrides = {}
@@ -208,7 +270,13 @@ def read_config(original=False,
     for key in config:
         if config[key] is None and key in AUTOMATIC_DEFAULTS:
             dirty = True
-            config[key] = overrides[key] = AUTOMATIC_DEFAULTS[key](config)
+            update = AUTOMATIC_DEFAULTS[key](config)
+            import sys
+            print(
+                "Updating config.json:\n" + json.dumps(update, indent=4),
+                file=sys.stderr)
+            config.update(update)
+            overrides.update(update)
 
     # Write automatic defaults to user config
     if dirty and config_out:
