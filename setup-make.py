@@ -279,18 +279,28 @@ def check_staleness(repos, show=1):
     def compare_head(path):
         ref = git_url_branch(path)[1]
         try:
-            # First check if the target is a branch or not (i.e. tag/SHA)
-            res = run(
-                ['git', 'show-ref', '--verify', f'refs/remotes/origin/{ref}'],
-                cwd=path,
-                check=False,
-                log=False)
-            target = 'origin/' + ref if res.returncode == 0 else ref
+            # FIXME the following can be simplified by parsing the output of
+            # git show-ref refs/remotes/origin/{ref} refs/tags/{ref}
+            for check in [False, True]:
+                # First check if the target is a branch, tag or not (i.e. tag/SHA)
+                res = run([
+                    'git', 'show-ref', '--verify', f'refs/remotes/origin/{ref}'
+                ],
+                          cwd=path,
+                          check=False,
+                          log=False)
+                target = 'origin/' + ref if res.returncode == 0 else ref
 
-            res = run(
-                ['git', 'rev-list', '--count', '--left-right', f'{target}...'],
-                cwd=path,
-                log=False)
+                res = run([
+                    'git', 'rev-list', '--count', '--left-right',
+                    f'{target}...'
+                ],
+                          cwd=path,
+                          check=check,
+                          log=False)
+                if res.returncode == 0:
+                    break
+                fetch_repo(path)
             n_behind, n_ahead = map(int, res.stdout.split())
 
             target_refs = run(
@@ -358,7 +368,10 @@ def update_repos():
     root_repos = list_repos()
     dp_repos = list_repos(DATA_PACKAGE_DIRS)
     projects = topo_sorted(find_all_deps(root_repos, {}))
-    repos = projects + dp_repos
+    missing = [p for p in projects if not os.path.isdir(p)]
+    if missing:
+        log.warning(f"Dependency projects not cloned: {','.join(missing)}")
+    repos = [p for p in projects if p not in missing] + dp_repos
 
     # Skip repos where the tracking branch does not match the config
     # or nothing is tracked (e.g. a tag is checked out).

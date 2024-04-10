@@ -31,11 +31,17 @@ set(ENV{HEPTOOLS_VERSION} $ENV{LCG_VERSION})
 # - set heptools_version variable so that downstream projects do not try to guess
 set(heptools_version $ENV{LCG_VERSION})
 
+# Do not find any libraries from LbEnv as they may conflict with the LCG toolchain
+get_filename_component(_CMAKE_INSTALL_DIR "${CMAKE_ROOT}" PATH)
+get_filename_component(_CMAKE_INSTALL_DIR "${_CMAKE_INSTALL_DIR}" PATH)
+list(APPEND CMAKE_SYSTEM_IGNORE_PREFIX_PATH "${_CMAKE_INSTALL_DIR}")
+
 # Force our version of ninja (envvar set in make.sh)
 if (DEFINED ENV{CMAKE_MAKE_PROGRAM})
   set(CMAKE_MAKE_PROGRAM "$ENV{CMAKE_MAKE_PROGRAM}" CACHE FILEPATH "lb-stack-setup override")
 endif()
 
+set(GAUDI_TEST_PUBLIC_HEADERS_BUILD ON CACHE BOOL "lb-stack-setup override")
 set(GAUDI_USE_INTELAMPLIFIER OFF CACHE BOOL "lb-stack-setup override")
 set(GAUDI_LEGACY_CMAKE_SUPPORT ON CACHE BOOL "lb-stack-setup override")
 
