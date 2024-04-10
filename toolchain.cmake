@@ -41,6 +41,7 @@ if (DEFINED ENV{CMAKE_MAKE_PROGRAM})
   set(CMAKE_MAKE_PROGRAM "$ENV{CMAKE_MAKE_PROGRAM}" CACHE FILEPATH "lb-stack-setup override")
 endif()
 
+set(GAUDI_TEST_PUBLIC_HEADERS_BUILD ON CACHE BOOL "lb-stack-setup override")
 set(GAUDI_USE_INTELAMPLIFIER OFF CACHE BOOL "lb-stack-setup override")
 set(GAUDI_LEGACY_CMAKE_SUPPORT ON CACHE BOOL "lb-stack-setup override")
 
